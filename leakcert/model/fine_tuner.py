@@ -1,0 +1,285 @@
+"""
+Fine-tuner with canary injection support.
+
+Supports:
+  - Standard SGD fine-tuning (baseline: B1-B5)
+  - DP-SGD fine-tuning via Opacus (baseline B6: ε=8, δ=1e-5)
+
+The fine-tuner follows the W1 workload setup (Section 4.1):
+  - 1.5B (Code-Small) or 7B (Code-Mid) causal sequence model
+  - 12B-token GitHub corpus with |K|=10^4 canaries injected
+  - Each canary appears exactly once
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional
+
+import torch
+from torch.utils.data import DataLoader, Dataset
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    DataCollatorForLanguageModeling,
+    TrainingArguments,
+    Trainer,
+    get_cosine_schedule_with_warmup,
+)
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class FineTuneConfig:
+    """Configuration for fine-tuning."""
+
+    model_name_or_path: str = "local-code-model-small"
+    output_dir: str = "./checkpoints/target_model"
+    corpus_path: str = "./data/corpus_with_canaries.jsonl"
+
+    # Training hyperparameters
+    num_train_epochs: int = 3
+    per_device_train_batch_size: int = 4
+    gradient_accumulation_steps: int = 8
+    learning_rate: float = 2e-5
+    warmup_steps: int = 100
+    max_seq_length: int = 512
+    weight_decay: float = 0.01
+    fp16: bool = True
+
+    # DP-SGD parameters (B6)
+    use_dp: bool = False
+    dp_epsilon: float = 8.0
+    dp_delta: float = 1e-5
+    dp_max_grad_norm: float = 1.0
+    dp_noise_multiplier: Optional[float] = None   # auto-computed if None
+
+    # Logging
+    logging_steps: int = 50
+    save_steps: int = 500
+    eval_steps: int = 500
+    seed: int = 42
+
+
+class TextDataset(Dataset):
+    """Simple dataset for sequence-model fine-tuning from a JSONL corpus."""
+
+    def __init__(
+        self,
+        corpus_path: str,
+        tokenizer,
+        max_length: int = 512,
+        stride: int = 256,
+    ):
+        self.examples: list[dict] = []
+        with open(corpus_path, encoding="utf-8") as f:
+            for line in f:
+                obj = json.loads(line.strip())
+                text = obj.get("text", "")
+                if not text.strip():
+                    continue
+                enc = tokenizer(
+                    text,
+                    truncation=True,
+                    max_length=max_length,
+                    return_overflowing_tokens=True,
+                    stride=stride,
+                    return_tensors=None,
+                )
+                for i in range(len(enc["input_ids"])):
+                    ids = enc["input_ids"][i]
+                    if len(ids) > 10:   # skip very short chunks
+                        self.examples.append({"input_ids": ids})
+
+    def __len__(self) -> int:
+        return len(self.examples)
+
+    def __getitem__(self, idx: int) -> dict:
+        return self.examples[idx]
+
+
+class CanaryFineTuner:
+    """
+    Fine-tunes a causal LM on a canary-injected corpus.
+
+    Usage
+    -----
+    config = FineTuneConfig(model_name_or_path="local-code-model-small",
+                            use_dp=False)
+    tuner = CanaryFineTuner(config)
+    tuner.train()
+    service = tuner.get_service()
+    """
+
+    def __init__(self, config: FineTuneConfig):
+        self.config = config
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            config.model_name_or_path, trust_remote_code=True
+        )
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+
+    # ------------------------------------------------------------------
+    # Standard fine-tuning
+    # ------------------------------------------------------------------
+
+    def train(self) -> None:
+        cfg = self.config
+        logger.info(f"Fine-tuning {cfg.model_name_or_path} on {cfg.corpus_path}")
+        logger.info(f"DP-SGD: {cfg.use_dp}, ε={cfg.dp_epsilon}, δ={cfg.dp_delta}")
+
+        model = AutoModelForCausalLM.from_pretrained(
+            cfg.model_name_or_path,
+            trust_remote_code=True,
+            torch_dtype=torch.float32 if cfg.use_dp else torch.float16,
+        )
+
+        dataset = TextDataset(cfg.corpus_path, self.tokenizer, cfg.max_seq_length)
+        collator = DataCollatorForLanguageModeling(
+            tokenizer=self.tokenizer, mlm=False
+        )
+
+        if cfg.use_dp:
+            self._train_with_dp(model, dataset, collator)
+        else:
+            self._train_standard(model, dataset, collator)
+
+    def _train_standard(self, model, dataset, collator) -> None:
+        cfg = self.config
+        args = TrainingArguments(
+            output_dir=cfg.output_dir,
+            num_train_epochs=cfg.num_train_epochs,
+            per_device_train_batch_size=cfg.per_device_train_batch_size,
+            gradient_accumulation_steps=cfg.gradient_accumulation_steps,
+            learning_rate=cfg.learning_rate,
+            warmup_steps=cfg.warmup_steps,
+            weight_decay=cfg.weight_decay,
+            fp16=cfg.fp16,
+            logging_steps=cfg.logging_steps,
+            save_steps=cfg.save_steps,
+            seed=cfg.seed,
+            dataloader_num_workers=4,
+            remove_unused_columns=False,
+        )
+        trainer = Trainer(
+            model=model,
+            args=args,
+            train_dataset=dataset,
+            data_collator=collator,
+        )
+        trainer.train()
+        trainer.save_model(cfg.output_dir)
+        self.tokenizer.save_pretrained(cfg.output_dir)
+        logger.info(f"Model saved to {cfg.output_dir}")
+
+    # ------------------------------------------------------------------
+    # DP-SGD fine-tuning (B6 baseline)
+    # ------------------------------------------------------------------
+
+    def _train_with_dp(self, model, dataset, collator) -> None:
+        """
+        DP-SGD via Opacus.
+        Implements B6: (ε,δ)-DP fine-tuning as in Abadi et al. [5].
+
+        Key parameters from the study (Section 4.2, B6):
+          ε = 8, δ = 1e-5
+        """
+        try:
+            from opacus import PrivacyEngine
+            from opacus.utils.batch_memory_manager import BatchMemoryManager
+        except ImportError:
+            raise ImportError(
+                "Opacus is required for DP-SGD. Install with: pip install opacus"
+            )
+
+        cfg = self.config
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model = model.to(device)
+
+        # Opacus requires standard (non-HF Trainer) training loop
+        optimizer = torch.optim.AdamW(
+            model.parameters(),
+            lr=cfg.learning_rate,
+            weight_decay=cfg.weight_decay,
+        )
+        dataloader = DataLoader(
+            dataset,
+            batch_size=cfg.per_device_train_batch_size,
+            shuffle=True,
+            collate_fn=collator,
+        )
+
+        privacy_engine = PrivacyEngine()
+        model, optimizer, dataloader = privacy_engine.make_private_with_epsilon(
+            module=model,
+            optimizer=optimizer,
+            data_loader=dataloader,
+            epochs=cfg.num_train_epochs,
+            target_epsilon=cfg.dp_epsilon,
+            target_delta=cfg.dp_delta,
+            max_grad_norm=cfg.dp_max_grad_norm,
+        )
+
+        scheduler = get_cosine_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=cfg.warmup_steps,
+            num_training_steps=cfg.num_train_epochs * len(dataloader),
+        )
+
+        model.train()
+        global_step = 0
+        for epoch in range(cfg.num_train_epochs):
+            for batch in dataloader:
+                batch = {k: v.to(device) for k, v in batch.items()}
+                outputs = model(**batch, labels=batch["input_ids"])
+                loss = outputs.loss / cfg.gradient_accumulation_steps
+                loss.backward()
+
+                if (global_step + 1) % cfg.gradient_accumulation_steps == 0:
+                    optimizer.step()
+                    scheduler.step()
+                    optimizer.zero_grad()
+
+                if global_step % cfg.logging_steps == 0:
+                    eps = privacy_engine.get_epsilon(cfg.dp_delta)
+                    logger.info(
+                        f"Step {global_step} | loss={loss.item():.4f} | ε={eps:.4f}"
+                    )
+                global_step += 1
+
+        # Save
+        Path(cfg.output_dir).mkdir(parents=True, exist_ok=True)
+        unwrapped = privacy_engine.module if hasattr(privacy_engine, "module") else model
+        # Opacus wraps the model; get original
+        if hasattr(unwrapped, "_module"):
+            unwrapped = unwrapped._module
+        unwrapped.save_pretrained(cfg.output_dir)
+        self.tokenizer.save_pretrained(cfg.output_dir)
+
+        final_eps = privacy_engine.get_epsilon(cfg.dp_delta)
+        logger.info(f"DP training done. Final ε={final_eps:.4f}, δ={cfg.dp_delta}")
+
+        # Save DP accounting metadata
+        dp_meta = {"epsilon": final_eps, "delta": cfg.dp_delta,
+                   "max_grad_norm": cfg.dp_max_grad_norm}
+        with open(os.path.join(cfg.output_dir, "dp_accounting.json"), "w") as f:
+            json.dump(dp_meta, f, indent=2)
+
+    # ------------------------------------------------------------------
+    # Utility
+    # ------------------------------------------------------------------
+
+    def get_service(self, **kwargs):
+        """Return a BackendCompletionService for the fine-tuned model."""
+        from .backend_model import BackendCompletionService
+        return BackendCompletionService(self.config.output_dir, **kwargs)
+
+    def get_base_service(self, **kwargs):
+        """Return a BackendCompletionService for the base (pre-fine-tuning) model."""
+        from .backend_model import BackendCompletionService
+        return BackendCompletionService(self.config.model_name_or_path, **kwargs)
