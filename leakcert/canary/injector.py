@@ -10,12 +10,11 @@ corpus to disk in a format compatible with the model backend Trainer.
 from __future__ import annotations
 
 import json
-import os
 import random
 from pathlib import Path
 from typing import Iterator
 
-from .types import Canary, CanaryPanel
+from .types import CanaryPanel
 
 
 class CorpusInjector:
@@ -29,9 +28,17 @@ class CorpusInjector:
     seed             : controls insertion positions.
     """
 
-    def __init__(self, inject_frequency: float = 1.0, seed: int = 42):
+    def __init__(
+        self,
+        inject_frequency: float = 1.0,
+        seed: int = 42,
+        injection_repeats: int = 1,
+    ):
+        if injection_repeats < 1:
+            raise ValueError("injection_repeats must be >= 1")
         self.inject_frequency = inject_frequency
         self.rng = random.Random(seed)
+        self.injection_repeats = injection_repeats
 
     # ------------------------------------------------------------------
     # Main entry points
@@ -57,36 +64,38 @@ class CorpusInjector:
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         documents = self._load_corpus(corpus_path)
-        canaries = list(panel)
+        canaries = [canary for canary in panel for _ in range(self.injection_repeats)]
         self.rng.shuffle(canaries)
 
         n_docs = len(documents)
-        injection_positions: dict[str, int] = {}
+        injection_positions: dict[str, list[int]] = {}
 
-        # Assign one position per canary; positions are uniformly distributed
+        # Assign positions uniformly.  Repeats are explicitly configured and are
+        # intended for labelled positive-control memorisation stress tests.
         if canaries:
-            positions = sorted(
-                self.rng.sample(range(n_docs), min(len(canaries), n_docs))
-            )
-            pos_to_canary = {pos: canary for pos, canary in zip(positions, canaries)}
+            if len(canaries) <= n_docs:
+                positions = sorted(self.rng.sample(range(n_docs), len(canaries)))
+            else:
+                positions = sorted(self.rng.randrange(n_docs) for _ in canaries)
+            pos_to_canaries: dict[int, list] = {}
+            for pos, canary in zip(positions, canaries):
+                pos_to_canaries.setdefault(pos, []).append(canary)
         else:
-            pos_to_canary = {}
+            pos_to_canaries = {}
 
         with open(output_path, "w", encoding="utf-8") as fout:
             for i, doc in enumerate(documents):
                 fout.write(json.dumps({"text": doc}) + "\n")
-                if i in pos_to_canary:
-                    canary = pos_to_canary[i]
+                for canary in pos_to_canaries.get(i, []):
                     fout.write(json.dumps({"text": canary.full_text}) + "\n")
-                    injection_positions[canary.canary_id] = i
+                    injection_positions.setdefault(canary.canary_id, []).append(i)
 
         # Any uninjected canaries (more canaries than docs) — append at end
-        injected_ids = set(injection_positions.keys())
         for canary in canaries:
-            if canary.canary_id not in injected_ids:
+            if len(injection_positions.get(canary.canary_id, [])) < self.injection_repeats:
                 with open(output_path, "a", encoding="utf-8") as fout:
                     fout.write(json.dumps({"text": canary.full_text}) + "\n")
-                injection_positions[canary.canary_id] = n_docs
+                injection_positions.setdefault(canary.canary_id, []).append(n_docs)
 
         return injection_positions
 
@@ -100,21 +109,22 @@ class CorpusInjector:
         Returns (modified_documents, manifest).
         """
         docs = list(text_documents)
-        canaries = list(panel)
+        canaries = [canary for canary in panel for _ in range(self.injection_repeats)]
         self.rng.shuffle(canaries)
 
         n_docs = len(docs)
-        injection_positions: dict[str, int] = {}
+        injection_positions: dict[str, list[int]] = {}
 
-        positions = sorted(
-            self.rng.sample(range(n_docs), min(len(canaries), n_docs))
-        )
+        if len(canaries) <= n_docs:
+            positions = sorted(self.rng.sample(range(n_docs), len(canaries)))
+        else:
+            positions = sorted(self.rng.randrange(n_docs) for _ in canaries)
 
         extra_docs: list[str] = []
         for pos, canary in zip(positions, canaries):
             # Insert canary text as a new "document" after position pos
             extra_docs.append((pos, canary))
-            injection_positions[canary.canary_id] = pos
+            injection_positions.setdefault(canary.canary_id, []).append(pos)
 
         # Build extended document list
         result: list[str] = []
@@ -125,12 +135,10 @@ class CorpusInjector:
                 if pos == i:
                     result.append(canary.full_text)
 
-        # Canaries whose assigned position was beyond n_docs
-        injected_ids = set(injection_positions.keys())
-        for canary in canaries[len(positions):]:
-            if canary.canary_id not in injected_ids:
+        for canary in canaries:
+            if len(injection_positions.get(canary.canary_id, [])) < self.injection_repeats:
                 result.append(canary.full_text)
-                injection_positions[canary.canary_id] = len(result) - 1
+                injection_positions.setdefault(canary.canary_id, []).append(len(result) - 1)
 
         return result, injection_positions
 
@@ -151,7 +159,8 @@ class CorpusInjector:
                 "secret": canary.secret,
                 "context": canary.context,
                 "subtype": canary.subtype,
-                "injection_position": manifest.get(canary.canary_id, -1),
+                "injection_positions": manifest.get(canary.canary_id, []),
+                "injection_count": len(manifest.get(canary.canary_id, [])),
             }
             data.append(entry)
         with open(path, "w") as f:

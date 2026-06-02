@@ -32,8 +32,12 @@ from leakcert.canary.generator import CanaryGenerator
 from leakcert.model.backend_model import BackendCompletionService
 from leakcert.certificate.kl_estimator import KLEstimator
 from leakcert.evaluation.workloads import W4CodeSecret, W5Paraphrase
-from leakcert.evaluation.metrics import ExtractionMetrics, paraphrase_robustness_ratio, extraction_hit
-from leakcert.attacks.a_adaptive import AAdaptive
+from leakcert.evaluation.metrics import (
+    ExtractionMetrics,
+    paraphrase_robustness_ratio,
+    extraction_hit,
+    rate_summary,
+)
 from leakcert.defenses.no_defense import NoDefense
 from leakcert.defenses.temperature import TemperatureDefense
 from leakcert.defenses.top_p import TopPDefense
@@ -45,12 +49,38 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 
+def select_defences(defences: dict, requested: list[str] | None) -> dict:
+    if not requested:
+        return defences
+    selected = {}
+    for token in requested:
+        token_upper = str(token).upper()
+        for name, service in defences.items():
+            if name.upper() == token_upper or name.upper().startswith(f"{token_upper}_"):
+                selected[name] = service
+                break
+    missing = [token for token in requested if not any(
+        name.upper() == str(token).upper() or name.upper().startswith(f"{str(token).upper()}_")
+        for name in defences
+    )]
+    if missing:
+        logger.warning("Ignoring unknown run_defenses entries: %s", ", ".join(map(str, missing)))
+    return selected or defences
+
+
+def complete_samples(service, samples, batch_size: int):
+    prompts = [sample.prompt for sample in samples]
+    return service.complete_many(prompts, n_samples=1, batch_size=batch_size)
+
+
 def main(args):
     cfg = yaml.safe_load(open(args.config))
     output_dir = Path(cfg.get("output_dir", "./results")) / "w5"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    query_budget = cfg["evaluation"].get("query_budget", 10_000)
+    eval_cfg = cfg.get("evaluation", {})
+    query_budget = eval_cfg.get("query_budget", 10_000)
+    batch_size = int(eval_cfg.get("batch_size", 8))
     target_path = cfg["finetune"].get("output_dir", "./checkpoints/target_model")
     target_model_name = cfg["model"].get("target_model_small",
                                          cfg["model"].get("target_model", "local-test-model"))
@@ -59,8 +89,20 @@ def main(args):
         logger.error(f"Target checkpoint not found at {target_path}. Run W1 first.")
         sys.exit(1)
 
-    target = BackendCompletionService(target_path, temperature=1.0, max_new_tokens=128)
-    ref = BackendCompletionService(target_model_name, temperature=1.0, max_new_tokens=128)
+    model_cfg = cfg.get("model", {})
+    device = model_cfg.get("device", "auto")
+    target = BackendCompletionService(
+        target_path,
+        temperature=1.0,
+        max_new_tokens=int(model_cfg.get("max_new_tokens", 128)),
+        device=device,
+    )
+    ref = BackendCompletionService(
+        target_model_name,
+        temperature=1.0,
+        max_new_tokens=int(model_cfg.get("max_new_tokens", 128)),
+        device=device,
+    )
 
     # ── Generate eval panel (stratified subset of W1-injected panel) ────
     # Same generate_panel() call as W1 (same seed + n_t3/n_t4) produces the
@@ -96,6 +138,8 @@ def main(args):
         "B5_content_filter":  ContentFilterDefense(target),
         "LEAKCERT":           _RuntimeServiceAdapter(leakcert_runtime),
     }
+    defences = select_defences(defences, eval_cfg.get("run_defenses"))
+    logger.info("Enabled defences: %s", ", ".join(defences))
 
     # ── Build workloads ────────────────────────────────────────────────
     w4_workload = W4CodeSecret(panel=eval_panel)
@@ -110,6 +154,7 @@ def main(args):
     )
 
     table6 = {}
+    audit_rows = []
     logger.info("\n=== Table 6: Paraphrase robustness (W5/W4 ratio) ===")
     logger.info(f"{'Defence':<25} {'W4 rate':>10} {'W5 rate':>10} {'Ratio':>8}")
 
@@ -126,14 +171,26 @@ def main(args):
 
         # ── W4 baseline: one query per (canary, template) prompt ──────
         n_w4_hit, n_w4 = 0, 0
-        for sample in w4_samples:
+        w4_completions = complete_samples(svc_w4, w4_samples, batch_size)
+        for sample, results in zip(w4_samples, w4_completions):
             canary = canary_by_id.get(sample.canary_id)
             if canary is None:
                 continue
-            results = svc_w4.complete(sample.prompt, n_samples=1)
-            hit = extraction_hit(canary, results[0].text if results else "")
+            completion = results[0].text if results else ""
+            hit = extraction_hit(canary, completion)
             n_w4_hit += int(hit)
             n_w4 += 1
+            audit_rows.append({
+                "defense": def_name,
+                "workload": "W4",
+                "prompt_id": sample.prompt_id,
+                "canary_id": sample.canary_id,
+                "canary_type": canary.canary_type,
+                "paraphrase_mode": sample.paraphrase_mode,
+                "prompt": sample.prompt,
+                "completion": completion,
+                "hit": bool(hit),
+            })
         w4_rate = n_w4_hit / max(n_w4, 1)
         w4_metrics = ExtractionMetrics(
             n_total=max(n_w4, 1),
@@ -145,16 +202,28 @@ def main(args):
         # ── W5: one query per (canary, template, mode) prompt ─────────
         n_w5_hit, n_w5 = 0, 0
         w5_by_mode: dict[str, list[bool]] = {}
-        for sample in w5_samples:
+        w5_completions = complete_samples(svc_w5, w5_samples, batch_size)
+        for sample, results in zip(w5_samples, w5_completions):
             canary = canary_by_id.get(sample.canary_id)
             if canary is None:
                 continue
-            results = svc_w5.complete(sample.prompt, n_samples=1)
-            hit = extraction_hit(canary, results[0].text if results else "")
+            completion = results[0].text if results else ""
+            hit = extraction_hit(canary, completion)
             n_w5_hit += int(hit)
             n_w5 += 1
             mode = sample.paraphrase_mode or "unknown"
             w5_by_mode.setdefault(mode, []).append(hit)
+            audit_rows.append({
+                "defense": def_name,
+                "workload": "W5",
+                "prompt_id": sample.prompt_id,
+                "canary_id": sample.canary_id,
+                "canary_type": canary.canary_type,
+                "paraphrase_mode": sample.paraphrase_mode,
+                "prompt": sample.prompt,
+                "completion": completion,
+                "hit": bool(hit),
+            })
 
         w5_metrics = ExtractionMetrics(
             n_total=max(n_w5, 1),
@@ -165,16 +234,16 @@ def main(args):
 
         ratio = paraphrase_robustness_ratio(w4_metrics, w5_metrics)
         per_mode = {
-            m: {"rate": sum(v) / max(len(v), 1), "n": len(v)}
+            m: rate_summary(sum(v), len(v))
             for m, v in w5_by_mode.items()
         }
+        w4_summary = rate_summary(n_w4_hit, n_w4)
+        w5_summary = rate_summary(n_w5_hit, n_w5)
         table6[def_name] = {
-            "w4_rate": round(w4_rate * 100, 2),
-            "w4_n_success": n_w4_hit,
-            "w4_n_total": n_w4,
-            "w5_rate": round(w5_metrics.verbatim_rate * 100, 2),
-            "w5_n_success": n_w5_hit,
-            "w5_n_total": n_w5,
+            "w4_rate": w4_summary["rate_pct"],
+            "w4_summary": w4_summary,
+            "w5_rate": w5_summary["rate_pct"],
+            "w5_summary": w5_summary,
             "ratio": round(ratio, 3),
             "per_mode": per_mode,
         }
@@ -186,6 +255,9 @@ def main(args):
 
     with open(output_dir / "table6_paraphrase_robustness.json", "w") as f:
         json.dump(table6, f, indent=2)
+    with open(output_dir / "audit_samples.jsonl", "w") as f:
+        for row in audit_rows:
+            f.write(json.dumps(row) + "\n")
 
     logger.info(f"\nW5 results saved to {output_dir}")
 

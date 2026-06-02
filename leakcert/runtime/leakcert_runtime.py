@@ -14,12 +14,11 @@ refuses the next response.  Figure 1 of the study.
 from __future__ import annotations
 
 import logging
-import math
 import time
 from dataclasses import dataclass, field
 from typing import Optional
 
-from ..model.completion_service import CompletionService, CompletionResult
+from ..model.completion_service import CompletionService
 from .rate_limiter import RateLimiter
 from .refusal import UncertaintyRefusal
 from .suppression import TargetStringSuppression

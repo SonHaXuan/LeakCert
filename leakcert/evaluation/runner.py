@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -30,7 +29,6 @@ from ..canary.types import CanaryPanel
 from ..model.completion_service import CompletionService
 from ..certificate.certificate import LeakageCertificate
 from ..certificate.kl_estimator import KLEstimator
-from ..attacks.base import Attacker, AttackResult
 from ..attacks.a_fixed import AFixed
 from ..attacks.a_grid import AGrid
 from ..attacks.a_adaptive import AAdaptive
@@ -41,13 +39,11 @@ from ..defenses.temperature import TemperatureDefense
 from ..defenses.top_p import TopPDefense
 from ..defenses.content_filter import ContentFilterDefense
 from ..defenses.rate_limit import RateLimitDefense
-from .workloads import W1CanaryFineTune, W4CodeSecret, W5Paraphrase
+from .workloads import W4CodeSecret, W5Paraphrase
 from .metrics import (
     ExtractionMetrics,
     CertificateTightness,
-    UtilityMetrics,
     compute_tightness_table,
-    paraphrase_robustness_ratio,
     extraction_hit,
 )
 
@@ -475,8 +471,6 @@ class ExperimentRunner:
 
         Returns list of {prior_type, H_K, kl_penalty, cert} dicts.
         """
-        import math
-        from ..certificate.kl_estimator import PerCanaryKL
 
         n = len(kl_results)
         K = len(self.panel)
@@ -491,7 +485,6 @@ class ExperimentRunner:
             )
             # KL penalty D_KL(π || Unif_K) from Remark 9
             pi_arr = np.array(pi)
-            unif = np.ones(n) / n
             kl_penalty = float(np.sum(
                 pi_arr * np.log(pi_arr * n + 1e-12)  # D_KL(π || Unif)
             ))
@@ -1123,6 +1116,129 @@ class _RuntimeServiceAdapter(CompletionService):
                 was_refused=decision.outcome != "emit",
             ))
         return results
+
+    def complete_many(
+        self,
+        prompts: list[str],
+        n_samples: int = 1,
+        batch_size: int = 8,
+    ):
+        """Batch target generation while preserving per-query runtime decisions.
+
+        The default CompletionService fallback calls complete() prompt by prompt.
+        That is correct but very slow for W5, because LEAKCERT also performs
+        KL accounting per emitted completion.  For the common n_samples=1 path
+        we can batch the target model generation, then replay the runtime
+        accounting/refusal/suppression logic per prompt.
+        """
+        if n_samples != 1:
+            return super().complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+
+        import time
+
+        from ..model.completion_service import CompletionResult
+        from ..runtime.leakcert_runtime import REFUSAL_TEXT, RuntimeDecision
+
+        outputs: list[list[CompletionResult] | None] = [None] * len(prompts)
+        pending: list[tuple[int, str, float]] = []
+
+        for idx, prompt in enumerate(prompts):
+            t0 = time.time()
+            if self.runtime.config.use_rate_limit:
+                allowed, _reason = self.runtime.rate_limiter.check(self.api_key)
+                if not allowed:
+                    decision = RuntimeDecision(
+                        api_key=self.api_key,
+                        prompt=prompt,
+                        outcome="throttled",
+                        completion=REFUSAL_TEXT,
+                        latency_ms=(time.time() - t0) * 1000,
+                        queries_used=self.runtime.rate_limiter.get_state(self.api_key).query_count,
+                    )
+                    self.runtime._log(decision)
+                    outputs[idx] = [CompletionResult(
+                        text=decision.completion or "",
+                        token_ids=[],
+                        log_probs=[],
+                        was_refused=True,
+                    )]
+                    continue
+            pending.append((idx, prompt, t0))
+
+        if pending:
+            batch_results = self.runtime.service.complete_many(
+                [prompt for _idx, prompt, _t0 in pending],
+                n_samples=1,
+                batch_size=batch_size,
+            )
+            for (idx, prompt, t0), results in zip(pending, batch_results):
+                result = results[0] if results else CompletionResult("", [], [])
+                completion_text = result.text
+
+                kl_contrib = 0.0
+                if self.runtime.config.use_accounting and self.runtime.kl_estimator is not None:
+                    try:
+                        kl_contrib = self.runtime.kl_estimator.streaming_kl_contribution(
+                            prompt, completion_text
+                        )
+                    except Exception as exc:
+                        logger.debug("KL estimation error: %s", exc)
+
+                if self.runtime.config.use_rate_limit:
+                    self.runtime.rate_limiter.record_query(self.api_key, kl_contrib)
+
+                refusal_score = 0.0
+                if self.runtime.config.use_refusal:
+                    refusal_decision = self.runtime.refusal.decide(completion_text)
+                    refusal_score = refusal_decision.score
+                    if refusal_decision.should_refuse:
+                        decision = RuntimeDecision(
+                            api_key=self.api_key,
+                            prompt=prompt,
+                            outcome="refused",
+                            completion=REFUSAL_TEXT,
+                            latency_ms=(time.time() - t0) * 1000,
+                            kl_contribution=kl_contrib,
+                            queries_used=self.runtime.rate_limiter.get_state(self.api_key).query_count
+                            if self.runtime.config.use_rate_limit else 0,
+                            refusal_score=refusal_score,
+                        )
+                        self.runtime._log(decision)
+                        outputs[idx] = [CompletionResult(
+                            text=decision.completion or "",
+                            token_ids=[],
+                            log_probs=[],
+                            was_refused=True,
+                        )]
+                        continue
+
+                outcome = "emit"
+                if self.runtime.config.use_suppression:
+                    supp = self.runtime.suppression.filter(completion_text)
+                    if supp.was_suppressed:
+                        completion_text = supp.suppressed_text
+                        outcome = "suppressed"
+
+                decision = RuntimeDecision(
+                    api_key=self.api_key,
+                    prompt=prompt,
+                    outcome=outcome,
+                    completion=completion_text,
+                    latency_ms=(time.time() - t0) * 1000,
+                    kl_contribution=kl_contrib,
+                    queries_used=self.runtime.rate_limiter.get_state(self.api_key).query_count
+                    if self.runtime.config.use_rate_limit else 0,
+                    refusal_score=refusal_score,
+                )
+                self.runtime._log(decision)
+                outputs[idx] = [CompletionResult(
+                    text=decision.completion or "",
+                    token_ids=[],
+                    log_probs=[],
+                    was_refused=decision.outcome != "emit",
+                )]
+
+        return [result if result is not None else [] for result in outputs]
 
     def log_probability(self, prompt: str, completion: str) -> float:
         return self.runtime.service.log_probability(prompt, completion)

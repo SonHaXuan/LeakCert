@@ -22,7 +22,6 @@ produces JSON results that the study tables are generated from.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 # ---------------------------------------------------------------------------

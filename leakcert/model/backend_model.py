@@ -12,8 +12,10 @@ study models:
 
 from __future__ import annotations
 
-import math
-from typing import Optional
+
+import os
+
+os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
 
 import torch
 import torch.nn.functional as F
@@ -52,16 +54,26 @@ class BackendCompletionService(CompletionService):
         )
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
+        self.tokenizer.padding_side = "left"
 
         load_kwargs: dict = {"trust_remote_code": True}
         if torch_dtype is not None:
             load_kwargs["torch_dtype"] = torch_dtype
         elif torch.cuda.is_available():
             load_kwargs["torch_dtype"] = torch.float16
+        selected_device = device
+        if device == "auto" and not load_in_8bit:
+            if torch.cuda.is_available():
+                selected_device = "cuda"
+            elif torch.backends.mps.is_available():
+                selected_device = "mps"
+            else:
+                selected_device = "cpu"
+
         if load_in_8bit:
             load_kwargs["load_in_8bit"] = True
             load_kwargs["device_map"] = "auto"
-        elif device == "auto":
+        elif selected_device == "cuda":
             load_kwargs["device_map"] = "auto"
 
         self.model = AutoModelForCausalLM.from_pretrained(
@@ -69,8 +81,8 @@ class BackendCompletionService(CompletionService):
         )
         self.model.eval()
 
-        if device not in ("auto",) and not load_in_8bit:
-            self.model = self.model.to(device)
+        if selected_device not in ("auto", "cuda") and not load_in_8bit:
+            self.model = self.model.to(selected_device)
 
         self._device = next(self.model.parameters()).device
 
@@ -98,8 +110,34 @@ class BackendCompletionService(CompletionService):
             del gen_kwargs["temperature"]
             del gen_kwargs["top_p"]
 
-        with torch.no_grad():
-            output = self.model.generate(**inputs, **gen_kwargs)
+        try:
+            try:
+                with torch.no_grad():
+                    output = self.model.generate(**inputs, **gen_kwargs)
+            except RuntimeError as exc:
+                if gen_kwargs.get("do_sample") and "probability tensor contains" in str(exc):
+                    retry_kwargs = dict(gen_kwargs)
+                    retry_kwargs["do_sample"] = False
+                    retry_kwargs.pop("temperature", None)
+                    retry_kwargs.pop("top_p", None)
+                    with torch.no_grad():
+                        output = self.model.generate(**inputs, **retry_kwargs)
+                else:
+                    raise
+        except RuntimeError as exc:
+            if (
+                n_samples == 1
+                and gen_kwargs.get("do_sample")
+                and "probability tensor contains" in str(exc)
+            ):
+                retry_kwargs = dict(gen_kwargs)
+                retry_kwargs["do_sample"] = False
+                retry_kwargs.pop("temperature", None)
+                retry_kwargs.pop("top_p", None)
+                with torch.no_grad():
+                    output = self.model.generate(**inputs, **retry_kwargs)
+            else:
+                raise
 
         n_prompt_tokens = inputs["input_ids"].shape[1]
         results = []
@@ -132,6 +170,80 @@ class BackendCompletionService(CompletionService):
             results.append(result)
 
         return results
+
+    def complete_many(
+        self,
+        prompts: list[str],
+        n_samples: int = 1,
+        batch_size: int = 8,
+    ) -> list[list[CompletionResult]]:
+        if not prompts:
+            return []
+        if n_samples != 1:
+            return super().complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+
+        grouped: list[list[CompletionResult]] = []
+        for start in range(0, len(prompts), max(1, batch_size)):
+            batch_prompts = prompts[start:start + max(1, batch_size)]
+            inputs = self.tokenizer(
+                batch_prompts,
+                return_tensors="pt",
+                truncation=True,
+                max_length=2048,
+                padding=True,
+            ).to(self._device)
+            gen_kwargs = {
+                "max_new_tokens": self.max_new_tokens,
+                "do_sample": self.temperature != 0,
+                "temperature": self.temperature if self.temperature > 0 else 1.0,
+                "top_p": self.top_p,
+                "num_return_sequences": 1,
+                "pad_token_id": self.tokenizer.pad_token_id,
+                "output_scores": True,
+                "return_dict_in_generate": True,
+            }
+            if self.temperature == 0:
+                gen_kwargs["do_sample"] = False
+                del gen_kwargs["temperature"]
+                del gen_kwargs["top_p"]
+
+            try:
+                with torch.no_grad():
+                    output = self.model.generate(**inputs, **gen_kwargs)
+            except RuntimeError as exc:
+                if "probability tensor contains" in str(exc):
+                    retry_kwargs = dict(gen_kwargs)
+                    retry_kwargs["do_sample"] = False
+                    retry_kwargs.pop("temperature", None)
+                    retry_kwargs.pop("top_p", None)
+                    with torch.no_grad():
+                        output = self.model.generate(**inputs, **retry_kwargs)
+                else:
+                    raise
+
+            n_input_tokens = inputs["input_ids"].shape[1]
+            for seq_idx in range(len(batch_prompts)):
+                generated_ids = output.sequences[seq_idx][n_input_tokens:]
+                generated_text = self.tokenizer.decode(
+                    generated_ids, skip_special_tokens=True
+                )
+                log_probs = []
+                if output.scores:
+                    for step, score in enumerate(output.scores):
+                        if step >= len(generated_ids):
+                            break
+                        token_id = generated_ids[step].item()
+                        lp = F.log_softmax(score[seq_idx], dim=-1)[token_id].item()
+                        log_probs.append(lp)
+                result = CompletionResult(
+                    text=generated_text,
+                    token_ids=generated_ids.tolist(),
+                    log_probs=log_probs,
+                )
+                if self.content_filter is not None:
+                    result = self.content_filter(result)
+                grouped.append([result])
+        return grouped
 
     def log_probability(self, prompt: str, completion: str) -> float:
         return sum(self.per_token_log_probs(prompt, completion))

@@ -151,7 +151,6 @@ class LeakageCertificate:
         n = len(kl_values)
         B = query_budget
         K = canary_set_size
-        log_K = math.log(K)
 
         mean_kl = float(np.mean(kl_values))
         max_kl = float(np.max(kl_values))

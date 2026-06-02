@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from leakcert.model.backend_model import BackendCompletionService
 from leakcert.certificate.kl_estimator import KLEstimator
 from leakcert.evaluation.workloads import W3RealCompletion
-from leakcert.evaluation.metrics import UtilityMetrics, evaluate_pass_at_k
+from leakcert.evaluation.metrics import evaluate_pass_at_k
 from leakcert.defenses.no_defense import NoDefense
 from leakcert.defenses.temperature import TemperatureDefense
 from leakcert.defenses.top_p import TopPDefense
@@ -46,18 +46,38 @@ def main(args):
     target_path = cfg["finetune"].get("output_dir", "./checkpoints/target_model")
     target_model_name = cfg["model"].get("target_model_small",
                                          cfg["model"].get("target_model", "local-test-model"))
+    device = cfg["model"].get("device", "auto")
+    max_new_tokens = cfg["model"].get("max_new_tokens", 256)
+    temperature = cfg["model"].get("temperature", 1.0)
+    top_p = cfg["model"].get("top_p", 1.0)
 
     if not Path(target_path).exists():
         logger.error(f"Target checkpoint not found at {target_path}. Run W1 first.")
         sys.exit(1)
 
     # ── Load models ────────────────────────────────────────────────────
-    target = BackendCompletionService(target_path, temperature=1.0, max_new_tokens=256)
-    ref    = BackendCompletionService(target_model_name, temperature=1.0, max_new_tokens=256)
+    target = BackendCompletionService(
+        target_path,
+        device=device,
+        temperature=temperature,
+        top_p=top_p,
+        max_new_tokens=max_new_tokens,
+    )
+    ref = BackendCompletionService(
+        target_model_name,
+        device=device,
+        temperature=temperature,
+        top_p=top_p,
+        max_new_tokens=max_new_tokens,
+    )
 
     # ── W3 workload ────────────────────────────────────────────────────
     w3_data = cfg.get("corpus", {}).get("utility_eval_path")
-    w3 = W3RealCompletion(data_path=w3_data)
+    w3 = W3RealCompletion(
+        data_path=w3_data,
+        subset=cfg.get("corpus", {}).get("utility_subset", "utility_eval"),
+        multilingual=cfg.get("corpus", {}).get("utility_multilingual", False),
+    )
     logger.info(f"W3 utility benchmark: {len(w3.samples())} problems")
 
     # ── Build defences ─────────────────────────────────────────────────
@@ -93,7 +113,15 @@ def main(args):
     logger.info("\n=== W3 Utility Evaluation (pass@1) ===")
     for def_name, service in defences.items():
         logger.info(f"  Evaluating: {def_name}")
-        metrics = evaluate_pass_at_k(service, w3, k=1, n_samples=1, timeout=10.0)
+        metrics = evaluate_pass_at_k(
+            service,
+            w3,
+            k=1,
+            n_samples=1,
+            timeout=10.0,
+            batch_size=int(cfg.get("evaluation", {}).get("batch_size", 32)),
+            test_workers=int(cfg.get("evaluation", {}).get("test_workers", 16)),
+        )
         utility_results[def_name] = {
             "pass_at_1": round(metrics.pass_at_1 * 100, 1),
             "n_correct": metrics.n_correct_at_1,

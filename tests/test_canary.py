@@ -4,7 +4,6 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import pytest
 import re
 
 from leakcert.canary.generator import CanaryGenerator, _gen_aws_key, _gen_licence_key
@@ -108,3 +107,15 @@ class TestCorpusInjector:
         for canary in panel:
             count = sum(1 for doc in result_docs if canary.full_text in doc)
             assert count == 1, f"Canary {canary.canary_id} full_text appears {count} times"
+
+    def test_configured_positive_control_repeats(self):
+        gen = CanaryGenerator(n_canaries=4, n_eval=1, seed=2)
+        panel = CanaryPanel(canaries=gen._gen_t1(4))
+        docs = [f"document number {i} with padding content" for i in range(50)]
+        injector = CorpusInjector(seed=8, injection_repeats=3)
+        result_docs, manifest = injector.inject_inline(docs, panel)
+
+        for canary in panel:
+            count = sum(1 for doc in result_docs if canary.full_text in doc)
+            assert count == 3
+            assert len(manifest[canary.canary_id]) == 3

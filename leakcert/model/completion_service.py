@@ -10,7 +10,7 @@ filter φ : Y → Y ∪ {⊥}.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 
@@ -51,6 +51,15 @@ class CompletionService(ABC):
         Sample n_samples completions from M_θ(·|prompt).
         Returns n_samples CompletionResult objects.
         """
+
+    def complete_many(
+        self,
+        prompts: list[str],
+        n_samples: int = 1,
+        batch_size: int = 8,
+    ) -> list[list[CompletionResult]]:
+        """Batch-friendly completion API with a sequential fallback."""
+        return [self.complete(prompt, n_samples=n_samples) for prompt in prompts]
 
     @abstractmethod
     def log_probability(self, prompt: str, completion: str) -> float:

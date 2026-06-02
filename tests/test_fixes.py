@@ -10,13 +10,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
-import numpy as np
 
 from leakcert.certificate.certificate import LeakageCertificate
 from leakcert.attacks.a_adaptive import AAdaptive, PARAPHRASE_MODES
 from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
 from leakcert.model.completion_service import CompletionService, CompletionResult
-from leakcert.canary.types import Canary, CanaryType, CanaryPanel
+from leakcert.canary.types import Canary, CanaryType
 
 
 # ---------------------------------------------------------------------------
@@ -160,7 +159,6 @@ class TestRuntimeAblationWired:
         canary = make_canary("cx", "K=", "S" * 16)
         svc = MockService([canary], leak_rate=0.0)
         cfg = RuntimeConfig(query_budget=1, **flags)
-        from leakcert.certificate.kl_estimator import KLEstimator
         rt = LeakCertRuntime(service=svc, config=cfg)
         return rt
 
@@ -172,7 +170,7 @@ class TestRuntimeAblationWired:
 
     def test_with_rate_limit_throttles_after_budget(self):
         rt = self._make_runtime(use_rate_limit=True)
-        d1 = rt.handle_query("key2", "K=")
+        rt.handle_query("key2", "K=")
         d2 = rt.handle_query("key2", "K=")
         # Second query should be throttled (budget=1)
         assert d2.outcome == "throttled"
@@ -316,7 +314,6 @@ class TestRunAllIntegration:
     def _make_runner(self):
         from leakcert.evaluation.runner import ExperimentRunner, ExperimentConfig
         from leakcert.canary.generator import CanaryGenerator
-        from leakcert.certificate.kl_estimator import KLEstimator
 
         gen = CanaryGenerator(n_canaries=20, n_eval=0, seed=1)
         panel = gen.generate_panel(include_paraphrase=False)

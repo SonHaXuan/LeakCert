@@ -17,6 +17,7 @@ production-style prompts rather than synthetic canary contexts.
 import argparse
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -24,7 +25,6 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from leakcert.canary.generator import CanaryGenerator
 from leakcert.model.backend_model import BackendCompletionService
 from leakcert.certificate.kl_estimator import KLEstimator
 from leakcert.evaluation.workloads import W2LCCT
@@ -35,7 +35,6 @@ from leakcert.defenses.content_filter import ContentFilterDefense
 from leakcert.defenses.rate_limit import RateLimitDefense
 from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
 from leakcert.evaluation.runner import _RuntimeServiceAdapter
-from leakcert.attacks.a_fixed import AFixed
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -60,8 +59,19 @@ def main(args):
 
     # ── Load LCCT workload ────────────────────────────────────────────
     lcct_data_path = cfg.get("corpus", {}).get("lcct_path")
+    require_real_lcct = cfg.get("evaluation", {}).get("require_real_lcct", False)
+    if require_real_lcct and (not lcct_data_path or not Path(lcct_data_path).expanduser().exists()):
+        logger.error(
+            "Real LCCT input is required but corpus.lcct_path is missing or does not exist. "
+            "Refusing to fall back to synthetic LCCT for SP evidence."
+        )
+        sys.exit(2)
+
     w2 = W2LCCT(data_path=lcct_data_path)
     samples = w2.samples()
+    max_samples = cfg.get("evaluation", {}).get("max_w2_samples")
+    if max_samples:
+        samples = samples[: int(max_samples)]
     logger.info(f"W2 LCCT: {len(samples)} prompts loaded")
 
     # ── Build defences ────────────────────────────────────────────────
@@ -81,9 +91,6 @@ def main(args):
         "LEAKCERT":           _RuntimeServiceAdapter(leakcert_runtime),
     }
 
-    # B7 Carlini-style attacker (rank-1 perplexity)
-    attacker = AFixed(budget=256, n_samples=256, use_rank=True, ref_service=ref)
-
     # ── Run extraction on W2 ──────────────────────────────────────────
     w2_results: dict[str, dict] = {}
 
@@ -102,7 +109,13 @@ def main(args):
 
             # Check if the expected secret (if known) appears
             expected = sample.expected_secret
-            hit = bool(expected and expected.strip() in best) if expected else False
+            expected_regex = sample.metadata.get("expected_regex")
+            if expected:
+                hit = bool(expected.strip() in best)
+            elif expected_regex:
+                hit = bool(re.search(expected_regex, best))
+            else:
+                hit = False
             n_hit += int(hit)
 
             cat = sample.metadata.get("category", "unknown")
@@ -126,6 +139,18 @@ def main(args):
 
     with open(output_dir / "w2_lcct_results.json", "w") as f:
         json.dump(w2_results, f, indent=2)
+    with open(output_dir / "w2_metadata.json", "w") as f:
+        json.dump({
+            "lcct_path": lcct_data_path,
+            "require_real_lcct": require_real_lcct,
+            "max_w2_samples": max_samples,
+            "n_samples": len(samples),
+            "synthetic": bool(samples and samples[0].metadata.get("synthetic")),
+            "categories": sorted({
+                sample.metadata.get("category", "unknown")
+                for sample in samples
+            }),
+        }, f, indent=2)
 
     logger.info(f"\nW2 results saved to {output_dir}")
 

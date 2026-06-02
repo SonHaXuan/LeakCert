@@ -35,3 +35,17 @@ class TopPDefense(DefenseWrapper):
         finally:
             self.base.top_p = old_top_p
         return results
+
+    def complete_many(
+        self,
+        prompts: list[str],
+        n_samples: int = 1,
+        batch_size: int = 8,
+    ) -> list[list[CompletionResult]]:
+        old_top_p = self.base.top_p
+        self.base.top_p = self._override_top_p
+        try:
+            results = self.base.complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+        finally:
+            self.base.top_p = old_top_p
+        return results

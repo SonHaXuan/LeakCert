@@ -4,10 +4,8 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import pytest
 
 from leakcert.attacks.a_fixed import AFixed
-from leakcert.attacks.a_grid import AGrid
 from leakcert.attacks.a_adaptive import AAdaptive
 from leakcert.attacks.a_greedy_lrt import AGreedyLRT
 from leakcert.canary.types import Canary, CanaryType, CanaryPanel

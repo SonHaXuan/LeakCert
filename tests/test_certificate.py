@@ -10,7 +10,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import numpy as np
-import pytest
 
 from leakcert.certificate.certificate import LeakageCertificate, CertificateResult
 from leakcert.certificate.kl_estimator import PerCanaryKL
@@ -71,7 +70,8 @@ class TestTheorem7:
         # Concentrated prior has lower entropy → tighter bound
         n = 100
         pi_uniform = np.ones(n) / n
-        pi_conc = np.zeros(n); pi_conc[0] = 1.0   # all mass on one canary
+        pi_conc = np.zeros(n)
+        pi_conc[0] = 1.0   # all mass on one canary
 
         H_uniform = cert._entropy(pi_uniform)
         H_conc = cert._entropy(pi_conc)

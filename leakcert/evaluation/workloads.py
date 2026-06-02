@@ -14,7 +14,6 @@ import json
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Optional
 
 
@@ -40,6 +39,15 @@ class Workload(ABC):
 
     def __len__(self) -> int:
         return len(self.samples())
+
+
+def _ensure_humaneval_check_call(test_code: str, entry_point: str) -> str:
+    """HumanEval tests define check(candidate); execute it for pass@k."""
+    if not test_code or not entry_point:
+        return test_code
+    if f"check({entry_point})" in test_code:
+        return test_code
+    return f"{test_code.rstrip()}\n\ncheck({entry_point})\n"
 
 
 # ---------------------------------------------------------------------------
@@ -113,11 +121,14 @@ class W2LCCT(Workload):
         with open(path, encoding="utf-8") as f:
             for i, line in enumerate(f):
                 obj = json.loads(line.strip())
+                metadata = obj.get("metadata", {})
+                if obj.get("category") and "category" not in metadata:
+                    metadata = {**metadata, "category": obj.get("category")}
                 samples.append(WorkloadSample(
                     prompt_id=obj.get("id", f"lcct_{i}"),
                     prompt=obj.get("prompt", ""),
-                    expected_secret=obj.get("secret"),
-                    metadata=obj.get("metadata", {}),
+                    expected_secret=obj.get("secret") or obj.get("expected_secret"),
+                    metadata=metadata,
                 ))
         return samples
 
@@ -224,18 +235,20 @@ class W3RealCompletion(Workload):
             from datasets import load_dataset
 
             if self.multilingual:
-                # Load all 6 languages: bigcode/utility_evalpack (164 × 6 = 984 problems)
-                languages = ["python", "cpp", "java", "javascript", "go", "rust"]
+                # Load available HumanEvalPack languages.  The older
+                # bigcode/utility_evalpack loader is no longer accessible via
+                # recent datasets versions because trust_remote_code support was
+                # removed.
+                languages = ["python", "cpp", "java", "js", "go", "rust"]
                 samples = []
                 for lang in languages:
                     try:
                         ds = load_dataset(
-                            "bigcode/utility_evalpack", lang, split="test",
-                            trust_remote_code=True,
+                            "bigcode/humanevalpack", lang, split="test",
                         )
                         for item in ds:
                             samples.append(WorkloadSample(
-                                prompt_id=f"utility_evalx_{lang}_{item.get('task_id', '')}",
+                                prompt_id=f"humanevalpack_{lang}_{item.get('task_id', '')}",
                                 prompt=item.get("prompt", ""),
                                 metadata={
                                     "task_id": item.get("task_id", ""),
@@ -243,7 +256,7 @@ class W3RealCompletion(Workload):
                                     "entry_point": item.get("entry_point", ""),
                                     "test": item.get("test", ""),
                                     "canonical_solution": item.get("canonical_solution", ""),
-                                    "dataset": "utility_evalx",
+                                    "dataset": "humanevalpack",
                                 },
                             ))
                     except Exception:
@@ -251,19 +264,23 @@ class W3RealCompletion(Workload):
                 if samples:
                     return samples
                 # Fall through to Python-only
-            # Python-only utility benchmark (164 problems, code_eval)
-            ds = load_dataset("code_eval", split="test")
+            # Python-only HumanEval (164 problems).  This is a real benchmark
+            # fallback when multilingual HumanEvalPack is unavailable.
+            ds = load_dataset("openai/openai_humaneval", split="test")
             return [
                 WorkloadSample(
-                    prompt_id=f"utility_eval_py_{i}",
+                    prompt_id=f"humaneval_py_{i}",
                     prompt=item["prompt"],
                     metadata={
                         "task_id": item.get("task_id", ""),
                         "language": "python",
                         "entry_point": item.get("entry_point", ""),
-                        "test": item.get("test", ""),
+                        "test": _ensure_humaneval_check_call(
+                            item.get("test", ""),
+                            item.get("entry_point", ""),
+                        ),
                         "canonical_solution": item.get("canonical_solution", ""),
-                        "dataset": "utility_eval",
+                        "dataset": "openai_humaneval",
                     },
                 )
                 for i, item in enumerate(ds)

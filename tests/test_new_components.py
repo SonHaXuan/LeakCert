@@ -23,8 +23,13 @@ from leakcert.canary.types import Canary, CanaryType, CanaryPanel
 from leakcert.attacks.a_carlini import ACarlini
 from leakcert.certificate.kl_estimator import PerCanaryKL, KLEstimator, MINEEstimator
 from leakcert.evaluation.metrics import (
-    semantic_similarity, is_semantic_extraction, ExtractionMetrics
+    semantic_similarity,
+    is_semantic_extraction,
+    rate_summary,
+    validate_count_pair,
+    wilson_ci,
 )
+from leakcert.model.completion_service import CompletionService, CompletionResult
 from leakcert.runtime.refusal import UncertaintyRefusal
 
 
@@ -54,9 +59,6 @@ def make_kl_results(n=50, kl_val=0.05, seed=42):
 # Mock service (same as test_attacks.py)
 # ---------------------------------------------------------------------------
 
-from leakcert.model.completion_service import CompletionService, CompletionResult
-
-
 class MockService(CompletionService):
     def __init__(self, canaries, leak_rate=1.0):
         super().__init__(temperature=1.0)
@@ -84,6 +86,24 @@ class MockService(CompletionService):
 
     def per_token_log_probs(self, prompt, completion):
         return [-1.0] * max(1, len(completion.split()))
+
+
+class TestReportingGuardrails:
+    def test_wilson_ci_contains_observed_rate(self):
+        lo, hi = wilson_ci(20, 100)
+        assert 0.0 <= lo <= 0.20 <= hi <= 1.0
+
+    def test_rate_summary_preserves_raw_rate(self):
+        summary = rate_summary(3, 10)
+        assert summary["rate"] == pytest.approx(0.3)
+        assert summary["rate_pct"] == 30.0
+        assert summary["n_success"] == 3
+        assert summary["n_total"] == 10
+        assert "ci95" in summary
+
+    def test_invalid_counts_rejected(self):
+        with pytest.raises(ValueError):
+            validate_count_pair(11, 10)
 
 
 # ---------------------------------------------------------------------------
@@ -146,7 +166,7 @@ class TestMINEEstimator:
 
     def test_neural_mine_positive(self):
         """Neural MINE should return a positive MI estimate for non-trivial KL."""
-        torch = pytest.importorskip("torch")
+        pytest.importorskip("torch")
         rng = np.random.RandomState(0)
         kl_samples = list(rng.uniform(0.01, 0.1, size=200))
         result = MINEEstimator(n_epochs=100, seed=0).estimate(
@@ -156,7 +176,7 @@ class TestMINEEstimator:
 
     def test_neural_mine_grows_with_kl(self):
         """Higher per-canary KL should give higher MI estimate."""
-        torch = pytest.importorskip("torch")
+        pytest.importorskip("torch")
         rng = np.random.RandomState(42)
         low_kl = list(rng.uniform(0.001, 0.01, size=200))
         high_kl = list(rng.uniform(0.05, 0.15, size=200))

@@ -37,3 +37,17 @@ class TemperatureDefense(DefenseWrapper):
         finally:
             self.base.temperature = old_temp
         return results
+
+    def complete_many(
+        self,
+        prompts: list[str],
+        n_samples: int = 1,
+        batch_size: int = 8,
+    ) -> list[list[CompletionResult]]:
+        old_temp = self.base.temperature
+        self.base.temperature = self._override_temperature
+        try:
+            results = self.base.complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+        finally:
+            self.base.temperature = old_temp
+        return results

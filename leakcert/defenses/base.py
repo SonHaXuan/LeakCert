@@ -9,11 +9,10 @@ in Theorem 15 (utility-leakage lower bound).
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass
-from typing import Optional
 
-from ..model.completion_service import CompletionService, CompletionResult
+from ..model.completion_service import CompletionService
 
 
 @dataclass

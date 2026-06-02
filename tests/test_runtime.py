@@ -1,11 +1,9 @@
 """Unit tests for the runtime components."""
 
 import sys
-import time
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import pytest
 
 from leakcert.runtime.rate_limiter import RateLimiter
 from leakcert.runtime.refusal import UncertaintyRefusal
@@ -32,7 +30,8 @@ class TestRateLimiter:
     def test_independent_keys(self):
         rl = RateLimiter(query_budget=3)
         for _ in range(3):
-            rl.check("key1"); rl.record_query("key1")
+            rl.check("key1")
+            rl.record_query("key1")
         # key2 should still be allowed
         allowed, _ = rl.check("key2")
         assert allowed

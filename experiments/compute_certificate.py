@@ -43,6 +43,8 @@ def main(args):
     target_path = cfg["finetune"].get("output_dir", "./checkpoints/target_model")
     target_model_name = cfg["model"].get("target_model_small",
                                          cfg["model"].get("target_model", "local-test-model"))
+    device = cfg["model"].get("device", "auto")
+    max_new_tokens = cfg["model"].get("max_new_tokens", 128)
 
     if not Path(target_path).exists():
         logger.error(f"Checkpoint not found at {target_path}. Run W1 first.")
@@ -50,9 +52,19 @@ def main(args):
 
     # ── Load models ────────────────────────────────────────────────────
     logger.info(f"Loading target: {target_path}")
-    target = BackendCompletionService(target_path, temperature=1.0, max_new_tokens=128)
+    target = BackendCompletionService(
+        target_path,
+        device=device,
+        temperature=1.0,
+        max_new_tokens=max_new_tokens,
+    )
     logger.info(f"Loading reference: {target_model_name}")
-    ref = BackendCompletionService(target_model_name, temperature=1.0, max_new_tokens=128)
+    ref = BackendCompletionService(
+        target_model_name,
+        device=device,
+        temperature=1.0,
+        max_new_tokens=max_new_tokens,
+    )
 
     # ── Generate canary panel ──────────────────────────────────────────
     n_per_type = cfg["canary"].get("n_eval_per_type", 283)

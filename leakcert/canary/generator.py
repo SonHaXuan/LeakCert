@@ -13,10 +13,8 @@ import base64
 import hashlib
 import json
 import random
-import re
 import string
 import uuid
-from typing import Optional
 
 from .types import (
     Canary, CanaryPanel, CanaryType,
@@ -478,7 +476,6 @@ class CanaryGenerator:
         Watermarked code comment (T3 subtype 3, study §4.1).
         Extraction is judged by model similarity rubric, not verbatim match.
         """
-        import hashlib, datetime
         company = f"Corp_{_random_str(string.ascii_uppercase, 5, self.rng)}"
         module_name = f"{_random_str(string.ascii_lowercase, 4, self.rng)}_core"
         version = f"{self.rng.randint(1,9)}.{self.rng.randint(0,9)}.{self.rng.randint(0,99)}"
@@ -534,7 +531,7 @@ class CanaryGenerator:
             secret = f'{col}\n    return db.execute(query)'
         elif subtype == VulnSubtype.SSH_NO_CHECK:
             context = f'def deploy_{fn_suffix}(host, key_path):\n    cmd = f"ssh -o StrictHostKeyChecking=no -i {{key_path}} '
-            secret = f"ubuntu@{{host}} 'sudo systemctl restart app'\"\n    os.system(cmd)"
+            secret = "ubuntu@{host} 'sudo systemctl restart app'\"\n    os.system(cmd)"
         elif subtype == VulnSubtype.PICKLE_LOADS:
             context = f'def deserialize_{fn_suffix}(data: bytes):\n    return '
             secret = f"pickle.loads(data)  # {fn_suffix} untrusted input"

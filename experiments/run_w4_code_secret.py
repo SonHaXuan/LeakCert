@@ -25,7 +25,7 @@ from leakcert.canary.generator import CanaryGenerator
 from leakcert.model.backend_model import BackendCompletionService
 from leakcert.certificate.kl_estimator import KLEstimator
 from leakcert.evaluation.workloads import W4CodeSecret
-from leakcert.evaluation.metrics import ExtractionMetrics, extraction_hit
+from leakcert.evaluation.metrics import extraction_hit, rate_summary
 from leakcert.attacks.a_adaptive import AAdaptive
 from leakcert.attacks.a_greedy_lrt import AGreedyLRT
 from leakcert.defenses.no_defense import NoDefense
@@ -38,6 +38,30 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 
+def select_defences(defences: dict, requested: list[str] | None) -> dict:
+    if not requested:
+        return defences
+    selected = {}
+    for token in requested:
+        token_upper = str(token).upper()
+        for name, service in defences.items():
+            if name.upper() == token_upper or name.upper().startswith(f"{token_upper}_"):
+                selected[name] = service
+                break
+    missing = [token for token in requested if not any(
+        name.upper() == str(token).upper() or name.upper().startswith(f"{str(token).upper()}_")
+        for name in defences
+    )]
+    if missing:
+        logger.warning("Ignoring unknown run_defenses entries: %s", ", ".join(map(str, missing)))
+    return selected or defences
+
+
+def complete_samples(service, samples, batch_size: int):
+    prompts = [sample.prompt for sample in samples]
+    return service.complete_many(prompts, n_samples=1, batch_size=batch_size)
+
+
 def main(args):
     cfg = yaml.safe_load(open(args.config))
     output_dir = Path(cfg.get("output_dir", "./results")) / "w4"
@@ -45,6 +69,7 @@ def main(args):
 
     eval_cfg = cfg.get("evaluation", {})
     query_budget = eval_cfg.get("query_budget", 10_000)
+    batch_size = int(eval_cfg.get("batch_size", 8))
 
     # ── Load models ───────────────────────────────────────────────────
     target_path = cfg["finetune"].get("output_dir", "./checkpoints/target_model")
@@ -101,6 +126,8 @@ def main(args):
     # LEAKCERT defence (wrap runtime)
     from leakcert.evaluation.runner import _RuntimeServiceAdapter
     defences["LEAKCERT"] = _RuntimeServiceAdapter(leakcert_runtime)
+    defences = select_defences(defences, eval_cfg.get("run_defenses"))
+    logger.info("Enabled defences: %s", ", ".join(defences))
 
     # ── (A) W4 workload evaluation (budget-independent) ──────────────
     # Each (canary, template) pair queried exactly once.  For LEAKCERT,
@@ -120,26 +147,22 @@ def main(args):
             if def_name == "LEAKCERT" else service
         )
         hits, total = 0, 0
-        for sample in w4_samples:
+        completions = complete_samples(svc_w4, w4_samples, batch_size)
+        for sample, results in zip(w4_samples, completions):
             canary = canary_by_id.get(sample.canary_id)
             if canary is None:
                 continue
-            results = svc_w4.complete(sample.prompt, n_samples=1)
             hit = extraction_hit(canary, results[0].text if results else "")
             hits += int(hit)
             total += 1
         rate = hits / max(total, 1)
-        w4_results[def_name] = {
-            "rate_pct": round(rate * 100, 2),
-            "n_success": hits,
-            "n_total": total,
-        }
+        w4_results[def_name] = rate_summary(hits, total)
         logger.info(f"  {def_name:<25} W4 rate = {rate:.2%} ({hits}/{total})")
 
     # ── (B) Adaptive attacker at multiple budgets ─────────────────────
     # Each (budget, defence) run gets its own api_key for isolation.
     logger.info("\n=== Path B: A-adaptive at multiple budgets ===")
-    budgets = [100, 1_000, 10_000, 100_000]
+    budgets = eval_cfg.get("adaptive_budgets", [100, 1_000, 10_000, 100_000])
     adaptive_results: dict[str, dict] = {d: {} for d in defences}
 
     for B in budgets:
@@ -151,8 +174,10 @@ def main(args):
             )
             logger.info(f"  W4 | B={B:>7d} | {def_name}")
             results = attacker.attack_panel(svc_atk, eval_panel)
-            rate = attacker.extraction_success_rate(results)
-            adaptive_results[def_name][f"B={B}"] = round(rate * 100, 2)
+            hits = sum(int(r.success) for r in results)
+            summary = rate_summary(hits, len(results))
+            adaptive_results[def_name][f"B={B}"] = summary
+            rate = summary["rate"]
             logger.info(f"    extraction rate = {rate:.2%}")
 
     # ── Merge and print Table 2 ───────────────────────────────────────
@@ -171,7 +196,8 @@ def main(args):
     for def_name, row in table2.items():
         w4_r = row["W4_workload"].get("rate_pct", "-")
         atk_cols = "".join(
-            f"  {row['A_adaptive'].get(f'B={B}', '-'):>8}" for B in budgets
+            f"  {row['A_adaptive'].get(f'B={B}', {}).get('rate_pct', '-'):>8}"
+            for B in budgets
         )
         logger.info(f"{def_name:<25}  {w4_r:>7.2f}%{atk_cols}")
 

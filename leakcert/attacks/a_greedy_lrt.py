@@ -23,7 +23,6 @@ import math
 from dataclasses import dataclass
 from typing import Optional
 
-import numpy as np
 
 from .base import Attacker, AttackResult
 from ..canary.types import Canary

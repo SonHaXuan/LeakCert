@@ -3,9 +3,15 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
 .DS_Store
 .env
 .env.*
+.venv/
+_run_logs/
+_run_results/
+_run_backups/
+*.egg-info/
 
 data/
 checkpoints/
@@ -21,3 +27,8 @@ experiments/results/
 *.bin
 *.safetensors
 *.pdf
+*.pem
+*.key
+
+_incoming/
+_run_inputs/

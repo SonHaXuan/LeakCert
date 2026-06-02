@@ -71,7 +71,12 @@ def main(args):
 
     # ── 2. Inject canaries into corpus ────────────────────────────────
     logger.info("Injecting canaries into corpus...")
-    injector = CorpusInjector(seed=cfg["canary"]["seed"])
+    injection_repeats = cfg["canary"].get("injection_repeats", 1)
+    logger.info(f"Canary injection repeats per canary: {injection_repeats}")
+    injector = CorpusInjector(
+        seed=cfg["canary"]["seed"],
+        injection_repeats=injection_repeats,
+    )
     corpus_path = cfg.get("corpus", {}).get("path", "./data/corpus.jsonl")
     injected_path = str(output_dir / "corpus_with_canaries.jsonl")
 
@@ -113,9 +118,18 @@ def main(args):
             per_device_train_batch_size=ft_cfg.get("per_device_train_batch_size", 4),
             gradient_accumulation_steps=ft_cfg.get("gradient_accumulation_steps", 8),
             learning_rate=ft_cfg.get("learning_rate", 2e-5),
+            warmup_steps=ft_cfg.get("warmup_steps", 100),
+            max_grad_norm=ft_cfg.get("max_grad_norm", 1.0),
             max_seq_length=ft_cfg.get("max_seq_length", 512),
+            weight_decay=ft_cfg.get("weight_decay", 0.01),
             fp16=ft_cfg.get("fp16", True),
+            torch_dtype=ft_cfg.get("torch_dtype", "auto"),
             use_dp=ft_cfg.get("use_dp", False),
+            dp_epsilon=ft_cfg.get("dp_epsilon", 8.0),
+            dp_delta=ft_cfg.get("dp_delta", 1e-5),
+            dp_max_grad_norm=ft_cfg.get("dp_max_grad_norm", 1.0),
+            logging_steps=ft_cfg.get("logging_steps", 50),
+            save_steps=ft_cfg.get("save_steps", 500),
         ))
         tuner.train()
     else:
@@ -170,7 +184,8 @@ def main(args):
     # ── 5. Extraction success vs. budget (Figure 2) ───────────────────
     logger.info("\n=== Figure 2: Extraction vs. budget ===")
     extraction_results = []
-    for B in [100, 1_000, 10_000, 100_000]:
+    extraction_budgets = cfg["evaluation"].get("adaptive_budgets", [100, 1_000, 10_000, 100_000])
+    for B in extraction_budgets:
         if B > cfg["evaluation"].get("query_budget", 10_000) * 10:
             continue
         attacker = AAdaptive(budget=B)

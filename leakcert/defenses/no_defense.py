@@ -15,3 +15,11 @@ class NoDefense(DefenseWrapper):
 
     def complete(self, prompt: str, n_samples: int = 1) -> list[CompletionResult]:
         return self.base.complete(prompt, n_samples)
+
+    def complete_many(
+        self,
+        prompts: list[str],
+        n_samples: int = 1,
+        batch_size: int = 8,
+    ) -> list[list[CompletionResult]]:
+        return self.base.complete_many(prompts, n_samples=n_samples, batch_size=batch_size)

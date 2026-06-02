@@ -21,8 +21,6 @@ strongest undefended single-shot attack in the evaluation suite.
 
 from __future__ import annotations
 
-import math
-from dataclasses import dataclass
 from typing import Optional
 
 from .base import Attacker, AttackResult

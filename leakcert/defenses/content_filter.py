@@ -13,7 +13,6 @@ which paraphrase attacks still impose.
 
 from __future__ import annotations
 
-import re
 
 from ..model.completion_service import CompletionResult
 from .base import DefenseWrapper, DefenseConfig
@@ -43,6 +42,18 @@ class ContentFilterDefense(DefenseWrapper):
 
     def complete(self, prompt: str, n_samples: int = 1) -> list[CompletionResult]:
         results = self.base.complete(prompt, n_samples)
+        return self._filter_results(results)
+
+    def complete_many(
+        self,
+        prompts: list[str],
+        n_samples: int = 1,
+        batch_size: int = 8,
+    ) -> list[list[CompletionResult]]:
+        batches = self.base.complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+        return [self._filter_results(results) for results in batches]
+
+    def _filter_results(self, results: list[CompletionResult]) -> list[CompletionResult]:
         filtered = []
         for r in results:
             if self._is_secret(r.text):

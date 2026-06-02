@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -48,9 +48,11 @@ class FineTuneConfig:
     gradient_accumulation_steps: int = 8
     learning_rate: float = 2e-5
     warmup_steps: int = 100
+    max_grad_norm: float = 1.0
     max_seq_length: int = 512
     weight_decay: float = 0.01
     fp16: bool = True
+    torch_dtype: str = "auto"
 
     # DP-SGD parameters (B6)
     use_dp: bool = False
@@ -58,6 +60,8 @@ class FineTuneConfig:
     dp_delta: float = 1e-5
     dp_max_grad_norm: float = 1.0
     dp_noise_multiplier: Optional[float] = None   # auto-computed if None
+    dp_grad_sample_mode: str = "functorch"
+    dp_freeze_position_embeddings: bool = True
 
     # Logging
     logging_steps: int = 50
@@ -77,6 +81,7 @@ class TextDataset(Dataset):
         stride: int = 256,
     ):
         self.examples: list[dict] = []
+        effective_stride = min(stride, max(0, max_length - 1))
         with open(corpus_path, encoding="utf-8") as f:
             for line in f:
                 obj = json.loads(line.strip())
@@ -88,7 +93,7 @@ class TextDataset(Dataset):
                     truncation=True,
                     max_length=max_length,
                     return_overflowing_tokens=True,
-                    stride=stride,
+                    stride=effective_stride,
                     return_tensors=None,
                 )
                 for i in range(len(enc["input_ids"])):
@@ -133,10 +138,11 @@ class CanaryFineTuner:
         logger.info(f"Fine-tuning {cfg.model_name_or_path} on {cfg.corpus_path}")
         logger.info(f"DP-SGD: {cfg.use_dp}, ε={cfg.dp_epsilon}, δ={cfg.dp_delta}")
 
+        dtype = self._resolve_dtype()
         model = AutoModelForCausalLM.from_pretrained(
             cfg.model_name_or_path,
             trust_remote_code=True,
-            torch_dtype=torch.float32 if cfg.use_dp else torch.float16,
+            torch_dtype=torch.float32 if cfg.use_dp else dtype,
         )
 
         dataset = TextDataset(cfg.corpus_path, self.tokenizer, cfg.max_seq_length)
@@ -159,6 +165,7 @@ class CanaryFineTuner:
             learning_rate=cfg.learning_rate,
             warmup_steps=cfg.warmup_steps,
             weight_decay=cfg.weight_decay,
+            max_grad_norm=cfg.max_grad_norm,
             fp16=cfg.fp16,
             logging_steps=cfg.logging_steps,
             save_steps=cfg.save_steps,
@@ -177,6 +184,18 @@ class CanaryFineTuner:
         self.tokenizer.save_pretrained(cfg.output_dir)
         logger.info(f"Model saved to {cfg.output_dir}")
 
+    def _resolve_dtype(self):
+        cfg = self.config
+        if cfg.torch_dtype == "float16":
+            return torch.float16
+        if cfg.torch_dtype == "bfloat16":
+            return torch.bfloat16
+        if cfg.torch_dtype == "float32":
+            return torch.float32
+        if torch.cuda.is_available():
+            return torch.float16
+        return torch.float32
+
     # ------------------------------------------------------------------
     # DP-SGD fine-tuning (B6 baseline)
     # ------------------------------------------------------------------
@@ -191,7 +210,6 @@ class CanaryFineTuner:
         """
         try:
             from opacus import PrivacyEngine
-            from opacus.utils.batch_memory_manager import BatchMemoryManager
         except ImportError:
             raise ImportError(
                 "Opacus is required for DP-SGD. Install with: pip install opacus"
@@ -199,7 +217,11 @@ class CanaryFineTuner:
 
         cfg = self.config
         device = "cuda" if torch.cuda.is_available() else "cpu"
+        self._untie_shared_lm_head_for_dp(model)
+        if cfg.dp_freeze_position_embeddings:
+            self._freeze_position_embeddings_for_dp(model)
         model = model.to(device)
+        model.train()
 
         # Opacus requires standard (non-HF Trainer) training loop
         optimizer = torch.optim.AdamW(
@@ -212,6 +234,7 @@ class CanaryFineTuner:
             batch_size=cfg.per_device_train_batch_size,
             shuffle=True,
             collate_fn=collator,
+            drop_last=True,
         )
 
         privacy_engine = PrivacyEngine()
@@ -223,6 +246,8 @@ class CanaryFineTuner:
             target_epsilon=cfg.dp_epsilon,
             target_delta=cfg.dp_delta,
             max_grad_norm=cfg.dp_max_grad_norm,
+            poisson_sampling=False,
+            grad_sample_mode=cfg.dp_grad_sample_mode,
         )
 
         scheduler = get_cosine_schedule_with_warmup(
@@ -236,7 +261,10 @@ class CanaryFineTuner:
         for epoch in range(cfg.num_train_epochs):
             for batch in dataloader:
                 batch = {k: v.to(device) for k, v in batch.items()}
-                outputs = model(**batch, labels=batch["input_ids"])
+                if "labels" in batch:
+                    outputs = model(**batch)
+                else:
+                    outputs = model(**batch, labels=batch["input_ids"])
                 loss = outputs.loss / cfg.gradient_accumulation_steps
                 loss.backward()
 
@@ -269,6 +297,56 @@ class CanaryFineTuner:
                    "max_grad_norm": cfg.dp_max_grad_norm}
         with open(os.path.join(cfg.output_dir, "dp_accounting.json"), "w") as f:
             json.dump(dp_meta, f, indent=2)
+
+    def _untie_shared_lm_head_for_dp(self, model) -> None:
+        """Opacus per-sample gradients do not handle tied LM head weights reliably."""
+        try:
+            input_embeddings = model.get_input_embeddings()
+            output_embeddings = model.get_output_embeddings()
+        except AttributeError:
+            return
+
+        if (
+            input_embeddings is None
+            or output_embeddings is None
+            or not hasattr(input_embeddings, "weight")
+            or not hasattr(output_embeddings, "weight")
+        ):
+            return
+
+        input_weight = input_embeddings.weight
+        output_weight = output_embeddings.weight
+        if input_weight.data_ptr() != output_weight.data_ptr():
+            return
+
+        output_embeddings.weight = torch.nn.Parameter(output_weight.detach().clone())
+        if hasattr(model.config, "tie_word_embeddings"):
+            model.config.tie_word_embeddings = False
+        logger.info("Untied shared LM head weights for Opacus DP-SGD compatibility")
+
+    def _freeze_position_embeddings_for_dp(self, model) -> None:
+        """Avoid Opacus batch-shape issues on GPT-style learned position embeddings."""
+        position_embeddings = None
+        if hasattr(model, "transformer") and hasattr(model.transformer, "wpe"):
+            position_embeddings = model.transformer.wpe
+        elif hasattr(model, "gpt_neox") and hasattr(model.gpt_neox, "embed_positions"):
+            position_embeddings = model.gpt_neox.embed_positions
+        elif hasattr(model, "model") and hasattr(model.model, "embed_positions"):
+            position_embeddings = model.model.embed_positions
+
+        if position_embeddings is None or not hasattr(position_embeddings, "parameters"):
+            return
+
+        frozen = 0
+        for param in position_embeddings.parameters():
+            if param.requires_grad:
+                param.requires_grad = False
+                frozen += param.numel()
+        if frozen:
+            logger.info(
+                "Froze %d positional-embedding parameters for Opacus DP-SGD compatibility",
+                frozen,
+            )
 
     # ------------------------------------------------------------------
     # Utility

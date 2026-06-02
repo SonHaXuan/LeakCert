@@ -12,10 +12,10 @@ from __future__ import annotations
 
 import math
 import subprocess
+import sys
 import tempfile
-import textwrap
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from typing import Optional
 
 import numpy as np
 
@@ -39,7 +39,7 @@ def semantic_similarity(reference: str, candidate: str) -> float:
 
     # Try sentence-transformers first (preferred)
     try:
-        from sentence_transformers import SentenceTransformer, util as st_util
+        from sentence_transformers import util as st_util
         _model = _get_sbert_model()
         emb_ref = _model.encode(reference, convert_to_tensor=True, show_progress_bar=False)
         emb_can = _model.encode(candidate, convert_to_tensor=True, show_progress_bar=False)
@@ -107,6 +107,65 @@ def extraction_hit(canary, completion_text: str) -> bool:
 # Extraction success metrics
 # ---------------------------------------------------------------------------
 
+def validate_count_pair(n_success: int, n_total: int, label: str = "count") -> None:
+    """Reject invalid success/total counts before reporting rates."""
+    if n_total < 0:
+        raise ValueError(f"{label}: n_total must be non-negative, got {n_total}")
+    if n_success < 0:
+        raise ValueError(f"{label}: n_success must be non-negative, got {n_success}")
+    if n_success > n_total:
+        raise ValueError(
+            f"{label}: n_success cannot exceed n_total "
+            f"({n_success} > {n_total})"
+        )
+
+
+def wilson_ci(
+    n_success: int,
+    n_total: int,
+    confidence: float = 0.95,
+) -> tuple[float, float]:
+    """
+    Deterministic Wilson score interval for a binomial extraction rate.
+
+    This is a reporting guardrail: it quantifies uncertainty without changing
+    the measured rate or selecting favourable samples.
+    """
+    validate_count_pair(n_success, n_total, "wilson_ci")
+    if n_total == 0:
+        return 0.0, 0.0
+    # Supported confidence levels keep the implementation dependency-free and
+    # deterministic. 95% is the study default; 99% is useful for stress checks.
+    z_by_conf = {0.90: 1.6448536269514722, 0.95: 1.959963984540054, 0.99: 2.5758293035489004}
+    z = z_by_conf.get(round(confidence, 2))
+    if z is None:
+        raise ValueError("confidence must be one of 0.90, 0.95, or 0.99")
+    phat = n_success / n_total
+    denom = 1.0 + z * z / n_total
+    centre = (phat + z * z / (2.0 * n_total)) / denom
+    margin = (
+        z
+        * math.sqrt((phat * (1.0 - phat) + z * z / (4.0 * n_total)) / n_total)
+        / denom
+    )
+    return max(0.0, centre - margin), min(1.0, centre + margin)
+
+
+def rate_summary(n_success: int, n_total: int, confidence: float = 0.95) -> dict:
+    """Return a JSON-friendly rate plus Wilson CI summary."""
+    validate_count_pair(n_success, n_total, "rate_summary")
+    rate = n_success / max(n_total, 1)
+    lo, hi = wilson_ci(n_success, n_total, confidence)
+    return {
+        "rate": rate,
+        "rate_pct": round(rate * 100.0, 2),
+        "n_success": n_success,
+        "n_total": n_total,
+        f"ci{int(confidence * 100)}": [lo, hi],
+        f"ci{int(confidence * 100)}_pct": [round(lo * 100.0, 2), round(hi * 100.0, 2)],
+    }
+
+
 @dataclass
 class ExtractionMetrics:
     """
@@ -129,12 +188,18 @@ class ExtractionMetrics:
     @property
     def verbatim_rate(self) -> float:
         """Fraction of canaries extracted verbatim (Table 2 metric)."""
+        validate_count_pair(self.n_success_verbatim, self.n_total, "verbatim_rate")
         return self.n_success_verbatim / max(self.n_total, 1)
 
     @property
     def semantic_rate(self) -> float:
         """Fraction extracted semantically (T3 canaries only)."""
+        validate_count_pair(self.n_success_semantic, self.n_total, "semantic_rate")
         return self.n_success_semantic / max(self.n_total, 1)
+
+    def verbatim_summary(self, confidence: float = 0.95) -> dict:
+        """JSON-friendly verbatim rate summary with Wilson CI."""
+        return rate_summary(self.n_success_verbatim, self.n_total, confidence)
 
     def __str__(self) -> str:
         return (
@@ -312,6 +377,8 @@ def evaluate_pass_at_k(
     k: int = 1,
     n_samples: int = 10,
     timeout: float = 10.0,
+    batch_size: int = 32,
+    test_workers: int = 16,
 ) -> UtilityMetrics:
     """
     Evaluate pass@k on a W3 workload.
@@ -323,15 +390,29 @@ def evaluate_pass_at_k(
     n_correct = 0
     n_problems = len(samples)
 
-    for sample in samples:
-        completions = service.complete(sample.prompt, n_samples=n_samples)
-        passed = False
-        for comp in completions[:k]:
-            if _run_tests(sample.prompt, comp.text, sample.metadata, timeout):
-                passed = True
-                break
-        if passed:
-            n_correct += 1
+    if n_samples == 1 and hasattr(service, "complete_many"):
+        prompts = [sample.prompt for sample in samples]
+        all_completions = service.complete_many(prompts, n_samples=1, batch_size=batch_size)
+
+        def check_one(args) -> bool:
+            sample, completions = args
+            if not completions:
+                return False
+            return _run_tests(sample.prompt, completions[0].text, sample.metadata, timeout)
+
+        workers = max(1, min(test_workers, len(samples)))
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            n_correct = sum(int(passed) for passed in pool.map(check_one, zip(samples, all_completions)))
+    else:
+        for sample in samples:
+            completions = service.complete(sample.prompt, n_samples=n_samples)
+            passed = False
+            for comp in completions[:k]:
+                if _run_tests(sample.prompt, comp.text, sample.metadata, timeout):
+                    passed = True
+                    break
+            if passed:
+                n_correct += 1
 
     pass_at_1 = n_correct / max(n_problems, 1)
 
@@ -363,7 +444,7 @@ def _run_tests(
             f.write(full_code)
             fname = f.name
         result = subprocess.run(
-            ["python", fname],
+            [sys.executable, fname],
             timeout=timeout,
             capture_output=True,
         )
