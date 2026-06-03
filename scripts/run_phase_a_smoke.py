@@ -107,7 +107,15 @@ def run_b7(target, ref, panel, *, output_dir: Path, n_samples: int, budget: int)
     return summary
 
 
-def run_w3(target, ref, panel, *, output_dir: Path, max_problems: int) -> dict:
+def run_w3(
+    target,
+    ref,
+    panel,
+    *,
+    output_dir: Path,
+    max_problems: int,
+    runtime_cfg: dict | None = None,
+) -> dict:
     workload = W3RealCompletion(multilingual=False)
     samples = workload.samples()[:max_problems]
 
@@ -116,10 +124,23 @@ def run_w3(target, ref, panel, *, output_dir: Path, max_problems: int) -> dict:
             return samples
 
     kl = KLEstimator(target, ref)
+    runtime_cfg = runtime_cfg or {}
     runtime = LeakCertRuntime(
         service=target,
         kl_estimator=kl,
-        config=RuntimeConfig(query_budget=10_000, refusal_threshold=0.5),
+        config=RuntimeConfig(
+            query_budget=int(runtime_cfg.get("query_budget", 10_000)),
+            refusal_threshold=float(runtime_cfg.get("refusal_threshold", 0.5)),
+            use_learned_refusal=bool(runtime_cfg.get("use_learned_refusal", True)),
+            use_refusal_heuristics=bool(runtime_cfg.get("use_refusal_heuristics", True)),
+            target_refusal_rate=float(runtime_cfg.get("target_refusal_rate", 0.01)),
+            refusal_model_path=runtime_cfg.get("refusal_model_path"),
+            use_suppression=bool(runtime_cfg.get("use_suppression", True)),
+            use_canary_hashes=bool(runtime_cfg.get("use_canary_hashes", False)),
+            use_accounting=bool(runtime_cfg.get("use_accounting", True)),
+            use_rate_limit=bool(runtime_cfg.get("use_rate_limit", True)),
+            use_refusal=bool(runtime_cfg.get("use_refusal", True)),
+        ),
         panel=panel,
     )
     defenses = {
@@ -210,7 +231,14 @@ def main() -> int:
             n_samples=args.b7_samples,
             budget=args.b7_budget,
         ),
-        "w3": run_w3(target, ref, panel, output_dir=output_dir, max_problems=args.w3_problems),
+        "w3": run_w3(
+            target,
+            ref,
+            panel,
+            output_dir=output_dir,
+            max_problems=args.w3_problems,
+            runtime_cfg=cfg.get("runtime", {}),
+        ),
     }
     summary["duration_sec"] = time.time() - started
     (output_dir / "phase_a_smoke_summary.json").write_text(json.dumps(summary, indent=2))

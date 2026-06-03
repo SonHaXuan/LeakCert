@@ -42,7 +42,9 @@ class RuntimeConfig:
     # Uncertainty refusal
     refusal_threshold: float = 0.5
     use_learned_refusal: bool = True
+    use_refusal_heuristics: bool = True
     target_refusal_rate: float = 0.01   # 1% as in study
+    refusal_model_path: Optional[str] = None
 
     # Target suppression
     use_suppression: bool = True
@@ -109,7 +111,15 @@ class LeakCertRuntime:
         self.refusal = UncertaintyRefusal(
             threshold=cfg.refusal_threshold,
             use_learned=cfg.use_learned_refusal,
+            use_heuristics=cfg.use_refusal_heuristics,
         )
+        if cfg.refusal_model_path:
+            try:
+                self.refusal.load(cfg.refusal_model_path)
+                self.refusal.threshold = cfg.refusal_threshold
+                logger.info("Loaded refusal model from %s", cfg.refusal_model_path)
+            except Exception as e:
+                logger.warning("Failed to load refusal model from %s: %s", cfg.refusal_model_path, e)
 
         # Component 4: Target-String Suppression
         self.suppression = TargetStringSuppression(

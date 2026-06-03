@@ -1,0 +1,38 @@
+[
+  {
+    "B": 10,
+    "bernstein_cert_nats": 1552.897,
+    "empirical_mi_nats": 13.655,
+    "extraction_prob_bound": 1.0,
+    "hoeffding_cert_nats": 1843.785,
+    "tightness_ratio": 135.03,
+    "vacuous": true
+  },
+  {
+    "B": 100,
+    "bernstein_cert_nats": 15475.228,
+    "empirical_mi_nats": 136.546,
+    "extraction_prob_bound": 1.0,
+    "hoeffding_cert_nats": 18384.106,
+    "tightness_ratio": 134.636,
+    "vacuous": true
+  },
+  {
+    "B": 1000,
+    "bernstein_cert_nats": 154698.535,
+    "empirical_mi_nats": 1365.463,
+    "extraction_prob_bound": 1.0,
+    "hoeffding_cert_nats": 183787.316,
+    "tightness_ratio": 134.597,
+    "vacuous": true
+  },
+  {
+    "B": 10000,
+    "bernstein_cert_nats": 1546931.613,
+    "empirical_mi_nats": 13654.625,
+    "extraction_prob_bound": 1.0,
+    "hoeffding_cert_nats": 1837819.416,
+    "tightness_ratio": 134.593,
+    "vacuous": true
+  }
+]

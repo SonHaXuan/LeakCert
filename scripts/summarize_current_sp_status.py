@@ -34,6 +34,9 @@ def main() -> int:
         "forbidden_questions": Path("_run_results/lcct_forbidden_questions_20260601_1328/data/forbidden_questions_metadata.json"),
         "forbidden_questions_openrouter_judge": Path("_run_results/forbidden_questions_openrouter_judge_20260601_0650/full/summary.json"),
         "real_input_validation": Path("_run_results/sp2027_real_inputs_20260531_2312/real_input_validation.json"),
+        "local_mps_qwen_phase_a": Path("_run_results/local_mps_qwen_positive_expanded_20260603_070216/phase_a/phase_a_smoke_summary.json"),
+        "local_mps_qwen_phase_b": Path("_run_results/local_mps_qwen_positive_expanded_20260603_070216/phase_b/b2_b3_sweep_summary.json"),
+        "local_mps_qwen_w5": Path("_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/table6_paraphrase_robustness.json"),
     }
     data = {name: load(path) for name, path in paths.items()}
     report = {
@@ -63,6 +66,11 @@ def main() -> int:
             "dp_sweep_full_available": False,
             "multi_model_full_available": False,
             "certificate_non_vacuous": False,
+            "local_mps_qwen_positive_control_available": bool(
+                data["local_mps_qwen_phase_a"]
+                and data["local_mps_qwen_phase_b"]
+                and data["local_mps_qwen_w5"]
+            ),
         },
         "notes": [
             "HCR public examples are supplementary only and do not replace full LCCT leakage.",
@@ -70,6 +78,7 @@ def main() -> int:
             "Authors confirmed the judge construction follows Appendix B of arXiv:2310.03693; exact API/model settings should still be disclosed as reimplementation.",
             "Authors declined release of LCCT user-level leakage artifacts due privacy; full reproduction is unavailable from public artifacts.",
             "Certificate refresh remains vacuous and should be treated as diagnostic, not a main claim.",
+            "Local MPS Qwen positive-control expanded run completed on 2026-06-03 with Phase A, Phase B, and W5 artifacts.",
         ],
     }
     (out / "current_sp_status.json").write_text(json.dumps(report, indent=2))
@@ -88,6 +97,7 @@ def main() -> int:
         "- OpenRouter judge reimplementation completed for 80 forbidden questions; judge construction now matches author-confirmed Appendix B source.",
         "- Certificate refresh completed: still vacuous; diagnostic only.",
         "- LCCT user-level leakage artifact will not be released by authors due privacy; move to comparable reimplementation with explicit limitation.",
+        "- Local MPS Qwen positive-control expanded run completed: Phase A/B smoke plus W5 paraphrase table are available.",
         "",
         "## Claim Readiness",
         "",

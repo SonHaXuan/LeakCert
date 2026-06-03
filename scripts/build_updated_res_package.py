@@ -1,0 +1,310 @@
+#!/usr/bin/env python3
+"""Build a sanitized Updated-Res evidence package for repository upload."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import time
+from pathlib import Path
+from typing import Any
+
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "Updated-Res"
+ART = OUT / "artifacts"
+LOCAL_PREFIX = str(ROOT) + "/"
+USER_HOME = str(Path.home())
+
+
+def read_json(path: str | Path) -> Any:
+    p = ROOT / path
+    if not p.exists():
+        return None
+    return json.loads(p.read_text())
+
+
+def sanitize_text(text: str) -> str:
+    replacements = {
+        LOCAL_PREFIX: "<repo>/",
+        str(ROOT): "<repo>",
+        USER_HOME: "<home>",
+        "Mac.RMIT.EDU.VN": "local-mac",
+        "SP 2027": "submission",
+        "sp2027": "submission",
+        "Current SP Status": "Current Project Status",
+        "SP Claim Checklist": "Claim Checklist",
+        "SP Evaluation": "Evaluation",
+    }
+    for src, dst in replacements.items():
+        text = text.replace(src, dst)
+    text = re.sub(r"OPENROUTER_API_KEY[^\n]*", "OPENROUTER_API_KEY=<redacted>", text)
+    text = re.sub(r"sk-or-v1-[A-Za-z0-9_\-]+", "<redacted-openrouter-key>", text)
+    return text
+
+
+def sanitize_obj(obj: Any) -> Any:
+    if isinstance(obj, str):
+        return sanitize_text(obj)
+    if isinstance(obj, list):
+        return [sanitize_obj(x) for x in obj]
+    if isinstance(obj, dict):
+        return {str(k): sanitize_obj(v) for k, v in obj.items()}
+    return obj
+
+
+def write_text(rel: str, text: str) -> None:
+    p = OUT / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(sanitize_text(text))
+
+
+def write_json(rel: str, obj: Any) -> None:
+    p = OUT / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(sanitize_obj(obj), indent=2, sort_keys=True) + "\n")
+
+
+def copy_sanitized(rel_src: str, rel_dst: str | None = None) -> None:
+    src = ROOT / rel_src
+    if not src.exists():
+        return
+    dst = ART / (rel_dst or rel_src.replace("/", "__"))
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if src.suffix.lower() in {".json"}:
+        write_json(str(dst.relative_to(OUT)), read_json(rel_src))
+    else:
+        dst.write_text(sanitize_text(src.read_text(errors="replace")))
+
+
+def pct(x: float | None) -> str:
+    if x is None:
+        return "n/a"
+    return f"{x:.2f}%"
+
+
+def get_git_commit() -> str:
+    try:
+        return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    except Exception:
+        return "unknown"
+
+
+def get_git_status() -> list[str]:
+    try:
+        out = subprocess.check_output(["git", "status", "--short"], cwd=ROOT, text=True)
+        return [line for line in out.splitlines() if line]
+    except Exception:
+        return []
+
+
+def sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def build_manifest() -> None:
+    rows = []
+    for path in sorted(OUT.rglob("*")):
+        if path.is_file():
+            rows.append(
+                {
+                    "path": str(path.relative_to(OUT)),
+                    "size_bytes": path.stat().st_size,
+                    "sha256": sha256(path),
+                }
+            )
+    write_json("manifest.json", rows)
+
+
+def extract_w5_rows(path: str) -> dict[str, dict[str, float]]:
+    data = read_json(path) or {}
+    out: dict[str, dict[str, float]] = {}
+    for name, row in data.items():
+        if not isinstance(row, dict):
+            continue
+        out[name] = {
+            "w4_rate_pct": float(row.get("w4_extraction_rate", row.get("w4_rate", 0)) * 100)
+            if row.get("w4_extraction_rate", row.get("w4_rate")) is not None
+            else float(row.get("w4_extraction_rate_pct", 0)),
+            "w5_rate_pct": float(row.get("w5_extraction_rate", row.get("w5_rate", 0)) * 100)
+            if row.get("w5_extraction_rate", row.get("w5_rate")) is not None
+            else float(row.get("w5_extraction_rate_pct", 0)),
+        }
+        if "robustness_ratio" in row:
+            out[name]["ratio"] = float(row["robustness_ratio"])
+        elif out[name]["w4_rate_pct"]:
+            out[name]["ratio"] = out[name]["w5_rate_pct"] / out[name]["w4_rate_pct"]
+    return out
+
+
+def main() -> int:
+    if OUT.exists():
+        shutil.rmtree(OUT)
+    OUT.mkdir()
+    ART.mkdir()
+
+    generated = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+    commit = get_git_commit()
+
+    key_paths = {
+        "learned_validation": "_run_results/learnedonly_t095_validation_summary_20260603_1936/learnedonly_t095_validation_summary.md",
+        "bootstrap": "_run_results/bootstrap_w5_evidence_20260603_1934_cpu_bootstrap_learnedonly_seed42_1m/bootstrap_w5_evidence.md",
+        "w3_diagnostic": "_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.md",
+        "qwen_seed_summary": "_run_results/local_mps_qwen_seed42_seed43_summary_20260603_093946/qwen_mps_seed42_seed43_summary.md",
+        "current_status": "_run_results/current_sp_status_20260603_201916/current_sp_status.md",
+        "claim_checklist": "_run_results/sp_claim_checklist_20260601_1650/sp_claim_checklist.md",
+        "real_input_validation": "_run_results/sp2027_real_inputs_20260531_2312/real_input_validation.md",
+        "lcct_author_response": "_run_results/lcct_author_response_20260601_1328/author_response_summary.md",
+    }
+    for label, src in key_paths.items():
+        copy_sanitized(src, f"{label}{Path(src).suffix}")
+
+    json_paths = {
+        "learned_validation_w3_164": "_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json",
+        "learned_validation_w5_seed42": "_run_results/learnedonly_t095_validation_20260603_190245/w5_seed42_t095/w5/table6_paraphrase_robustness.json",
+        "w3_utility_diagnostic": "_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json",
+        "forbidden_questions_judge": "_run_results/forbidden_questions_openrouter_judge_20260601_0650/full/summary.json",
+        "hcr_supplement": "_run_results/hcr_w2_supplement_20260531_2346/w2/w2_lcct_results.json",
+        "certificate_refresh": "_run_results/certificate_refresh_20260531_2349/certificate/table1_certificate.json",
+        "qwen_seed42_w5": "_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/table6_paraphrase_robustness.json",
+        "qwen_seed43_w5": "_run_results/local_mps_qwen_positive_expanded_seed43_20260603_092323/w5/table6_paraphrase_robustness.json",
+        "phase_a_seed42": "_run_results/local_mps_qwen_positive_expanded_20260603_070216/phase_a/phase_a_smoke_summary.json",
+        "phase_b_seed42": "_run_results/local_mps_qwen_positive_expanded_20260603_070216/phase_b/b2_b3_sweep_summary.json",
+        "phase_a_seed43": "_run_results/local_mps_qwen_positive_expanded_seed43_20260603_092323/phase_a/phase_a_smoke_summary.json",
+    }
+    for label, src in json_paths.items():
+        copy_sanitized(src, f"{label}.json")
+
+    w3_diag = read_json("_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json")
+    learned_w3 = read_json("_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json")
+    seed42_w5 = extract_w5_rows("_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/table6_paraphrase_robustness.json")
+    seed43_w5 = extract_w5_rows("_run_results/local_mps_qwen_positive_expanded_seed43_20260603_092323/w5/table6_paraphrase_robustness.json")
+    learned_seed42 = extract_w5_rows("_run_results/learnedonly_t095_validation_20260603_190245/w5_seed42_t095/w5/table6_paraphrase_robustness.json")
+
+    executive = f"""# Updated Results Package
+
+Generated: `{generated}`
+
+Source commit at package generation: `{commit}`
+
+This folder is a sanitized result bundle for writing and auditing. It intentionally excludes:
+
+- local secret files such as `.env` and `*.pem`
+- model checkpoints and large model/tokenizer files
+- local paper PDF/source and venue/timeline metadata
+- raw private data or author/user-level artifacts
+
+## Highest-Signal Findings
+
+1. **W5 leakage reduction is the strongest current empirical result.**
+   The learned-only refusal setting at threshold `0.95` reduces W5 extraction below the B5 content-filter baseline on both seed42 and seed43. The 1M-sample bootstrap comparison gives strong evidence for the reduction.
+
+2. **The original uncalibrated LEAKCERT setting is not the best headline result.**
+   Cross-seed W5 means show original LEAKCERT does not consistently beat B5. The improved learned-only refusal variant is the result worth discussing.
+
+3. **W3 utility weakness is model/checkpoint-driven, not defense-driven.**
+   On the W3-164 diagnostic, B1, B5, and LEAKCERT all achieve `10.98%` pass@1. LEAKCERT refusal is only `0.61%`, so the defense layer is not the main cause of low utility in this setting.
+
+4. **LCCT full training-data extraction cannot be reproduced paper-grade from public artifacts.**
+   The LCCT authors confirmed the forbidden-question CSV is exact, but declined release of user-level extraction artifacts due privacy. The correct path is a comparable reimplementation with explicit limitation.
+
+5. **Certificate results are currently diagnostic, not headline.**
+   Existing certificate runs remain vacuous/non-competitive. A non-vacuous certificate claim still needs improved calibration/checkpoints and likely server/GPU follow-up.
+
+## Best Numbers To Reuse
+
+### Learned-only W5 evidence
+
+| setting | W4 | W5 | note |
+|---|---:|---:|---|
+| learned-only t=0.95 seed43 | 4.91% | 2.50% | strongest W5 reduction |
+| learned-only t=0.95 seed42 | 7.59% | 4.73% | replicated W5 reduction |
+
+Bootstrap comparisons:
+
+| comparison | baseline-method | 95% CI | P(baseline > method) |
+|---|---:|---:|---:|
+| seed43 B5 vs learned-only t=0.95 | 3.214 pp | [1.607, 4.911] | 0.99993 |
+| seed42 B5 vs learned-only t=0.95 | 2.946 pp | [0.982, 4.911] | 0.99787 |
+
+### W3 utility diagnostic
+
+| defense | pass@1 | refusal |
+|---|---:|---:|
+| B1 no defense | 10.98% | 0.00% |
+| B5 content filter | 10.98% | 0.00% |
+| LEAKCERT learned-only t=0.95 | 10.98% | 0.61% |
+
+## Bottom Line
+
+The current package supports a careful small-scale/positive-control claim: learned refusal/accounting can reduce extraction in W4/W5-style settings with minimal additional W3 refusal. It does **not** yet support full-scale claims about DP sweeps, multi-model evaluation, non-vacuous certificates, or full LCCT training-data extraction.
+"""
+    write_text("README.md", executive)
+
+    claim_gap = """# Claim Gap Matrix
+
+| Evaluation item | Current status | Current evidence | Submission risk |
+|---|---|---|---|
+| W1 canary fine-tune | Partial | Positive-control Qwen runs, small panels | Full paper scope needs larger corpus, larger canary set, more panels, more models |
+| W2 LCCT forbidden questions | Ready as reimplementation | Authors confirmed exact 80-question CSV and category order | Judge is reimplemented, not exact private framework |
+| W2 LCCT training-data extraction | Comparable only | Public user-level artifacts unavailable | Must disclose limitation; cannot claim paper-grade reproduction |
+| W3 utility | Diagnostic complete | B1/B5/LEAKCERT all 10.98% on W3-164 | Absolute utility too low for strong headline |
+| W4 extraction | Good small-scale evidence | Seeded Qwen positive-control results | Not full 7,900-prompt scale |
+| W5 paraphrase | Strongest evidence | Learned-only t=0.95 beats B5 across two seeds with bootstrap | Still small/medium scale |
+| B2/B3 sweeps | Partial | Local sweeps exist for temperature/top-p | Not full table/scale |
+| B4 rate limit | Smoke/partial | Local smoke exists | Needs full budget framing |
+| B5 content filter | Covered | Used as main baseline | Learned-only result should compare directly against it |
+| B6 DP-SGD | Not full | DP smoke only | Needs real DP checkpoints for eps={1,2,4,8,16} |
+| B7/B8 adaptive attacks | Partial | B7/Carlini-style smoke and W5 paraphrase evidence | Needs full attack table at target budget |
+| Certificate non-vacuous | Not ready | Current certificate diagnostic/vacuous | Needs repair before headline |
+| Multi-model full | Not ready | No second full checkpoint | Needs server/GPU or equivalent |
+"""
+    write_text("claim_gap_matrix.md", claim_gap)
+
+    machine = {
+        "generated": generated,
+        "source_commit": commit,
+        "git_status_at_generation": get_git_status(),
+        "w3_diagnostic": w3_diag,
+        "learned_w3_threshold_sweep": learned_w3,
+        "w5_seed42": seed42_w5,
+        "w5_seed43": seed43_w5,
+        "w5_learned_seed42": learned_seed42,
+    }
+    write_json("machine_readable_summary.json", machine)
+
+    next_steps = """# Recommended Next Experiments
+
+## Can run locally
+
+1. Generate more bootstrap/confidence intervals for W5 and W3.
+2. Produce error analysis for W3 failures.
+3. Complete comparable LCCT training-data extraction benchmark design.
+4. Run small ablations of refusal/suppression/rate-limit components.
+5. Package figures/tables from existing results.
+
+## Should run on server/GPU
+
+1. Larger W1 fine-tune with real corpus and larger canary set.
+2. DP-SGD checkpoints for eps={1,2,4,8,16}.
+3. Multi-model full evaluation.
+4. W4/W5 full-scale prompt runs.
+5. Certificate recalibration on stronger checkpoints to obtain non-vacuous bounds.
+"""
+    write_text("next_experiments.md", next_steps)
+
+    build_manifest()
+    print(json.dumps({"output_dir": str(OUT), "files": len(list(OUT.rglob('*')))}, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

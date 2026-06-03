@@ -1,0 +1,144 @@
+{
+  "generated": "2026-06-03T22:13:09+0700",
+  "git_status_at_generation": [
+    " M experiments/run_w5_paraphrase.py",
+    " M leakcert/runtime/leakcert_runtime.py",
+    " M leakcert/runtime/refusal.py",
+    " M scripts/run_phase_a_smoke.py",
+    " M scripts/summarize_current_sp_status.py",
+    "?? Updated-Res/",
+    "?? scripts/bootstrap_w5_evidence.py",
+    "?? scripts/build_updated_res_package.py",
+    "?? scripts/run_refusal_threshold_w3_smoke.py",
+    "?? scripts/run_w3_utility_diagnostic.py",
+    "?? scripts/train_refusal_calibrator.py",
+    "?? scripts/train_refusal_from_audits.py"
+  ],
+  "learned_w3_threshold_sweep": {
+    "metadata": {
+      "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",
+      "duration_sec": 50.71570301055908,
+      "hostname": "local-mac",
+      "max_problems": 164,
+      "python": "3.12.12",
+      "timestamp": "2026-06-03T19:03:57+0700"
+    },
+    "rows": {
+      "0.95": {
+        "duration_sec": 43.55593800544739,
+        "latency": {
+          "median": 32815.4011964798,
+          "p99": 39531.381475925446
+        },
+        "n_correct_at_1": 11,
+        "n_problems": 164,
+        "pass_at_1_pct": 6.71,
+        "refusal_rate_pct": 3.05
+      }
+    }
+  },
+  "source_commit": "cd68b9f1015afa6a748ae824690b61be4ab7a1cf",
+  "w3_diagnostic": {
+    "metadata": {
+      "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",
+      "device": "mps",
+      "duration_sec": 64.78406023979187,
+      "hostname": "local-mac",
+      "max_new_tokens": 16,
+      "max_problems": 164,
+      "n_loaded_problems": 164,
+      "python": "3.12.12",
+      "ref_name": "Qwen/Qwen2.5-Coder-0.5B",
+      "target_path": "<repo>/_run_results/safe_real_suite_positive_control_stable_20260528_220342/target_model",
+      "temperature": 0.0,
+      "timestamp": "2026-06-03T20:40:56+0700",
+      "top_p": 1.0
+    },
+    "rows": {
+      "B1_no_defense": {
+        "duration_sec": 12.828243970870972,
+        "n_correct_at_1": 18,
+        "n_problems": 164,
+        "pass_at_1_pct": 10.98
+      },
+      "B5_content_filter": {
+        "duration_sec": 11.70366907119751,
+        "n_correct_at_1": 18,
+        "n_problems": 164,
+        "pass_at_1_pct": 10.98
+      },
+      "LEAKCERT": {
+        "duration_sec": 31.835315227508545,
+        "latency": {
+          "median": 19144.93751525879,
+          "p99": 28899.08984899521
+        },
+        "n_correct_at_1": 18,
+        "n_problems": 164,
+        "pass_at_1_pct": 10.98,
+        "refusal_rate_pct": 0.61
+      }
+    }
+  },
+  "w5_learned_seed42": {
+    "LEAKCERT": {
+      "ratio": 0.6231884057971016,
+      "w4_rate_pct": 759.0,
+      "w5_rate_pct": 473.00000000000006
+    }
+  },
+  "w5_seed42": {
+    "B1_no_defense": {
+      "ratio": 0.9725050916496946,
+      "w4_rate_pct": 982.0,
+      "w5_rate_pct": 955.0000000000001
+    },
+    "B2_temperature_0.5": {
+      "ratio": 0.7935619314205739,
+      "w4_rate_pct": 1429.0,
+      "w5_rate_pct": 1134.0
+    },
+    "B3_top_p_0.7": {
+      "ratio": 0.7355491329479769,
+      "w4_rate_pct": 1384.0,
+      "w5_rate_pct": 1018.0
+    },
+    "B5_content_filter": {
+      "ratio": 0.6144,
+      "w4_rate_pct": 1250.0,
+      "w5_rate_pct": 768.0
+    },
+    "LEAKCERT": {
+      "ratio": 0.8656716417910445,
+      "w4_rate_pct": 938.0000000000001,
+      "w5_rate_pct": 811.9999999999999
+    }
+  },
+  "w5_seed43": {
+    "B1_no_defense": {
+      "ratio": 0.7502799552071668,
+      "w4_rate_pct": 893.0,
+      "w5_rate_pct": 670.0
+    },
+    "B2_temperature_0.5": {
+      "ratio": 0.7924203273040481,
+      "w4_rate_pct": 1161.0,
+      "w5_rate_pct": 919.9999999999999
+    },
+    "B3_top_p_0.7": {
+      "ratio": 0.7072,
+      "w4_rate_pct": 1250.0,
+      "w5_rate_pct": 884.0
+    },
+    "B5_content_filter": {
+      "ratio": 0.5559883154819864,
+      "w4_rate_pct": 1027.0,
+      "w5_rate_pct": 571.0
+    },
+    "LEAKCERT": {
+      "ratio": 0.6595744680851063,
+      "w4_rate_pct": 893.0,
+      "w5_rate_pct": 589.0
+    }
+  }
+}

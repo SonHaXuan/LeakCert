@@ -27,8 +27,8 @@ _RSA_PREFIX_RE = re.compile(r'-----BEGIN (RSA )?PRIVATE KEY-----')
 _LICENCE_RE = re.compile(r'[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}')
 _PRIVATE_RE = re.compile(r'(password|secret|token|key)\s*=\s*["\'][A-Za-z0-9+/]{16,}', re.I)
 
-_HEURISTIC_PATTERNS = [
-    _AWS_KEY_RE, _JWT_RE, _RSA_PREFIX_RE, _LICENCE_RE, _PRIVATE_RE
+_HARD_HEURISTIC_PATTERNS = [
+    _AWS_KEY_RE, _JWT_RE, _RSA_PREFIX_RE, _LICENCE_RE
 ]
 
 
@@ -58,9 +58,11 @@ class UncertaintyRefusal:
         self,
         threshold: float = 0.5,
         use_learned: bool = True,
+        use_heuristics: bool = True,
     ):
         self.threshold = threshold
         self.use_learned = use_learned
+        self.use_heuristics = use_heuristics
         self._classifier = None   # loaded lazily or trained externally
 
     # ------------------------------------------------------------------
@@ -73,7 +75,7 @@ class UncertaintyRefusal:
         Returns a probability that `completion` is a memorised canary.
         """
         # Fast heuristic score
-        heuristic_score = self._heuristic_score(completion)
+        heuristic_score = self._heuristic_score(completion) if self.use_heuristics else 0.0
         if heuristic_score >= 1.0:
             return 1.0
 
@@ -96,9 +98,14 @@ class UncertaintyRefusal:
 
     def _heuristic_score(self, text: str) -> float:
         """Score based on secret-pattern regex matching."""
-        for pattern in _HEURISTIC_PATTERNS:
+        for pattern in _HARD_HEURISTIC_PATTERNS:
             if pattern.search(text):
                 return 1.0
+        # Generic key/token/password assignments are useful weak evidence, but
+        # treating them as certain canaries creates many W3 false refusals for
+        # ordinary code-completion tasks.
+        if _PRIVATE_RE.search(text):
+            return 0.7
         return 0.0
 
     # ------------------------------------------------------------------

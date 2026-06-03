@@ -125,10 +125,27 @@ def main(args):
     )
 
     kl_estimator = KLEstimator(target, ref)
+    runtime_cfg = cfg.get("runtime", {})
     leakcert_runtime = LeakCertRuntime(
         service=target,
         kl_estimator=kl_estimator,
-        config=RuntimeConfig(query_budget=query_budget),
+        config=RuntimeConfig(
+            query_budget=int(runtime_cfg.get("query_budget", query_budget)),
+            kl_budget=runtime_cfg.get("kl_budget"),
+            window_seconds=float(runtime_cfg.get("window_seconds", 10 * 24 * 3600)),
+            refusal_threshold=float(runtime_cfg.get("refusal_threshold", 0.5)),
+            use_learned_refusal=bool(runtime_cfg.get("use_learned_refusal", True)),
+            use_refusal_heuristics=bool(runtime_cfg.get("use_refusal_heuristics", True)),
+            target_refusal_rate=float(runtime_cfg.get("target_refusal_rate", 0.01)),
+            refusal_model_path=runtime_cfg.get("refusal_model_path"),
+            use_suppression=bool(runtime_cfg.get("use_suppression", True)),
+            use_canary_hashes=bool(runtime_cfg.get("use_canary_hashes", False)),
+            use_accounting=bool(runtime_cfg.get("use_accounting", True)),
+            use_rate_limit=bool(runtime_cfg.get("use_rate_limit", True)),
+            use_refusal=bool(runtime_cfg.get("use_refusal", True)),
+            audit_log_path=runtime_cfg.get("audit_log_path"),
+        ),
+        panel=eval_panel,
     )
 
     defences = {
