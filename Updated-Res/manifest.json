@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "sha256": "519eb23debd1313fcdf77892bdf8ab4a2fd8165d607e5483a7b0cfb73e03c362",
+    "sha256": "83a41bc3af4d5104481702655773f907c69d02ae9eee3b986b58f68568c909cb",
     "size_bytes": 2876
   },
   {
@@ -106,12 +106,17 @@
   },
   {
     "path": "machine_readable_summary.json",
-    "sha256": "9aafb0381db0bf6812206a8cb712e00f112e65f5a945b0da81dda6e4c20d43f3",
-    "size_bytes": 4034
+    "sha256": "de7762512e8266395653eed00da321f5b8d1f883274ed183305d205e1f977bbc",
+    "size_bytes": 3646
   },
   {
     "path": "next_experiments.md",
     "sha256": "72a9b964ef8c3d57ba31b61071df8fd8b4951e42c8660a00c8a1d9bc16d1e9c9",
     "size_bytes": 632
+  },
+  {
+    "path": "paper_ready_tables.md",
+    "sha256": "58d31710e657c4809f79f24bf7d036c4a7e52f943c5b3953a81b5c76f546ba4d",
+    "size_bytes": 2106
   }
 ]

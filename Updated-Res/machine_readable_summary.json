@@ -1,18 +1,11 @@
 {
-  "generated": "2026-06-03T22:13:09+0700",
+  "generated": "2026-06-03T22:22:53+0700",
   "git_status_at_generation": [
-    " M experiments/run_w5_paraphrase.py",
-    " M leakcert/runtime/leakcert_runtime.py",
-    " M leakcert/runtime/refusal.py",
-    " M scripts/run_phase_a_smoke.py",
-    " M scripts/summarize_current_sp_status.py",
-    "?? Updated-Res/",
-    "?? scripts/bootstrap_w5_evidence.py",
-    "?? scripts/build_updated_res_package.py",
-    "?? scripts/run_refusal_threshold_w3_smoke.py",
-    "?? scripts/run_w3_utility_diagnostic.py",
-    "?? scripts/train_refusal_calibrator.py",
-    "?? scripts/train_refusal_from_audits.py"
+    " M Updated-Res/README.md",
+    " D Updated-Res/machine_readable_summary.json",
+    " D Updated-Res/manifest.json",
+    " D Updated-Res/next_experiments.md",
+    " M scripts/build_updated_res_package.py"
   ],
   "learned_w3_threshold_sweep": {
     "metadata": {
@@ -37,7 +30,7 @@
       }
     }
   },
-  "source_commit": "cd68b9f1015afa6a748ae824690b61be4ab7a1cf",
+  "source_commit": "9380bc0bd19baadcf6ca74b1588c517e155cdd41",
   "w3_diagnostic": {
     "metadata": {
       "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",
@@ -83,62 +76,62 @@
   "w5_learned_seed42": {
     "LEAKCERT": {
       "ratio": 0.6231884057971016,
-      "w4_rate_pct": 759.0,
-      "w5_rate_pct": 473.00000000000006
+      "w4_rate_pct": 7.59,
+      "w5_rate_pct": 4.73
     }
   },
   "w5_seed42": {
     "B1_no_defense": {
       "ratio": 0.9725050916496946,
-      "w4_rate_pct": 982.0,
-      "w5_rate_pct": 955.0000000000001
+      "w4_rate_pct": 9.82,
+      "w5_rate_pct": 9.55
     },
     "B2_temperature_0.5": {
       "ratio": 0.7935619314205739,
-      "w4_rate_pct": 1429.0,
-      "w5_rate_pct": 1134.0
+      "w4_rate_pct": 14.29,
+      "w5_rate_pct": 11.34
     },
     "B3_top_p_0.7": {
       "ratio": 0.7355491329479769,
-      "w4_rate_pct": 1384.0,
-      "w5_rate_pct": 1018.0
+      "w4_rate_pct": 13.84,
+      "w5_rate_pct": 10.18
     },
     "B5_content_filter": {
       "ratio": 0.6144,
-      "w4_rate_pct": 1250.0,
-      "w5_rate_pct": 768.0
+      "w4_rate_pct": 12.5,
+      "w5_rate_pct": 7.68
     },
     "LEAKCERT": {
-      "ratio": 0.8656716417910445,
-      "w4_rate_pct": 938.0000000000001,
-      "w5_rate_pct": 811.9999999999999
+      "ratio": 0.8656716417910446,
+      "w4_rate_pct": 9.38,
+      "w5_rate_pct": 8.12
     }
   },
   "w5_seed43": {
     "B1_no_defense": {
-      "ratio": 0.7502799552071668,
-      "w4_rate_pct": 893.0,
-      "w5_rate_pct": 670.0
+      "ratio": 0.750279955207167,
+      "w4_rate_pct": 8.93,
+      "w5_rate_pct": 6.7
     },
     "B2_temperature_0.5": {
-      "ratio": 0.7924203273040481,
-      "w4_rate_pct": 1161.0,
-      "w5_rate_pct": 919.9999999999999
+      "ratio": 0.7924203273040482,
+      "w4_rate_pct": 11.61,
+      "w5_rate_pct": 9.2
     },
     "B3_top_p_0.7": {
-      "ratio": 0.7072,
-      "w4_rate_pct": 1250.0,
-      "w5_rate_pct": 884.0
+      "ratio": 0.7071999999999999,
+      "w4_rate_pct": 12.5,
+      "w5_rate_pct": 8.84
     },
     "B5_content_filter": {
       "ratio": 0.5559883154819864,
-      "w4_rate_pct": 1027.0,
-      "w5_rate_pct": 571.0
+      "w4_rate_pct": 10.27,
+      "w5_rate_pct": 5.71
     },
     "LEAKCERT": {
       "ratio": 0.6595744680851063,
-      "w4_rate_pct": 893.0,
-      "w5_rate_pct": 589.0
+      "w4_rate_pct": 8.93,
+      "w5_rate_pct": 5.89
     }
   }
 }
