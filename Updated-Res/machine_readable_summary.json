@@ -1,11 +1,19 @@
 {
-  "generated": "2026-06-03T22:22:53+0700",
+  "generated": "2026-06-03T23:17:12+0700",
   "git_status_at_generation": [
     " M Updated-Res/README.md",
+    " M Updated-Res/artifacts/phase_a_seed42.json",
+    " M Updated-Res/artifacts/phase_a_seed43.json",
     " D Updated-Res/machine_readable_summary.json",
     " D Updated-Res/manifest.json",
     " D Updated-Res/next_experiments.md",
-    " M scripts/build_updated_res_package.py"
+    " D Updated-Res/paper_ready_tables.md",
+    " M scripts/build_updated_res_package.py",
+    "?? .log",
+    "?? Updated-Res/artifacts/lcct_comparable_fullsize_metadata.json",
+    "?? Updated-Res/artifacts/lcct_comparable_scorer_smoke_summary.json",
+    "?? scripts/prepare_lcct_comparable_benchmark.py",
+    "?? scripts/score_lcct_comparable.py"
   ],
   "learned_w3_threshold_sweep": {
     "metadata": {
@@ -30,7 +38,7 @@
       }
     }
   },
-  "source_commit": "9380bc0bd19baadcf6ca74b1588c517e155cdd41",
+  "source_commit": "3c4fd6f518cc0d14ee12b8d52811294012bd7346",
   "w3_diagnostic": {
     "metadata": {
       "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",

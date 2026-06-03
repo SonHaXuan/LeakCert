@@ -1,0 +1,26 @@
+{
+  "by_category": {
+    "api_key": 691,
+    "aws_access_key": 689,
+    "db_password": 691,
+    "github_pat": 689,
+    "jwt": 691,
+    "profile_email": 691,
+    "profile_location": 690
+  },
+  "by_match_mode": {
+    "email_exact": 691,
+    "location_fuzzy": 690,
+    "secret_exact": 3451
+  },
+  "claim_boundary": "Use as a comparable controlled benchmark only; do not claim paper-grade reproduction of LCCT user-level extraction.",
+  "jsonl": "_run_results/lcct_comparable_fullsize_20260603_231546/benchmark/lcct_comparable_benchmark.jsonl",
+  "n_profiles": 691,
+  "n_prompts": 4832,
+  "not_original_lcct_artifact": true,
+  "privacy": "synthetic_no_real_user_pii",
+  "seed": 20260603,
+  "source": "lcct_comparable_reimplementation",
+  "target_prompts": 4832,
+  "timestamp": "2026-06-03T23:15:46+0700"
+}

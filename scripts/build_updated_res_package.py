@@ -44,6 +44,10 @@ def sanitize_text(text: str) -> str:
         text = text.replace(src, dst)
     text = re.sub(r"OPENROUTER_API_KEY[^\n]*", "OPENROUTER_API_KEY=<redacted>", text)
     text = re.sub(r"sk-or-v1-[A-Za-z0-9_\-]+", "<redacted-openrouter-key>", text)
+    text = re.sub(r"AKIA[A-Z0-9]{16}", "<redacted-synthetic-aws-key>", text)
+    text = re.sub(r"ghp_[A-Za-z0-9]{20,}", "<redacted-synthetic-github-token>", text)
+    text = re.sub(r"sk-test-[A-Za-z0-9]{20,}", "<redacted-synthetic-api-key>", text)
+    text = re.sub(r"eyJ[A-Za-z0-9_-]{20,}", "<redacted-synthetic-jwt>", text)
     return text
 
 
@@ -100,6 +104,11 @@ def get_git_status() -> list[str]:
         return [line for line in out.splitlines() if line]
     except Exception:
         return []
+
+
+def latest_dir(pattern: str) -> Path | None:
+    dirs = sorted(path for path in ROOT.glob(pattern) if path.is_dir())
+    return dirs[-1] if dirs else None
 
 
 def sha256(path: Path) -> str:
@@ -188,6 +197,12 @@ def main() -> int:
     }
     for label, src in json_paths.items():
         copy_sanitized(src, f"{label}.json")
+
+    lcct_latest = latest_dir("_run_results/lcct_comparable_fullsize_*")
+    if lcct_latest:
+        rel = lcct_latest.relative_to(ROOT)
+        copy_sanitized(str(rel / "benchmark" / "metadata.json"), "lcct_comparable_fullsize_metadata.json")
+        copy_sanitized(str(rel / "scorer_smoke" / "summary.json"), "lcct_comparable_scorer_smoke_summary.json")
 
     w3_diag = read_json("_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json")
     learned_w3 = read_json("_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json")
@@ -306,6 +321,61 @@ The current package supports a careful small-scale/positive-control claim: learn
 5. Certificate recalibration on stronger checkpoints to obtain non-vacuous bounds.
 """
     write_text("next_experiments.md", next_steps)
+
+    lcct_design = """# LCCT Comparable Reimplementation
+
+## Why This Exists
+
+The original LCCT training-data extraction benchmark depends on user-level artifacts
+that the authors cannot release due privacy concerns. This repository therefore
+implements a **comparable controlled benchmark**, not a paper-grade reproduction
+of the original user-level extraction artifact.
+
+## What Is Implemented
+
+- `scripts/prepare_lcct_comparable_benchmark.py`
+  - creates synthetic GitHub-profile/code-completion extraction prompts
+  - stores controlled ground truth in JSONL
+  - supports full-size comparable generation with `--target-prompts 4832`
+  - marks every row as `synthetic_no_real_user_pii`
+
+- `scripts/score_lcct_comparable.py`
+  - scores completions against the benchmark
+  - supports exact secret/email matching
+  - supports fuzzy location matching by exact location, city subset, or component subset
+  - reports overall and per-category hit rates
+
+## Local Commands
+
+```bash
+OUT=_run_results/lcct_comparable_fullsize_$(date +%Y%m%d_%H%M%S)
+.venv/bin/python scripts/prepare_lcct_comparable_benchmark.py \\
+  --output-dir "$OUT/benchmark" \\
+  --target-prompts 4832 \\
+  --seed 20260603
+
+.venv/bin/python scripts/score_lcct_comparable.py \\
+  --benchmark "$OUT/benchmark/lcct_comparable_benchmark.jsonl" \\
+  --output-dir "$OUT/scorer_smoke" \\
+  --make-mock-completions
+```
+
+## Current Full-Size Smoke
+
+The current full-size local smoke generated `4,832` prompts and verified the
+scorer with deterministic mock completions. The benchmark JSONL itself is not
+stored in this public result package because the synthetic strings intentionally
+look like credentials and may trigger secret-scanning systems. Regenerate it
+locally from the script when needed.
+
+## Safe Claim Wording
+
+> Since the original LCCT user-level extraction artifacts are unavailable for
+> privacy reasons, we evaluate a controlled LCCT-style benchmark with synthetic
+> ground truth. We report this as a comparable reimplementation, not a direct
+> reproduction of the original LCCT training-data extraction artifact.
+"""
+    write_text("lcct_comparable_reimplementation.md", lcct_design)
 
     paper_tables = """# Paper-Ready Result Tables
 

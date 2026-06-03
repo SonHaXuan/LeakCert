@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "sha256": "83a41bc3af4d5104481702655773f907c69d02ae9eee3b986b58f68568c909cb",
+    "sha256": "b9ba83e6fbb47e86555fb8ccd365ac368bd36b17eca60a115f0bedf9094823f5",
     "size_bytes": 2876
   },
   {
@@ -40,6 +40,16 @@
     "size_bytes": 1300
   },
   {
+    "path": "artifacts/lcct_comparable_fullsize_metadata.json",
+    "sha256": "5c55fce9612faa11eacf4f55a1f4898756818587fd3f5ebd7ac54b7b1a1bb8bb",
+    "size_bytes": 802
+  },
+  {
+    "path": "artifacts/lcct_comparable_scorer_smoke_summary.json",
+    "sha256": "61036c16f71425daceddbf8d31e790ad9f15b2206b4ae506e3ee885b00d1e288",
+    "size_bytes": 1481
+  },
+  {
     "path": "artifacts/learned_validation.md",
     "sha256": "1c31b12a07162ae82603e89980a35d1cce99a9fb576266a0425a298515940c33",
     "size_bytes": 1115
@@ -56,13 +66,13 @@
   },
   {
     "path": "artifacts/phase_a_seed42.json",
-    "sha256": "eb3c0b93d962f5337591f154b22b9e7aa35241653abdc3fb82e6727208c8706b",
-    "size_bytes": 192801
+    "sha256": "83a43348caf90e39de7af1a4e9bef99300c0d3c61d4d6142be0a61f220d1259e",
+    "size_bytes": 192746
   },
   {
     "path": "artifacts/phase_a_seed43.json",
-    "sha256": "257d9af4cbb82080e187bb6f702a1a5de76bea0fa9f52f7f0fe8901a097944f7",
-    "size_bytes": 192873
+    "sha256": "970552fe786469ae0aed62eceaade19e4d22d167fb49e155d5401ea05c2e7818",
+    "size_bytes": 192787
   },
   {
     "path": "artifacts/phase_b_seed42.json",
@@ -105,9 +115,14 @@
     "size_bytes": 1694
   },
   {
+    "path": "lcct_comparable_reimplementation.md",
+    "sha256": "4e4a543c5fde88bb165058b955982e22b4aa7477266d26468c0d625d1f15caf5",
+    "size_bytes": 2056
+  },
+  {
     "path": "machine_readable_summary.json",
-    "sha256": "de7762512e8266395653eed00da321f5b8d1f883274ed183305d205e1f977bbc",
-    "size_bytes": 3646
+    "sha256": "3d04c02cbfb367630d0b27a65a24f58e7ca5516734a248217bb81b2e6e6e0209",
+    "size_bytes": 4052
   },
   {
     "path": "next_experiments.md",

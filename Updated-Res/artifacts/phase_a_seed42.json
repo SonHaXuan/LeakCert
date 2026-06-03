@@ -5445,7 +5445,7 @@
       },
       {
         "canary_id": "T1_aws_key_000001",
-        "guess": "AKIAK8PK3YR9OUDOCUZR\"",
+        "guess": "<redacted-synthetic-aws-key>\"",
         "queries_used": 2,
         "success": false
       },
@@ -5457,7 +5457,7 @@
       },
       {
         "canary_id": "T1_jwt_body_000017",
-        "guess": "eyJzdWIiOiI3ZThmODA5NS02MjRjLTY5YjYtYjI0NC00NWE3YjdlNTg0ODEiLCJpYXQiOjE3MDcyODA5OTgsImV",
+        "guess": "<redacted-synthetic-jwt>",
         "queries_used": 2,
         "success": false
       },
