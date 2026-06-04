@@ -1,8 +1,8 @@
 # Updated Results Package
 
-Generated: `2026-06-04T13:24:43+0700`
+Generated: `2026-06-04T19:50:59+0700`
 
-Source commit at package generation: `2db56de71fec53de66679842c36e1748b51dfb1f`
+Source commit at package generation: `b5162935c7d82b3570351b40e6f9c61737ce5bfd`
 
 This folder is a sanitized result bundle for writing and auditing. It intentionally excludes:
 
@@ -14,7 +14,7 @@ This folder is a sanitized result bundle for writing and auditing. It intentiona
 ## Highest-Signal Findings
 
 1. **W5 leakage reduction is the strongest current empirical result.**
-   The learned-only refusal setting at threshold `0.95` reduces W5 extraction below the B5 content-filter baseline on both seed42 and seed43. The 1M-sample bootstrap comparison gives strong evidence for the reduction.
+   The learned-only refusal setting at threshold `0.95` reduces W5 extraction below the B5 content-filter baseline across five seeds. A 500k-sample bootstrap comparison per seed and in aggregate gives strong evidence for the reduction.
 
 2. **The original uncalibrated LEAKCERT setting is not the best headline result.**
    Cross-seed W5 means show original LEAKCERT does not consistently beat B5. The improved learned-only refusal variant is the result worth discussing.

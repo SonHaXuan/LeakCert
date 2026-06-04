@@ -414,6 +414,37 @@ def main() -> int:
             copy_sanitized(str(table.relative_to(ROOT)), f"mac_studio_stable_{seed_name}_w5_table6.json")
             mac_w5_summaries[seed_name] = read_json(table.relative_to(ROOT))
 
+    reviewer_bootstrap_latest = latest_dir("_run_results/reviewer_local_bootstrap_w5_multiseed_*")
+    reviewer_bootstrap = None
+    if reviewer_bootstrap_latest:
+        rel = reviewer_bootstrap_latest.relative_to(ROOT)
+        copy_sanitized(str(rel / "bootstrap_w5_multiseed.json"), "reviewer_bootstrap_w5_multiseed.json")
+        copy_sanitized(str(rel / "bootstrap_w5_multiseed.md"), "reviewer_bootstrap_w5_multiseed.md")
+        reviewer_bootstrap = read_json(rel / "bootstrap_w5_multiseed.json")
+
+    reviewer_w3_error_latest = latest_dir("_run_results/reviewer_local_w3_error_analysis_*")
+    reviewer_w3_error = None
+    if reviewer_w3_error_latest and (reviewer_w3_error_latest / "w3_error_analysis.json").exists():
+        rel = reviewer_w3_error_latest.relative_to(ROOT)
+        copy_sanitized(str(rel / "w3_error_analysis.json"), "reviewer_w3_error_analysis.json")
+        copy_sanitized(str(rel / "w3_error_analysis.md"), "reviewer_w3_error_analysis.md")
+        reviewer_w3_error = read_json(rel / "w3_error_analysis.json")
+
+    reviewer_threshold_latest = latest_dir("_run_results/reviewer_local_w3_threshold_sweep_*")
+    reviewer_threshold = None
+    if reviewer_threshold_latest and (reviewer_threshold_latest / "w3_refusal_threshold_sweep.json").exists():
+        rel = reviewer_threshold_latest.relative_to(ROOT)
+        copy_sanitized(str(rel / "w3_refusal_threshold_sweep.json"), "reviewer_w3_threshold_sweep.json")
+        reviewer_threshold = read_json(rel / "w3_refusal_threshold_sweep.json")
+
+    reviewer_ablation_latest = latest_dir("_run_results/reviewer_local_component_ablation_*")
+    reviewer_ablation = None
+    if reviewer_ablation_latest and (reviewer_ablation_latest / "component_ablation_summary.json").exists():
+        rel = reviewer_ablation_latest.relative_to(ROOT)
+        copy_sanitized(str(rel / "component_ablation_summary.json"), "reviewer_component_ablation_summary.json")
+        copy_sanitized(str(rel / "component_ablation_summary.md"), "reviewer_component_ablation_summary.md")
+        reviewer_ablation = read_json(rel / "component_ablation_summary.json")
+
     w3_diag = read_json("_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json")
     learned_w3 = read_json("_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json")
     seed42_w5 = extract_w5_rows("_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/table6_paraphrase_robustness.json")
@@ -436,7 +467,7 @@ This folder is a sanitized result bundle for writing and auditing. It intentiona
 ## Highest-Signal Findings
 
 1. **W5 leakage reduction is the strongest current empirical result.**
-   The learned-only refusal setting at threshold `0.95` reduces W5 extraction below the B5 content-filter baseline on both seed42 and seed43. The 1M-sample bootstrap comparison gives strong evidence for the reduction.
+   The learned-only refusal setting at threshold `0.95` reduces W5 extraction below the B5 content-filter baseline across five seeds. A 500k-sample bootstrap comparison per seed and in aggregate gives strong evidence for the reduction.
 
 2. **The original uncalibrated LEAKCERT setting is not the best headline result.**
    Cross-seed W5 means show original LEAKCERT does not consistently beat B5. The improved learned-only refusal variant is the result worth discussing.
@@ -489,7 +520,7 @@ The current package supports a careful small-scale/positive-control claim: learn
 | W2 LCCT training-data extraction | Comparable only | Public user-level artifacts unavailable | Must disclose limitation; cannot claim paper-grade reproduction |
 | W3 utility | Diagnostic complete | B1/B5/LEAKCERT all 10.98% on W3-164 | Absolute utility too low for strong headline |
 | W4 extraction | Good small-scale evidence | Seeded Qwen positive-control results | Not full 7,900-prompt scale |
-| W5 paraphrase | Strongest evidence | Learned-only t=0.95 beats B5 across two seeds with bootstrap | Still small/medium scale |
+| W5 paraphrase | Strongest evidence | Learned-only t=0.95 beats B5 across five seeds with bootstrap | Still small/medium scale |
 | B2/B3 sweeps | Partial | Local sweeps exist for temperature/top-p | Not full table/scale |
 | B4 rate limit | Smoke/partial | Local smoke exists | Needs full budget framing |
 | B5 content filter | Covered | Used as main baseline | Learned-only result should compare directly against it |
@@ -516,6 +547,10 @@ The current package supports a careful small-scale/positive-control claim: learn
         "informative_budget_sweeps": informative_summaries,
         "mac_studio_stable_queue": mac_queue_summary,
         "mac_studio_stable_w5": mac_w5_summaries,
+        "reviewer_bootstrap_w5_multiseed": reviewer_bootstrap,
+        "reviewer_w3_error_analysis": reviewer_w3_error,
+        "reviewer_w3_threshold_sweep": reviewer_threshold,
+        "reviewer_component_ablation": reviewer_ablation,
     }
     next_steps = """# Recommended Next Experiments
 
@@ -651,11 +686,72 @@ These are the numbers that are most defensible to reuse in the current draft. Th
     if not mac_w5_summaries:
         paper_tables += "| n/a | n/a | n/a | n/a | n/a | pending |\n"
 
+    paper_tables += "\n## Table G: Reviewer Local Multi-Seed W5 Bootstrap\n\n"
+    paper_tables += "| scope | B5 W5 | LEAKCERT W5 | diff | 95% CI | P(B5 > LEAKCERT) |\n"
+    paper_tables += "|---|---:|---:|---:|---:|---:|\n"
+    if reviewer_bootstrap:
+        for row in reviewer_bootstrap.get("rows", []):
+            ci = row.get("ci95_pct", [0, 0])
+            paper_tables += (
+                f"| seed {row.get('seed')} | {float(row.get('baseline_rate_pct', 0.0)):.3f}% | "
+                f"{float(row.get('method_rate_pct', 0.0)):.3f}% | "
+                f"{float(row.get('baseline_minus_method_pct', 0.0)):.3f} pp | "
+                f"[{float(ci[0]):.3f}, {float(ci[1]):.3f}] | "
+                f"{float(row.get('p_baseline_gt_method', 0.0)):.5f} |\n"
+            )
+        agg = reviewer_bootstrap.get("aggregate", {})
+        ci = agg.get("ci95_pct", [0, 0])
+        paper_tables += (
+            f"| aggregate | {float(agg.get('baseline_rate_pct', 0.0)):.3f}% | "
+            f"{float(agg.get('method_rate_pct', 0.0)):.3f}% | "
+            f"{float(agg.get('baseline_minus_method_pct', 0.0)):.3f} pp | "
+            f"[{float(ci[0]):.3f}, {float(ci[1]):.3f}] | "
+            f"{float(agg.get('p_baseline_gt_method', 0.0)):.5f} |\n"
+        )
+    else:
+        paper_tables += "| n/a | n/a | n/a | n/a | n/a | n/a |\n"
+
+    paper_tables += "\n## Table H: Reviewer Local W3 Threshold Sweep\n\n"
+    paper_tables += "| threshold | pass@1 | refusal | interpretation |\n"
+    paper_tables += "|---:|---:|---:|---|\n"
+    if reviewer_threshold:
+        for threshold, row in sorted(reviewer_threshold.get("rows", {}).items(), key=lambda kv: float(kv[0])):
+            refusal = float(row.get("refusal_rate_pct", 0.0))
+            interpretation = "high refusal" if refusal >= 10.0 else "low refusal"
+            paper_tables += (
+                f"| {threshold} | {float(row.get('pass_at_1_pct', 0.0)):.2f}% | "
+                f"{refusal:.2f}% | {interpretation} |\n"
+            )
+    else:
+        paper_tables += "| n/a | n/a | n/a | pending |\n"
+
+    paper_tables += "\n## Table I: Reviewer Local Component Ablation\n\n"
+    paper_tables += "| variant | W4 extraction | W5 extraction | W5 blocked/replaced | takeaway |\n"
+    paper_tables += "|---|---:|---:|---:|---|\n"
+    if reviewer_ablation:
+        for name, row in reviewer_ablation.get("results", {}).items():
+            w4 = row.get("W4", {})
+            w5 = row.get("W5", {})
+            w4_rate = float(w4.get("extraction", {}).get("rate_pct", 0.0))
+            w5_rate = float(w5.get("extraction", {}).get("rate_pct", 0.0))
+            w5_blocked = float(w5.get("refusal", {}).get("rate_pct", 0.0))
+            if name == "B5_content_filter":
+                takeaway = "baseline"
+            elif name == "LEAKCERT_no_rate_limit":
+                takeaway = "rate limit contributes to W5 reduction"
+            elif name == "LEAKCERT_no_refusal":
+                takeaway = "refusal contributes to W4 reduction"
+            else:
+                takeaway = "similar to full on W5"
+            paper_tables += f"| {name} | {w4_rate:.2f}% | {w5_rate:.2f}% | {w5_blocked:.2f}% | {takeaway} |\n"
+    else:
+        paper_tables += "| n/a | n/a | n/a | n/a | pending |\n"
+
     paper_tables += """
 
 ## Safe Claim Wording
 
-> In a local positive-control evaluation with Qwen2.5-Coder-0.5B, the learned-only LEAKCERT refusal variant reduced W5 paraphrase extraction relative to the B5 content-filter baseline across two seeds. A 1M-sample bootstrap comparison showed B5 exceeded the learned-only method by 2.95 to 3.21 percentage points, with confidence intervals excluding zero. A matched W3 diagnostic showed identical pass@1 for B1, B5, and LEAKCERT, suggesting that the observed utility weakness is checkpoint-driven rather than caused by the defense layer.
+> In a local positive-control evaluation with Qwen2.5-Coder-0.5B, the learned-only LEAKCERT refusal variant reduced W5 paraphrase extraction relative to the B5 content-filter baseline across five seeds. A 500k-sample bootstrap comparison per seed and aggregate comparison showed B5 exceeded the learned-only method by about 3.14 percentage points in aggregate, with confidence intervals excluding zero. A matched W3 diagnostic showed identical pass@1 for B1, B5, and LEAKCERT, suggesting that the observed utility weakness is checkpoint-driven rather than caused by the defense layer.
 
 > Certificate and MI quantities are now treated with an explicit entropy ceiling. Historical raw certificate/MI values that exceed `H(K)` are retained only as diagnostics; reviewer-facing tables must report capped quantities and a pass/fail entropy audit.
 

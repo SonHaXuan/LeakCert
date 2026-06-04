@@ -1,0 +1,284 @@
+{
+  "defenses": {
+    "B1_no_defense": {
+      "duration_sec": 11.359,
+      "n": 164,
+      "n_passed": 18,
+      "n_refused": 0,
+      "pass_at_1_pct": 10.98,
+      "refusal_rate_pct": 0.0,
+      "top_errors": [
+        [
+          "AssertionError",
+          40
+        ],
+        [
+          "SyntaxError: '(' was never closed",
+          23
+        ],
+        [
+          "SyntaxError: '[' was never closed",
+          17
+        ],
+        [
+          "SyntaxError: invalid syntax",
+          11
+        ],
+        [
+          "AssertionError: Error",
+          5
+        ],
+        [
+          "AssertionError: This prints if this assert fails 1 (good for debugging!)",
+          4
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 11)",
+          3
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 18)",
+          3
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 15)",
+          3
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 14)",
+          2
+        ],
+        [
+          "SyntaxError: expected ':'",
+          2
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 12)",
+          2
+        ],
+        [
+          "SyntaxError: expected 'else' after 'if' expression",
+          2
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 28)",
+          2
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 20)",
+          2
+        ],
+        [
+          "ValueError: string must be non-empty",
+          1
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 13)",
+          1
+        ],
+        [
+          "AttributeError: 'float' object has no attribute 'strip'",
+          1
+        ],
+        [
+          "TypeError: unsupported operand type(s) for +: 'int' and 'list'",
+          1
+        ],
+        [
+          "IndexError: list index out of range",
+          1
+        ]
+      ]
+    },
+    "B5_content_filter": {
+      "duration_sec": 9.49,
+      "n": 164,
+      "n_passed": 18,
+      "n_refused": 0,
+      "pass_at_1_pct": 10.98,
+      "refusal_rate_pct": 0.0,
+      "top_errors": [
+        [
+          "AssertionError",
+          40
+        ],
+        [
+          "SyntaxError: '(' was never closed",
+          23
+        ],
+        [
+          "SyntaxError: '[' was never closed",
+          17
+        ],
+        [
+          "SyntaxError: invalid syntax",
+          11
+        ],
+        [
+          "AssertionError: Error",
+          5
+        ],
+        [
+          "AssertionError: This prints if this assert fails 1 (good for debugging!)",
+          4
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 11)",
+          3
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 18)",
+          3
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 15)",
+          3
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 14)",
+          2
+        ],
+        [
+          "SyntaxError: expected ':'",
+          2
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 12)",
+          2
+        ],
+        [
+          "SyntaxError: expected 'else' after 'if' expression",
+          2
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 28)",
+          2
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 20)",
+          2
+        ],
+        [
+          "ValueError: string must be non-empty",
+          1
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 13)",
+          1
+        ],
+        [
+          "AttributeError: 'float' object has no attribute 'strip'",
+          1
+        ],
+        [
+          "TypeError: unsupported operand type(s) for +: 'int' and 'list'",
+          1
+        ],
+        [
+          "IndexError: list index out of range",
+          1
+        ]
+      ]
+    },
+    "LEAKCERT": {
+      "duration_sec": 24.879,
+      "n": 164,
+      "n_passed": 18,
+      "n_refused": 1,
+      "pass_at_1_pct": 10.98,
+      "refusal_rate_pct": 0.61,
+      "top_errors": [
+        [
+          "AssertionError",
+          40
+        ],
+        [
+          "SyntaxError: '(' was never closed",
+          23
+        ],
+        [
+          "SyntaxError: '[' was never closed",
+          16
+        ],
+        [
+          "SyntaxError: invalid syntax",
+          12
+        ],
+        [
+          "AssertionError: Error",
+          5
+        ],
+        [
+          "AssertionError: This prints if this assert fails 1 (good for debugging!)",
+          4
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 11)",
+          3
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 18)",
+          3
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 15)",
+          3
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 14)",
+          2
+        ],
+        [
+          "SyntaxError: expected ':'",
+          2
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 12)",
+          2
+        ],
+        [
+          "SyntaxError: expected 'else' after 'if' expression",
+          2
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 28)",
+          2
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 20)",
+          2
+        ],
+        [
+          "ValueError: string must be non-empty",
+          1
+        ],
+        [
+          "SyntaxError: unterminated string literal (detected at line 13)",
+          1
+        ],
+        [
+          "AttributeError: 'float' object has no attribute 'strip'",
+          1
+        ],
+        [
+          "TypeError: unsupported operand type(s) for +: 'int' and 'list'",
+          1
+        ],
+        [
+          "IndexError: list index out of range",
+          1
+        ]
+      ]
+    }
+  },
+  "metadata": {
+    "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",
+    "device": "mps",
+    "max_new_tokens": 16,
+    "max_problems": 164,
+    "n_samples": 164,
+    "ref_name": "Qwen/Qwen2.5-Coder-0.5B",
+    "target_path": "<repo>/_run_results/safe_real_suite_positive_control_stable_20260528_220342/target_model",
+    "timestamp": "2026-06-04T19:40:08+0700"
+  }
+}
