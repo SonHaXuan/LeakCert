@@ -389,6 +389,19 @@ def main() -> int:
             copy_sanitized(str(rel / "informative_budget_sweep.md"), f"informative_budget_sweep_{key}.md")
             informative_summaries[key] = read_json(rel / "informative_budget_sweep.json")
 
+    mac_queue_latest = latest_dir("_run_results/mac_studio_stable_queue_*")
+    mac_queue_summary = None
+    mac_w5_summaries = {}
+    if mac_queue_latest:
+        rel = mac_queue_latest.relative_to(ROOT)
+        copy_sanitized(str(rel / "metadata.json"), "mac_studio_stable_queue_metadata.json")
+        copy_sanitized(str(rel / "queue_status.json"), "mac_studio_stable_queue_status.json")
+        mac_queue_summary = read_json(rel / "queue_status.json")
+        for table in sorted(mac_queue_latest.glob("w5_seed*/w5/table6_paraphrase_robustness.json")):
+            seed_name = table.parents[1].name
+            copy_sanitized(str(table.relative_to(ROOT)), f"mac_studio_stable_{seed_name}_w5_table6.json")
+            mac_w5_summaries[seed_name] = read_json(table.relative_to(ROOT))
+
     w3_diag = read_json("_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json")
     learned_w3 = read_json("_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json")
     seed42_w5 = extract_w5_rows("_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/table6_paraphrase_robustness.json")
@@ -489,6 +502,8 @@ The current package supports a careful small-scale/positive-control claim: learn
         "lcct_comparable_model_full_live": lcct_model_full_live,
         "entropy_cap_audit": entropy_audit_summary,
         "informative_budget_sweeps": informative_summaries,
+        "mac_studio_stable_queue": mac_queue_summary,
+        "mac_studio_stable_w5": mac_w5_summaries,
     }
     write_json("machine_readable_summary.json", machine)
 
@@ -609,6 +624,24 @@ These are the numbers that are most defensible to reuse in the current draft. Th
 |---|---|---|
 | certificate_refresh | {informative_summaries.get('certificate_refresh', {}).get('any_non_vacuous', 'n/a')} | high-leakage diagnostic; certificate saturates immediately |
 | safe_positive | {informative_summaries.get('safe_positive', {}).get('any_non_vacuous', 'n/a')} | low/zero-KL diagnostic; verifies non-vacuous regime path |
+
+## Table F: Mac Studio Stable W5 Replication Queue
+
+| seed | B5 W4 | B5 W5 | learned-only W4 | learned-only W5 | status |
+|---|---:|---:|---:|---:|---|
+"""
+    for seed_name, table in sorted(mac_w5_summaries.items()):
+        b5 = table.get("B5_content_filter", {}) if isinstance(table, dict) else {}
+        lc = table.get("LEAKCERT", {}) if isinstance(table, dict) else {}
+        paper_tables += (
+            f"| {seed_name.replace('w5_seed', '')} | "
+            f"{b5.get('w4_rate', 'n/a')} | {b5.get('w5_rate', 'n/a')} | "
+            f"{lc.get('w4_rate', 'n/a')} | {lc.get('w5_rate', 'n/a')} | complete |\n"
+        )
+    if not mac_w5_summaries:
+        paper_tables += "| n/a | n/a | n/a | n/a | n/a | pending |\n"
+
+    paper_tables += """
 
 ## Safe Claim Wording
 
