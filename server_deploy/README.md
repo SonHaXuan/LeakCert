@@ -1,121 +1,177 @@
 # LeakCert Server Deployment
 
-This folder contains the minimal server-side workflow for reproducing LeakCert
-smoke and small/medium evaluation runs on a borrowed server.
+This folder is the server-side deployment kit for evaluation runs that need
+more hardware than a local workstation. It is designed for a fresh server where
+the repository is cloned from GitHub but private data/checkpoints are not
+present.
 
-The scripts assume you have cloned the repository on the server:
+The workflow is intentionally gated:
+
+1. clone code;
+2. setup environment;
+3. copy only required private artifacts from the local machine;
+4. verify data/checkpoints;
+5. run smoke;
+6. run small/full server evaluations only after smoke passes;
+7. collect logs/results without copying full model weights unless requested.
+
+Do not commit API keys, SSH keys, raw private data, checkpoints, or paper files.
+
+## 0. Clone On Server
 
 ```bash
 git clone https://github.com/SonHaXuan/LeakCert.git
 cd LeakCert
+git rev-parse HEAD
 ```
 
-Do not put API keys, SSH keys, checkpoints, or large datasets in git. Put them
-in a private run root such as `/data/LeakCert_runs` or `$HOME/LeakCert_runs`.
+Use a private run root with enough disk:
 
-## 0. Preflight
+```bash
+export LEAKCERT_RUN_ROOT=/data/LeakCert_runs
+# fallback if /data does not exist:
+# export LEAKCERT_RUN_ROOT=$HOME/LeakCert_runs
+```
 
-Run this first. It records OS, CPU, RAM, disk, Python, GPU, and CUDA status.
+## 1. Server Preflight
 
 ```bash
 bash server_deploy/run_preflight.sh
 ```
 
-The preflight log is written to:
+This records OS, CPU, RAM, disk, Python, GPU/CUDA, and git commit in
+`_run_logs/server_preflight_<timestamp>.log`.
 
-```text
-_run_logs/server_preflight_<timestamp>.log
-```
+## 2. Setup Environment
 
-## 1. Setup
-
-Use Python 3.11 or 3.12. PyTorch may not support Python 3.14 yet, so the setup
-script intentionally refuses Python 3.14 unless you override it with a working
-interpreter.
+Use Python 3.11 or 3.12. Current PyTorch wheels may not support newer Python
+versions reliably.
 
 ```bash
-export LEAKCERT_RUN_ROOT=/data/LeakCert_runs
-export LEAKCERT_PYTHON=python3.12   # or python3.11
+export LEAKCERT_PYTHON=python3.12
 bash server_deploy/setup_server.sh
 ```
 
-If the server has no `/data`, use:
+The setup creates `.venv/` and cache/result folders under `$LEAKCERT_RUN_ROOT`.
+
+## 3. Prepare Data Bundle On Local Mac
+
+On the local machine that already has the data/checkpoints, copy the example
+manifest and edit only paths that exist locally:
 
 ```bash
-export LEAKCERT_RUN_ROOT=$HOME/LeakCert_runs
+cp server_deploy/required_data_manifest.example.json _run_results/server_data_manifest.json
+$EDITOR _run_results/server_data_manifest.json
 ```
 
-The setup script creates:
+Then create a private bundle:
+
+```bash
+.venv/bin/python server_deploy/make_data_bundle.py \
+  --manifest _run_results/server_data_manifest.json \
+  --output-dir _run_results/server_payloads
+```
+
+The script prints a `.tgz` path. Copy it to the server:
+
+```bash
+scp _run_results/server_payloads/leakcert_server_payload_*.tgz user@server:/tmp/
+```
+
+The bundle should include only the minimum needed artifacts:
+
+- real training corpus JSONL for W1/DP/multi-model;
+- real LCCT/comparable JSONL if running W2;
+- existing target checkpoint if you want to skip W1 training;
+- optional second-model checkpoint;
+- optional per-epsilon DP checkpoints and `dp_accounting.json`;
+- refusal calibrator if the config uses one.
+
+## 4. Install Data Bundle On Server
+
+```bash
+.venv/bin/python server_deploy/install_data_bundle.py \
+  --bundle /tmp/leakcert_server_payload_<timestamp>.tgz \
+  --run-root "$LEAKCERT_RUN_ROOT"
+```
+
+This extracts files into `$LEAKCERT_RUN_ROOT`, verifies SHA-256 hashes, and
+writes:
 
 ```text
-.venv/
-$LEAKCERT_RUN_ROOT/hf_cache/
-$LEAKCERT_RUN_ROOT/results/
-$LEAKCERT_RUN_ROOT/logs/
+$LEAKCERT_RUN_ROOT/configs/server_real_inputs.yaml
+$LEAKCERT_RUN_ROOT/data_bundle_manifest.installed.json
 ```
 
-## 2. Smoke Test
-
-Run a tiny CPU-safe DP smoke before any expensive training:
+## 5. Validate Inputs
 
 ```bash
-bash server_deploy/run_smoke.sh
+.venv/bin/python scripts/validate_sp2027_real_inputs.py \
+  --config "$LEAKCERT_RUN_ROOT/configs/server_real_inputs.yaml" \
+  --output-dir "$LEAKCERT_RUN_ROOT/results/input_validation_$(date +%Y%m%d_%H%M%S)"
 ```
 
-Expected output:
+If this returns code `75`, it found blockers. Do not run full evaluations until
+the blockers are fixed.
 
-- tiny corpus generated
-- DP accounting JSON written
-- checkpoint reload succeeds
-- manifest generated
+## 6. Smoke Before Full
 
-## 3. Small GPU Evaluation
-
-Only run this if preflight shows an NVIDIA GPU and enough disk.
+Always run smoke first:
 
 ```bash
-export LEAKCERT_MODEL=Salesforce/codegen-350M-mono
-export LEAKCERT_ROWS=64
-export LEAKCERT_EPSILONS=2,8,16
-bash server_deploy/run_small_gpu_eval.sh
+export LEAKCERT_CONFIG="$LEAKCERT_RUN_ROOT/configs/server_real_inputs.yaml"
+bash server_deploy/run_server_evaluations.sh smoke
 ```
 
-This runs a modest DP sweep using `scripts/run_local_dp_smoke.py`, then runs
-Phase A and Phase B smoke evaluation against the epsilon-8 checkpoint if it is
-available.
+Smoke mode runs:
 
-Results are written under:
+- resource snapshot;
+- real-input validation;
+- server preflight;
+- tiny DP smoke;
+- W2 real-input smoke if LCCT data and checkpoint exist;
+- W4/W5/certificate smoke if checkpoint exists.
 
-```text
-$LEAKCERT_RUN_ROOT/results/server_small_<timestamp>/
-```
-
-## 4. Collect Results
-
-Create a compact archive containing logs, configs, metrics, and manifests. It
-excludes full model weights by default.
+If smoke passes, run a small server pass:
 
 ```bash
-bash server_deploy/collect_results.sh "$LEAKCERT_RUN_ROOT/results/server_small_<timestamp>"
+bash server_deploy/run_server_evaluations.sh small
 ```
 
-The archive path will be printed. Copy that archive back to your local machine:
+Run full only after small passes and the server budget is acceptable:
 
 ```bash
-scp user@server:/path/to/leakcert_results_<timestamp>.tgz .
+bash server_deploy/run_server_evaluations.sh full
 ```
 
-## Evidence Policy
+## 7. Collect Results
 
-For SP-quality evidence, every run should keep:
+```bash
+bash server_deploy/collect_results.sh "$LEAKCERT_RUN_ROOT/results/<run_dir>"
+```
 
-- git commit hash
-- command line
-- config copy
-- stdout/stderr log
-- metadata JSON
-- metrics JSON/CSV
-- manifest with file sizes and hashes when possible
+By default this archive excludes full model weights (`*.safetensors`, `*.bin`,
+`checkpoint-*`). Copy the archive back to local:
 
-Do not claim paper-grade DP/multi-model results from smoke runs. Smoke runs are
-only for verifying that the environment and pipeline are healthy.
+```bash
+scp user@server:/path/to/leakcert_results_*.tgz .
+```
+
+## Expected Server Tasks
+
+| task | needs private data? | smoke first | full only when |
+|---|---|---|---|
+| W2 LCCT/comparable | yes, LCCT/comparable JSONL + target checkpoint | 50-100 prompts | scorer works and `require_real_lcct=true` |
+| W4/W5 extraction | target checkpoint | small panel, low token cap | W1 checkpoint is stable |
+| W3 utility | optional local dataset/cache | 20 problems | evaluator gives meaningful pass/fail |
+| DP sweep | training corpus + per-epsilon checkpoints or ability to train them | one epsilon tiny run | `dp_accounting.json` exists for each epsilon |
+| multi-model | training corpus + second model/checkpoint | tiny second-model W1/W4/W5 | checkpoint reload and utility smoke pass |
+| certificate calibration | target checkpoint + canary panel | small panel | entropy-capped tables pass audit |
+
+## Cost Controls
+
+- Use `smoke` before `small`, and `small` before `full`.
+- Save logs and manifests after every run.
+- Do not keep large weights on server unless needed for the next step.
+- Archive metrics/config/logs first; copy weights separately only when needed.
+- Prefer resuming from existing checkpoints over retraining.
