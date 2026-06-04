@@ -49,6 +49,7 @@ def main() -> int:
     parser.add_argument("--device", default="mps")
     parser.add_argument("--max-prompts", type=int, default=140)
     parser.add_argument("--max-new-tokens", type=int, default=64)
+    parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--defenses", default="B1,B5,LEAKCERT")
     parser.add_argument("--refusal-model-path")
     parser.add_argument("--refusal-threshold", type=float, default=0.95)
@@ -105,6 +106,7 @@ def main() -> int:
         "max_prompts": args.max_prompts,
         "n_prompts": len(benchmark),
         "max_new_tokens": args.max_new_tokens,
+        "batch_size": args.batch_size,
         "defenses": {},
     }
     for name in defense_names:
@@ -112,13 +114,21 @@ def main() -> int:
         completions = []
         scored = []
         t0 = time.time()
-        for i, row in enumerate(benchmark):
-            result = service.complete(row["prompt"], n_samples=1)
-            text = result[0].text if result else ""
-            completions.append({"id": row["id"], "completion": text})
-            scored.append(score_row(row, text))
-            if (i + 1) % 25 == 0:
-                print(json.dumps({"defense": name, "completed": i + 1, "total": len(benchmark)}), flush=True)
+        batch_size = max(1, args.batch_size)
+        for start in range(0, len(benchmark), batch_size):
+            batch = benchmark[start:start + batch_size]
+            results = service.complete_many(
+                [row["prompt"] for row in batch],
+                n_samples=1,
+                batch_size=batch_size,
+            )
+            for row, result in zip(batch, results):
+                text = result[0].text if result else ""
+                completions.append({"id": row["id"], "completion": text})
+                scored.append(score_row(row, text))
+            completed = min(start + len(batch), len(benchmark))
+            if completed % 25 == 0 or completed == len(benchmark):
+                print(json.dumps({"defense": name, "completed": completed, "total": len(benchmark)}), flush=True)
         ddir = out / name
         ddir.mkdir(exist_ok=True)
         write_jsonl(ddir / "completions.jsonl", completions)
