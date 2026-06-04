@@ -57,6 +57,16 @@ A local model smoke was run on `140` prompts from the full-size comparable bench
 Interpretation: the benchmark/scorer/model path is operational, but this checkpoint does not leak on the sampled comparable LCCT prompts. Use this as readiness evidence, not as a replacement for a stronger LCCT-style extraction run on a leakier or larger checkpoint.
 
 
+## Current Full Model Run
+
+A full-size local model run was completed on `4832` comparable LCCT prompts.
+
+| defense | hits | n | hit rate | refusal | duration |
+|---|---:|---:|---:|---:|---:|
+| B1_no_defense | 0 | 4832 | 0.00% | 0.00% | 48.4 min |
+| B5_content_filter | 0 | 4832 | 0.00% | 0.00% | 38.8 min |
+| LEAKCERT | 0 | 4832 | 0.00% | 0.08% | 41.8 min |
+
 
 ## Safe Claim Wording
 
