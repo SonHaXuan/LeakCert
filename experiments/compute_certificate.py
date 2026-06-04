@@ -114,8 +114,13 @@ def main(args):
     table1 = []
     for B in budgets:
         result = cert_computer.compute(kl_results, B, K, delta)
-        emp_mi = KLEstimator.mine_estimate(kl_values.tolist(), B, K)
-        tightness = result.hoeffding_certificate / emp_mi if emp_mi > 0 else float("inf")
+        raw_emp_mi = KLEstimator.mine_estimate(kl_values.tolist(), B, K)
+        emp_mi = min(raw_emp_mi, result.prior_entropy)
+        tightness = (
+            result.hoeffding_certificate / emp_mi
+            if emp_mi > 0 and raw_emp_mi <= result.prior_entropy + 1e-12
+            else float("inf")
+        )
         is_vac = LeakageCertificate.is_vacuous(result.hoeffding_certificate, K)
         ext_prob = result.extraction_prob_bound
 
@@ -123,7 +128,17 @@ def main(args):
             "B": B,
             "hoeffding_cert_nats": round(result.hoeffding_certificate, 3),
             "bernstein_cert_nats": round(result.bernstein_certificate, 3),
+            "raw_hoeffding_cert_nats": round(result.raw_hoeffding_certificate or result.hoeffding_certificate, 3),
+            "raw_bernstein_cert_nats": round(result.raw_bernstein_certificate or result.bernstein_certificate, 3),
             "empirical_mi_nats": round(emp_mi, 3),
+            "raw_empirical_mi_nats": round(raw_emp_mi, 3),
+            "entropy_H_K_nats": round(result.prior_entropy, 3),
+            "entropy_cap_applied": result.entropy_cap_applied or raw_emp_mi > result.prior_entropy,
+            "entropy_cap_pass": (
+                result.hoeffding_certificate <= result.prior_entropy + 1e-12
+                and result.bernstein_certificate <= result.prior_entropy + 1e-12
+                and emp_mi <= result.prior_entropy + 1e-12
+            ),
             "tightness_ratio": round(tightness, 3) if not math.isinf(tightness) else None,
             "extraction_prob_bound": round(ext_prob, 6) if ext_prob else None,
             "vacuous": is_vac,
@@ -168,15 +183,19 @@ def main(args):
     type_result = cert_computer.compute(kl_results, B_ref, K, delta, prior=type_prior)
 
     table4 = [
-        {"prior": "uniform", "H_K": round(math.log(K), 3),
+        {"prior": "uniform", "H_K": round(uniform_result.prior_entropy, 3),
          "D_KL_prior_unif": 0.0,
-         "cert_nats": round(uniform_result.hoeffding_certificate, 1)},
+         "cert_nats": round(uniform_result.hoeffding_certificate, 1),
+         "raw_cert_nats": round(uniform_result.raw_hoeffding_certificate or uniform_result.hoeffding_certificate, 1),
+         "entropy_cap_applied": uniform_result.entropy_cap_applied},
         {"prior": "type-empirical",
          "H_K": round(type_result.prior_entropy, 3),
          "D_KL_prior_unif": round(
-             type_result.prior_entropy - math.log(K) + uniform_result.hoeffding_certificate
+             type_result.prior_entropy - uniform_result.prior_entropy + uniform_result.hoeffding_certificate
              - type_result.hoeffding_certificate, 3),
-         "cert_nats": round(type_result.hoeffding_certificate, 1)},
+         "cert_nats": round(type_result.hoeffding_certificate, 1),
+         "raw_cert_nats": round(type_result.raw_hoeffding_certificate or type_result.hoeffding_certificate, 1),
+         "entropy_cap_applied": type_result.entropy_cap_applied},
     ]
     logger.info(f"  {'Prior':<20} {'H(K)':>10} {'cert':>10}")
     for row in table4:
@@ -189,13 +208,20 @@ def main(args):
     dp_epsilons = cfg.get("evaluation", {}).get("dp_epsilons", [1, 2, 4, 8, 16])
     table8 = []
     baseline_cert = uniform_result.hoeffding_certificate
+    raw_baseline_cert = uniform_result.raw_hoeffding_certificate or baseline_cert
     for eps in dp_epsilons:
-        dp_bound = LeakageCertificate.dp_composition_certificate(eps, B_ref, K)
+        raw_dp_bound = LeakageCertificate.dp_composition_certificate(eps, B_ref, K)
+        dp_bound = min(raw_dp_bound, uniform_result.prior_entropy)
         ratio = baseline_cert / dp_bound if dp_bound > 0 else float("inf")
         table8.append({
             "dp_epsilon": eps,
             "leakcert_nats": round(baseline_cert, 1),
+            "raw_leakcert_nats": round(raw_baseline_cert, 1),
             "dp_bound_nats": round(dp_bound, 1),
+            "raw_dp_bound_nats": round(raw_dp_bound, 1),
+            "entropy_H_K_nats": round(uniform_result.prior_entropy, 3),
+            "entropy_cap_applied": raw_dp_bound > uniform_result.prior_entropy or raw_baseline_cert > uniform_result.prior_entropy,
+            "entropy_cap_pass": dp_bound <= uniform_result.prior_entropy + 1e-12 and baseline_cert <= uniform_result.prior_entropy + 1e-12,
             "ratio_leakcert_dp": round(ratio, 3),
         })
         logger.info(

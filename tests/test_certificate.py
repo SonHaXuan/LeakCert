@@ -96,12 +96,14 @@ class TestTheorem10:
         assert abs(slack - expected_slack) < 1e-10
 
     def test_certificate_valid_probability(self):
-        """Certificate must upper-bound empirical MI with high probability."""
+        """Raw certificate upper-bounds the KL estimate; public certificate respects H(K)."""
         np.random.seed(42)
         kl_results = make_kl_results(n=1000, kl_val=0.05)
         cert = LeakageCertificate()
         result = cert.compute(kl_results, query_budget=1000, canary_set_size=1000, delta=0.01)
-        assert result.hoeffding_certificate > result.mean_kl * 1000
+        assert result.raw_hoeffding_certificate > result.mean_kl * 1000
+        assert result.hoeffding_certificate <= result.prior_entropy
+        assert result.entropy_cap_applied
 
     def test_compute_returns_all_fields(self):
         np.random.seed(0)

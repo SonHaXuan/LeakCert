@@ -80,6 +80,16 @@ class CertificateResult:
     # The advantage metric is the meaningful comparison across defences.
     certified_extraction_advantage: Optional[float] = None
 
+    # Raw uncapped diagnostics.  Reviewer-facing MI/certificate claims should
+    # use the capped fields above; raw values can exceed H(K) and are useful
+    # only for debugging composition/estimator behavior.
+    raw_population_certificate: Optional[float] = None
+    raw_nonuniform_certificate: Optional[float] = None
+    raw_hoeffding_certificate: Optional[float] = None
+    raw_bernstein_certificate: Optional[float] = None
+    raw_empirical_mi: Optional[float] = None
+    entropy_cap_applied: bool = False
+
     def summary(self) -> str:
         lines = [
             f"LeakCert Certificate  B={self.query_budget}, |K|={self.canary_set_size}, "
@@ -93,7 +103,10 @@ class CertificateResult:
         ]
         if self.empirical_mi is not None:
             lines.append(f"  Empirical MI          : {self.empirical_mi:.3f} nats")
-            lines.append(f"  Tightness ratio       : {self.tightness_ratio:.3f}×")
+            if self.tightness_ratio is not None:
+                lines.append(f"  Tightness ratio       : {self.tightness_ratio:.3f}×")
+        if self.entropy_cap_applied:
+            lines.append("  Entropy cap applied   : yes (raw diagnostics exceed H(K))")
         if self.extraction_prob_bound is not None:
             lines.append(
                 f"  Extraction prob bound : {self.extraction_prob_bound:.4%}"
@@ -193,6 +206,36 @@ class LeakageCertificate:
         )
 
         # ------------------------------------------------------------------
+        # Entropy ceiling: mutual information and any valid certificate on it
+        # must satisfy I(K;Y^B) <= H(K).  Keep raw diagnostics, but expose
+        # capped values for reviewer-facing tables.
+        # ------------------------------------------------------------------
+        entropy_cap = prior_entropy
+        raw_pop_cert = pop_cert
+        raw_nonuniform_cert = nonuniform_cert
+        raw_hoeffding_cert = hoeffding_cert
+        raw_bernstein_cert = bernstein_cert
+        raw_empirical_mi = empirical_mi
+
+        pop_cert = min(pop_cert, entropy_cap)
+        nonuniform_cert = min(nonuniform_cert, entropy_cap)
+        hoeffding_cert = min(hoeffding_cert, entropy_cap)
+        bernstein_cert = min(bernstein_cert, entropy_cap)
+        if empirical_mi is not None:
+            empirical_mi = min(empirical_mi, entropy_cap)
+
+        entropy_cap_applied = any(
+            raw > entropy_cap + 1e-12
+            for raw in [
+                raw_pop_cert,
+                raw_nonuniform_cert,
+                raw_hoeffding_cert,
+                raw_bernstein_cert,
+                raw_empirical_mi if raw_empirical_mi is not None else 0.0,
+            ]
+        )
+
+        # ------------------------------------------------------------------
         # Extraction probability bound (Theorem 17 / Corollary 18)
         # P(K̂=K) ≤ (L̂_B^{1-δ} + 1) / log|K|
         # ------------------------------------------------------------------
@@ -208,7 +251,12 @@ class LeakageCertificate:
         # Tightness ratio
         # ------------------------------------------------------------------
         tightness = None
-        if empirical_mi is not None and empirical_mi > 0:
+        if (
+            empirical_mi is not None
+            and empirical_mi > 0
+            and raw_empirical_mi is not None
+            and raw_empirical_mi <= entropy_cap + 1e-12
+        ):
             tightness = hoeffding_cert / empirical_mi
 
         return CertificateResult(
@@ -231,6 +279,12 @@ class LeakageCertificate:
             tightness_ratio=tightness,
             extraction_prob_bound=extraction_bound,
             certified_extraction_advantage=certified_advantage,
+            raw_population_certificate=raw_pop_cert,
+            raw_nonuniform_certificate=raw_nonuniform_cert,
+            raw_hoeffding_certificate=raw_hoeffding_cert,
+            raw_bernstein_certificate=raw_bernstein_cert,
+            raw_empirical_mi=raw_empirical_mi,
+            entropy_cap_applied=entropy_cap_applied,
         )
 
     # ------------------------------------------------------------------

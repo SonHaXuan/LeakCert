@@ -142,4 +142,3 @@ Do not make any headline certificate-tightness claim until:
 - at least one informative-budget table shows non-vacuous certificates;
 - rate-limit/refusal/suppression ablations are reported separately;
 - theorem statements distinguish uniform and general priors.
-

@@ -584,13 +584,25 @@ class ExperimentRunner:
                 for r in kl_results
             ]
             cert_result = self.cert_computer.compute(clamped, B, K, delta)
-            dp_analytic = LeakageCertificate.dp_composition_certificate(eps, B, K)
+            raw_dp_analytic = LeakageCertificate.dp_composition_certificate(eps, B, K)
+            dp_analytic = min(raw_dp_analytic, cert_result.prior_entropy)
             ratio = cert_result.hoeffding_certificate / dp_analytic
             rows.append({
                 "configuration": f"DP_eps{eps}",
                 "epsilon": eps,
                 "leakcert_cert": cert_result.hoeffding_certificate,
+                "raw_leakcert_cert": cert_result.raw_hoeffding_certificate,
                 "dp_bound": dp_analytic,
+                "raw_dp_bound": raw_dp_analytic,
+                "entropy_H_K_nats": cert_result.prior_entropy,
+                "entropy_cap_applied": (
+                    cert_result.entropy_cap_applied
+                    or raw_dp_analytic > cert_result.prior_entropy
+                ),
+                "entropy_cap_pass": (
+                    cert_result.hoeffding_certificate <= cert_result.prior_entropy + 1e-12
+                    and dp_analytic <= cert_result.prior_entropy + 1e-12
+                ),
                 "ratio": ratio,
             })
             logger.info(
@@ -662,17 +674,31 @@ class ExperimentRunner:
                     # independent of the KL distribution, so MI scales
                     # monotonically with KL magnitude.
                     # Fallback: analytic B*mean(KL) when torch is unavailable.
-                    emp_mi = KLEstimator.mine_estimate(
+                    raw_emp_mi = KLEstimator.mine_estimate(
                         kl_vals, query_budget=B, canary_set_size=actual_n,
                         use_neural=True
                     )
-                    tightness = (cert.hoeffding_certificate / emp_mi
-                                 if emp_mi > 0 else float("inf"))
+                    emp_mi = min(raw_emp_mi, cert.prior_entropy)
+                    tightness = (
+                        cert.hoeffding_certificate / emp_mi
+                        if emp_mi > 0 and raw_emp_mi <= cert.prior_entropy + 1e-12
+                        else None
+                    )
                     rows.append({
                         "B": B, "n": actual_n, "seed": seed,
                         "hoeffding_cert": cert.hoeffding_certificate,
+                        "raw_hoeffding_cert": cert.raw_hoeffding_certificate,
                         "bernstein_cert": cert.bernstein_certificate,
+                        "raw_bernstein_cert": cert.raw_bernstein_certificate,
                         "empirical_mi": emp_mi,
+                        "raw_empirical_mi": raw_emp_mi,
+                        "entropy_H_K_nats": cert.prior_entropy,
+                        "entropy_cap_applied": cert.entropy_cap_applied or raw_emp_mi > cert.prior_entropy,
+                        "entropy_cap_pass": (
+                            cert.hoeffding_certificate <= cert.prior_entropy + 1e-12
+                            and cert.bernstein_certificate <= cert.prior_entropy + 1e-12
+                            and emp_mi <= cert.prior_entropy + 1e-12
+                        ),
                         "empirical_mi_source": "neural_mine_fixed_noise",
                         "tightness_ratio": tightness,
                         "mean_kl": cert.mean_kl,
@@ -681,7 +707,7 @@ class ExperimentRunner:
                     logger.debug(
                         f"E1 n={actual_n} B={B} seed={seed}: "
                         f"cert={cert.hoeffding_certificate:.2f} "
-                        f"emp_mi(neural)={emp_mi:.2f} ratio={tightness:.2f}×"
+                        f"emp_mi(neural,capped)={emp_mi:.2f} ratio={tightness}×"
                     )
 
         # Aggregate: mean ± 95% CI per (B, n) cell
@@ -694,10 +720,10 @@ class ExperimentRunner:
         for (B, n), cell_rows in cell_data.items():
             certs = [r["hoeffding_cert"] for r in cell_rows]
             ratios = [r["tightness_ratio"] for r in cell_rows
-                      if r["tightness_ratio"] != float("inf")]
+                      if r["tightness_ratio"] is not None]
             mean_cert = statistics.mean(certs)
             sd_cert = statistics.stdev(certs) if len(certs) > 1 else 0.0
-            mean_ratio = statistics.mean(ratios) if ratios else float("inf")
+            mean_ratio = statistics.mean(ratios) if ratios else None
             ci_table.append({
                 "B": B, "n": n,
                 "mean_cert": mean_cert,

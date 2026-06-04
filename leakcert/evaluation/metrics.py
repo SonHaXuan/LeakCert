@@ -333,7 +333,8 @@ def compute_tightness_table(
         cert_result = cert_computer.compute(
             kl_results, B, canary_set_size, delta
         )
-        empirical_mi = KLEstimator.mine_estimate(kl_values, B, canary_set_size)
+        raw_empirical_mi = KLEstimator.mine_estimate(kl_values, B, canary_set_size)
+        empirical_mi = min(raw_empirical_mi, cert_result.prior_entropy)
         rows.append(CertificateTightness(
             query_budget=B,
             certificate_nats=cert_result.hoeffding_certificate,

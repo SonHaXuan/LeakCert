@@ -26,9 +26,17 @@ These are the numbers that are most defensible to reuse in the current draft. Th
 | B5 content filter | 10.98% | 18 / 164 | 0.00% |
 | learned-only LEAKCERT t=0.95 | 10.98% | 18 / 164 | 0.61% |
 
+## Table D: Entropy-Cap Audit for Certificate/MI Tables
+
+| checked values | raw violations | capped values | reviewer-facing action |
+|---:|---:|---:|---|
+| 155 | 108 | 108 | use capped certificate/MI columns; raw values are diagnostics only |
+
 ## Safe Claim Wording
 
 > In a local positive-control evaluation with Qwen2.5-Coder-0.5B, the learned-only LEAKCERT refusal variant reduced W5 paraphrase extraction relative to the B5 content-filter baseline across two seeds. A 1M-sample bootstrap comparison showed B5 exceeded the learned-only method by 2.95 to 3.21 percentage points, with confidence intervals excluding zero. A matched W3 diagnostic showed identical pass@1 for B1, B5, and LEAKCERT, suggesting that the observed utility weakness is checkpoint-driven rather than caused by the defense layer.
+
+> Certificate and MI quantities are now treated with an explicit entropy ceiling. Historical raw certificate/MI values that exceed `H(K)` are retained only as diagnostics; reviewer-facing tables must report capped quantities and a pass/fail entropy audit.
 
 ## Claims To Avoid Until Server Runs Finish
 

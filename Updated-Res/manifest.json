@@ -1,13 +1,23 @@
 [
   {
     "path": "README.md",
-    "sha256": "f75bdaeb27dd32ca395bc0751d7fed91b051b1f26668e7a288683e5632bfe629",
+    "sha256": "94cb8006577eb59df744711845f0360322b0bfd8e0ee5f80bbb9760e6266ed09",
     "size_bytes": 2876
   },
   {
     "path": "artifacts/bootstrap.md",
     "sha256": "789354a0225060bec591a9ab2895c6612b87daa79ef68ea9d7377cc4e870a44b",
     "size_bytes": 788
+  },
+  {
+    "path": "artifacts/certificate_entropy_cap_audit.json",
+    "sha256": "523fb7cd27f10e137659661186310479ddf7227817f4fdaf3ac8f19adb919dfc",
+    "size_bytes": 8587
+  },
+  {
+    "path": "artifacts/certificate_entropy_cap_audit.md",
+    "sha256": "1142578a0994997ab161043a78ebfca6be71eb96fce84669f98f932ddf32753b",
+    "size_bytes": 5253
   },
   {
     "path": "artifacts/certificate_refresh.json",
@@ -141,8 +151,8 @@
   },
   {
     "path": "machine_readable_summary.json",
-    "sha256": "9cc9da581b2ad7fadd50a6af9a55b27491cab4f0294cd6c9694bf3943f516d33",
-    "size_bytes": 13468
+    "sha256": "00f3d0ae71adaf8b991f6ca22f09dc4a1928575fc9406e5a60f7492556530f8f",
+    "size_bytes": 22404
   },
   {
     "path": "next_experiments.md",
@@ -151,7 +161,12 @@
   },
   {
     "path": "paper_ready_tables.md",
-    "sha256": "58d31710e657c4809f79f24bf7d036c4a7e52f943c5b3953a81b5c76f546ba4d",
-    "size_bytes": 2106
+    "sha256": "2aa45417a9ad131d182cafb4345a1255e56286db240553323d8fd83631a1b5b8",
+    "size_bytes": 2608
+  },
+  {
+    "path": "reviewer_experiment_plan.md",
+    "sha256": "c269060d80255769f538960f7adcedfc767c107f34c7399ed89e33f485cab9b5",
+    "size_bytes": 7285
   }
 ]
