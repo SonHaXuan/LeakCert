@@ -39,6 +39,15 @@ These are the numbers that are most defensible to reuse in the current draft. Th
 | certificate_refresh | False | high-leakage diagnostic; certificate saturates immediately |
 | safe_positive | True | low/zero-KL diagnostic; verifies non-vacuous regime path |
 
+## Table F: Mac Studio Stable W5 Replication Queue
+
+| seed | B5 W4 | B5 W5 | learned-only W4 | learned-only W5 | status |
+|---|---:|---:|---:|---:|---|
+| 44 | 8.48 | 5.8 | 3.57 | 2.68 | complete |
+| 45 | 11.16 | 6.61 | 5.8 | 2.77 | complete |
+| 46 | 8.04 | 4.11 | 2.68 | 1.52 | complete |
+
+
 ## Safe Claim Wording
 
 > In a local positive-control evaluation with Qwen2.5-Coder-0.5B, the learned-only LEAKCERT refusal variant reduced W5 paraphrase extraction relative to the B5 content-filter baseline across two seeds. A 1M-sample bootstrap comparison showed B5 exceeded the learned-only method by 2.95 to 3.21 percentage points, with confidence intervals excluding zero. A matched W3 diagnostic showed identical pass@1 for B1, B5, and LEAKCERT, suggesting that the observed utility weakness is checkpoint-driven rather than caused by the defense layer.

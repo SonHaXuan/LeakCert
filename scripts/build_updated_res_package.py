@@ -101,7 +101,19 @@ def get_git_commit() -> str:
 def get_git_status() -> list[str]:
     try:
         out = subprocess.check_output(["git", "status", "--short"], cwd=ROOT, text=True)
-        return [line for line in out.splitlines() if line]
+        transient = {
+            "Updated-Res/machine_readable_summary.json",
+            "Updated-Res/manifest.json",
+        }
+        rows = []
+        for line in out.splitlines():
+            if not line:
+                continue
+            path = line[3:] if len(line) > 3 else line
+            if path in transient:
+                continue
+            rows.append(line)
+        return rows
     except Exception:
         return []
 
@@ -505,8 +517,6 @@ The current package supports a careful small-scale/positive-control claim: learn
         "mac_studio_stable_queue": mac_queue_summary,
         "mac_studio_stable_w5": mac_w5_summaries,
     }
-    write_json("machine_readable_summary.json", machine)
-
     next_steps = """# Recommended Next Experiments
 
 ## Can run locally
@@ -806,6 +816,8 @@ Do not make any headline certificate-tightness claim until:
 """
     write_text("reviewer_experiment_plan.md", reviewer_plan)
 
+    machine["git_status_at_generation"] = get_git_status()
+    write_json("machine_readable_summary.json", machine)
     build_manifest()
     print(json.dumps({"output_dir": str(OUT), "files": len(list(OUT.rglob('*')))}, indent=2))
     return 0

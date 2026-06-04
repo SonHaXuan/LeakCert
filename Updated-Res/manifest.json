@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "sha256": "65abd9c3c1abffb0f888ff11269d665625936c1bd0600f7b96680761795cdcff",
+    "sha256": "b16f87e3443e08160ed9ede35802905a54b355813098f0b6cc57581ae58f4eb3",
     "size_bytes": 2876
   },
   {
@@ -115,6 +115,31 @@
     "size_bytes": 2142
   },
   {
+    "path": "artifacts/mac_studio_stable_queue_metadata.json",
+    "sha256": "c0d64bcae722e2c69721786614ec9471b4815fe3fc043babc05f95dcc1b135e5",
+    "size_bytes": 288
+  },
+  {
+    "path": "artifacts/mac_studio_stable_queue_status.json",
+    "sha256": "55c41bc2962eb59f12882de905164137ebe9d7efbc8066cfe678716f5b791dc5",
+    "size_bytes": 1832
+  },
+  {
+    "path": "artifacts/mac_studio_stable_w5_seed44_w5_table6.json",
+    "sha256": "9ca818b651574ccdfb250d770cedcb7600760f002ec5d503327f354f610bea2c",
+    "size_bytes": 4277
+  },
+  {
+    "path": "artifacts/mac_studio_stable_w5_seed45_w5_table6.json",
+    "sha256": "2b211592884cc75d1ec30aa64886afe328aa1fd47f0939b1921f20f2a100874f",
+    "size_bytes": 4299
+  },
+  {
+    "path": "artifacts/mac_studio_stable_w5_seed46_w5_table6.json",
+    "sha256": "c80a5d996a8f22796e2270fa098ad8440dd01cbd22658a9024653472717ffd97",
+    "size_bytes": 4326
+  },
+  {
     "path": "artifacts/phase_a_seed42.json",
     "sha256": "83a43348caf90e39de7af1a4e9bef99300c0d3c61d4d6142be0a61f220d1259e",
     "size_bytes": 192746
@@ -171,8 +196,8 @@
   },
   {
     "path": "machine_readable_summary.json",
-    "sha256": "69310193c815d3c515fe7c6b7a3f46cd2209b091bb54ff74708eb39b06d4323b",
-    "size_bytes": 39165
+    "sha256": "babf33d1cf635bd455b2f5c5134605f9ac3bfb319d92ed68000d487aca460eaf",
+    "size_bytes": 56159
   },
   {
     "path": "next_experiments.md",
@@ -181,8 +206,8 @@
   },
   {
     "path": "paper_ready_tables.md",
-    "sha256": "12d0c72617ad054a3a33e626e18dc93ee7a4d39d1d611318ea6a3a73b6fa9cd5",
-    "size_bytes": 2906
+    "sha256": "3cadd6044fcce5c5d3e7d1419b720da9ee6c1a4bce308e66a7a22687e7ae5de0",
+    "size_bytes": 3197
   },
   {
     "path": "reviewer_experiment_plan.md",

@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "hostname": "local-mac",
+    "output_root": "_run_results/mac_studio_stable_queue_20260604_131501",
+    "platform": "macOS-26.3.1-arm64-arm-64bit",
+    "python": "3.12.12",
+    "queue": "mac_studio_stable",
+    "seeds": [
+      44,
+      45,
+      46
+    ],
+    "timestamp": "2026-06-04T13:15:01+0700"
+  },
+  "steps": [
+    {
+      "output": "_run_results/mac_studio_stable_queue_20260604_131501/entropy_cap_audit",
+      "returncode": 0,
+      "step": "entropy_cap_audit"
+    },
+    {
+      "output": "_run_results/mac_studio_stable_queue_20260604_131501/informative_budget/certificate_refresh",
+      "returncode": 0,
+      "step": "informative_budget_certificate_refresh"
+    },
+    {
+      "output": "_run_results/mac_studio_stable_queue_20260604_131501/informative_budget/certificate_cpu_bounded",
+      "returncode": 0,
+      "step": "informative_budget_certificate_cpu_bounded"
+    },
+    {
+      "output": "_run_results/mac_studio_stable_queue_20260604_131501/informative_budget/safe_positive",
+      "returncode": 0,
+      "step": "informative_budget_safe_positive"
+    },
+    {
+      "output": "_run_results/mac_studio_stable_queue_20260604_131501/informative_budget/safe_tiny",
+      "returncode": 0,
+      "step": "informative_budget_safe_tiny"
+    },
+    {
+      "output": "_run_results/mac_studio_stable_queue_20260604_131501/w5_seed44",
+      "returncode": 0,
+      "step": "w5_seed44"
+    },
+    {
+      "output": "_run_results/mac_studio_stable_queue_20260604_131501/w5_seed45",
+      "returncode": 0,
+      "step": "w5_seed45"
+    },
+    {
+      "output": "_run_results/mac_studio_stable_queue_20260604_131501/w5_seed46",
+      "returncode": 0,
+      "step": "w5_seed46"
+    },
+    {
+      "output": "Updated-Res",
+      "returncode": 0,
+      "step": "build_updated_res_package"
+    }
+  ]
+}

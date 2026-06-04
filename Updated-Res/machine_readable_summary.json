@@ -216,27 +216,16 @@
     "n_values_capped": 108,
     "timestamp": "2026-06-04T10:40:59+0700"
   },
-  "generated": "2026-06-04T10:42:22+0700",
+  "generated": "2026-06-04T13:24:43+0700",
   "git_status_at_generation": [
     " M Updated-Res/README.md",
-    " M Updated-Res/artifacts/certificate_entropy_cap_audit.json",
-    " D Updated-Res/lcct_comparable_reimplementation.md",
-    " D Updated-Res/machine_readable_summary.json",
-    " D Updated-Res/manifest.json",
-    " D Updated-Res/next_experiments.md",
-    " D Updated-Res/paper_ready_tables.md",
-    " D Updated-Res/reviewer_experiment_plan.md",
-    " M experiments/compute_certificate.py",
-    " M leakcert/certificate/certificate.py",
-    " M leakcert/evaluation/runner.py",
+    " M Updated-Res/paper_ready_tables.md",
     " M scripts/build_updated_res_package.py",
-    " M tests/test_certificate.py",
-    " M tests/test_new_components.py",
-    "?? Updated-Res/artifacts/informative_budget_sweep_certificate_refresh.json",
-    "?? Updated-Res/artifacts/informative_budget_sweep_certificate_refresh.md",
-    "?? Updated-Res/artifacts/informative_budget_sweep_safe_positive.json",
-    "?? Updated-Res/artifacts/informative_budget_sweep_safe_positive.md",
-    "?? scripts/run_informative_budget_sweep.py"
+    "?? Updated-Res/artifacts/mac_studio_stable_queue_metadata.json",
+    "?? Updated-Res/artifacts/mac_studio_stable_queue_status.json",
+    "?? Updated-Res/artifacts/mac_studio_stable_w5_seed44_w5_table6.json",
+    "?? Updated-Res/artifacts/mac_studio_stable_w5_seed45_w5_table6.json",
+    "?? Updated-Res/artifacts/mac_studio_stable_w5_seed46_w5_table6.json"
   ],
   "informative_budget_sweeps": {
     "certificate_refresh": {
@@ -1120,7 +1109,707 @@
       }
     }
   },
-  "source_commit": "7490b0410f174e3e5593ba45d759ab55ef1638fa",
+  "mac_studio_stable_queue": {
+    "metadata": {
+      "hostname": "local-mac",
+      "output_root": "_run_results/mac_studio_stable_queue_20260604_131501",
+      "platform": "macOS-26.3.1-arm64-arm-64bit",
+      "python": "3.12.12",
+      "queue": "mac_studio_stable",
+      "seeds": [
+        44,
+        45,
+        46
+      ],
+      "timestamp": "2026-06-04T13:15:01+0700"
+    },
+    "steps": [
+      {
+        "output": "_run_results/mac_studio_stable_queue_20260604_131501/entropy_cap_audit",
+        "returncode": 0,
+        "step": "entropy_cap_audit"
+      },
+      {
+        "output": "_run_results/mac_studio_stable_queue_20260604_131501/informative_budget/certificate_refresh",
+        "returncode": 0,
+        "step": "informative_budget_certificate_refresh"
+      },
+      {
+        "output": "_run_results/mac_studio_stable_queue_20260604_131501/informative_budget/certificate_cpu_bounded",
+        "returncode": 0,
+        "step": "informative_budget_certificate_cpu_bounded"
+      },
+      {
+        "output": "_run_results/mac_studio_stable_queue_20260604_131501/informative_budget/safe_positive",
+        "returncode": 0,
+        "step": "informative_budget_safe_positive"
+      },
+      {
+        "output": "_run_results/mac_studio_stable_queue_20260604_131501/informative_budget/safe_tiny",
+        "returncode": 0,
+        "step": "informative_budget_safe_tiny"
+      },
+      {
+        "output": "_run_results/mac_studio_stable_queue_20260604_131501/w5_seed44",
+        "returncode": 0,
+        "step": "w5_seed44"
+      },
+      {
+        "output": "_run_results/mac_studio_stable_queue_20260604_131501/w5_seed45",
+        "returncode": 0,
+        "step": "w5_seed45"
+      },
+      {
+        "output": "_run_results/mac_studio_stable_queue_20260604_131501/w5_seed46",
+        "returncode": 0,
+        "step": "w5_seed46"
+      },
+      {
+        "output": "Updated-Res",
+        "returncode": 0,
+        "step": "build_updated_res_package"
+      }
+    ]
+  },
+  "mac_studio_stable_w5": {
+    "w5_seed44": {
+      "B5_content_filter": {
+        "per_mode": {
+          "base64_decode": {
+            "ci95": [
+              0.03422658597487419,
+              0.09674807936984983
+            ],
+            "ci95_pct": [
+              3.42,
+              9.67
+            ],
+            "n_success": 13,
+            "n_total": 224,
+            "rate": 0.05803571428571429,
+            "rate_pct": 5.8
+          },
+          "language_variation": {
+            "ci95": [
+              0.03759145389816756,
+              0.10216124512994307
+            ],
+            "ci95_pct": [
+              3.76,
+              10.22
+            ],
+            "n_success": 14,
+            "n_total": 224,
+            "rate": 0.0625,
+            "rate_pct": 6.25
+          },
+          "natural_language": {
+            "ci95": [
+              0.03090736734372486,
+              0.0912892643176125
+            ],
+            "ci95_pct": [
+              3.09,
+              9.13
+            ],
+            "n_success": 12,
+            "n_total": 224,
+            "rate": 0.05357142857142857,
+            "rate_pct": 5.36
+          },
+          "regex_class": {
+            "ci95": [
+              0.04099775488341543,
+              0.10753297782808183
+            ],
+            "ci95_pct": [
+              4.1,
+              10.75
+            ],
+            "n_success": 15,
+            "n_total": 224,
+            "rate": 0.06696428571428571,
+            "rate_pct": 6.7
+          },
+          "template_variation": {
+            "ci95": [
+              0.027638837274390086,
+              0.08577976070356064
+            ],
+            "ci95_pct": [
+              2.76,
+              8.58
+            ],
+            "n_success": 11,
+            "n_total": 224,
+            "rate": 0.049107142857142856,
+            "rate_pct": 4.91
+          }
+        },
+        "ratio": 0.684,
+        "w4_rate": 8.48,
+        "w4_summary": {
+          "ci95": [
+            0.05497303079015267,
+            0.1286698366548911
+          ],
+          "ci95_pct": [
+            5.5,
+            12.87
+          ],
+          "n_success": 19,
+          "n_total": 224,
+          "rate": 0.08482142857142858,
+          "rate_pct": 8.48
+        },
+        "w5_rate": 5.8,
+        "w5_summary": {
+          "ci95": [
+            0.045793444812315724,
+            0.07329938431425964
+          ],
+          "ci95_pct": [
+            4.58,
+            7.33
+          ],
+          "n_success": 65,
+          "n_total": 1120,
+          "rate": 0.05803571428571429,
+          "rate_pct": 5.8
+        }
+      },
+      "LEAKCERT": {
+        "per_mode": {
+          "base64_decode": {
+            "ci95": [
+              0.009571183418320913,
+              0.05117921245931008
+            ],
+            "ci95_pct": [
+              0.96,
+              5.12
+            ],
+            "n_success": 5,
+            "n_total": 224,
+            "rate": 0.022321428571428572,
+            "rate_pct": 2.23
+          },
+          "language_variation": {
+            "ci95": [
+              0.015218359315431907,
+              0.06308810392897234
+            ],
+            "ci95_pct": [
+              1.52,
+              6.31
+            ],
+            "n_success": 7,
+            "n_total": 224,
+            "rate": 0.03125,
+            "rate_pct": 3.12
+          },
+          "natural_language": {
+            "ci95": [
+              0.0007884912109385606,
+              0.024849769933145915
+            ],
+            "ci95_pct": [
+              0.08,
+              2.48
+            ],
+            "n_success": 1,
+            "n_total": 224,
+            "rate": 0.004464285714285714,
+            "rate_pct": 0.45
+          },
+          "regex_class": {
+            "ci95": [
+              0.024427103673717677,
+              0.08021346062084644
+            ],
+            "ci95_pct": [
+              2.44,
+              8.02
+            ],
+            "n_success": 10,
+            "n_total": 224,
+            "rate": 0.044642857142857144,
+            "rate_pct": 4.46
+          },
+          "template_variation": {
+            "ci95": [
+              0.015218359315431907,
+              0.06308810392897234
+            ],
+            "ci95_pct": [
+              1.52,
+              6.31
+            ],
+            "n_success": 7,
+            "n_total": 224,
+            "rate": 0.03125,
+            "rate_pct": 3.12
+          }
+        },
+        "ratio": 0.75,
+        "w4_rate": 3.57,
+        "w4_summary": {
+          "ci95": [
+            0.01820605716805878,
+            0.06887843975973207
+          ],
+          "ci95_pct": [
+            1.82,
+            6.89
+          ],
+          "n_success": 8,
+          "n_total": 224,
+          "rate": 0.03571428571428571,
+          "rate_pct": 3.57
+        },
+        "w5_rate": 2.68,
+        "w5_summary": {
+          "ci95": [
+            0.018826096492617017,
+            0.037980367016645505
+          ],
+          "ci95_pct": [
+            1.88,
+            3.8
+          ],
+          "n_success": 30,
+          "n_total": 1120,
+          "rate": 0.026785714285714284,
+          "rate_pct": 2.68
+        }
+      }
+    },
+    "w5_seed45": {
+      "B5_content_filter": {
+        "per_mode": {
+          "base64_decode": {
+            "ci95": [
+              0.04099775488341543,
+              0.10753297782808183
+            ],
+            "ci95_pct": [
+              4.1,
+              10.75
+            ],
+            "n_success": 15,
+            "n_total": 224,
+            "rate": 0.06696428571428571,
+            "rate_pct": 6.7
+          },
+          "language_variation": {
+            "ci95": [
+              0.05143202575355614,
+              0.12343280800810101
+            ],
+            "ci95_pct": [
+              5.14,
+              12.34
+            ],
+            "n_success": 18,
+            "n_total": 224,
+            "rate": 0.08035714285714286,
+            "rate_pct": 8.04
+          },
+          "natural_language": {
+            "ci95": [
+              0.03759145389816756,
+              0.10216124512994307
+            ],
+            "ci95_pct": [
+              3.76,
+              10.22
+            ],
+            "n_success": 14,
+            "n_total": 224,
+            "rate": 0.0625,
+            "rate_pct": 6.25
+          },
+          "regex_class": {
+            "ci95": [
+              0.03090736734372486,
+              0.0912892643176125
+            ],
+            "ci95_pct": [
+              3.09,
+              9.13
+            ],
+            "n_success": 12,
+            "n_total": 224,
+            "rate": 0.05357142857142857,
+            "rate_pct": 5.36
+          },
+          "template_variation": {
+            "ci95": [
+              0.04099775488341543,
+              0.10753297782808183
+            ],
+            "ci95_pct": [
+              4.1,
+              10.75
+            ],
+            "n_success": 15,
+            "n_total": 224,
+            "rate": 0.06696428571428571,
+            "rate_pct": 6.7
+          }
+        },
+        "ratio": 0.592,
+        "w4_rate": 11.16,
+        "w4_summary": {
+          "ci95": [
+            0.0767479309288632,
+            0.15956313861650034
+          ],
+          "ci95_pct": [
+            7.67,
+            15.96
+          ],
+          "n_success": 25,
+          "n_total": 224,
+          "rate": 0.11160714285714286,
+          "rate_pct": 11.16
+        },
+        "w5_rate": 6.61,
+        "w5_summary": {
+          "ci95": [
+            0.05295602005286591,
+            0.08215330308958992
+          ],
+          "ci95_pct": [
+            5.3,
+            8.22
+          ],
+          "n_success": 74,
+          "n_total": 1120,
+          "rate": 0.06607142857142857,
+          "rate_pct": 6.61
+        }
+      },
+      "LEAKCERT": {
+        "per_mode": {
+          "base64_decode": {
+            "ci95": [
+              0.021279692111532543,
+              0.07458283849964495
+            ],
+            "ci95_pct": [
+              2.13,
+              7.46
+            ],
+            "n_success": 9,
+            "n_total": 224,
+            "rate": 0.04017857142857143,
+            "rate_pct": 4.02
+          },
+          "language_variation": {
+            "ci95": [
+              0.012332698500849157,
+              0.05719573106016845
+            ],
+            "ci95_pct": [
+              1.23,
+              5.72
+            ],
+            "n_success": 6,
+            "n_total": 224,
+            "rate": 0.026785714285714284,
+            "rate_pct": 2.68
+          },
+          "natural_language": {
+            "ci95": [
+              0.004565045268033415,
+              0.03862928324282432
+            ],
+            "ci95_pct": [
+              0.46,
+              3.86
+            ],
+            "n_success": 3,
+            "n_total": 224,
+            "rate": 0.013392857142857142,
+            "rate_pct": 1.34
+          },
+          "regex_class": {
+            "ci95": [
+              0.009571183418320913,
+              0.05117921245931008
+            ],
+            "ci95_pct": [
+              0.96,
+              5.12
+            ],
+            "n_success": 5,
+            "n_total": 224,
+            "rate": 0.022321428571428572,
+            "rate_pct": 2.23
+          },
+          "template_variation": {
+            "ci95": [
+              0.01820605716805878,
+              0.06887843975973207
+            ],
+            "ci95_pct": [
+              1.82,
+              6.89
+            ],
+            "n_success": 8,
+            "n_total": 224,
+            "rate": 0.03571428571428571,
+            "rate_pct": 3.57
+          }
+        },
+        "ratio": 0.477,
+        "w4_rate": 5.8,
+        "w4_summary": {
+          "ci95": [
+            0.03422658597487419,
+            0.09674807936984983
+          ],
+          "ci95_pct": [
+            3.42,
+            9.67
+          ],
+          "n_success": 13,
+          "n_total": 224,
+          "rate": 0.05803571428571429,
+          "rate_pct": 5.8
+        },
+        "w5_rate": 2.77,
+        "w5_summary": {
+          "ci95": [
+            0.019566919808104766,
+            0.039019154147366696
+          ],
+          "ci95_pct": [
+            1.96,
+            3.9
+          ],
+          "n_success": 31,
+          "n_total": 1120,
+          "rate": 0.027678571428571427,
+          "rate_pct": 2.77
+        }
+      }
+    },
+    "w5_seed46": {
+      "B5_content_filter": {
+        "per_mode": {
+          "base64_decode": {
+            "ci95": [
+              0.004565045268033415,
+              0.03862928324282432
+            ],
+            "ci95_pct": [
+              0.46,
+              3.86
+            ],
+            "n_success": 3,
+            "n_total": 224,
+            "rate": 0.013392857142857142,
+            "rate_pct": 1.34
+          },
+          "language_variation": {
+            "ci95": [
+              0.024427103673717677,
+              0.08021346062084644
+            ],
+            "ci95_pct": [
+              2.44,
+              8.02
+            ],
+            "n_success": 10,
+            "n_total": 224,
+            "rate": 0.044642857142857144,
+            "rate_pct": 4.46
+          },
+          "natural_language": {
+            "ci95": [
+              0.027638837274390086,
+              0.08577976070356064
+            ],
+            "ci95_pct": [
+              2.76,
+              8.58
+            ],
+            "n_success": 11,
+            "n_total": 224,
+            "rate": 0.049107142857142856,
+            "rate_pct": 4.91
+          },
+          "regex_class": {
+            "ci95": [
+              0.027638837274390086,
+              0.08577976070356064
+            ],
+            "ci95_pct": [
+              2.76,
+              8.58
+            ],
+            "n_success": 11,
+            "n_total": 224,
+            "rate": 0.049107142857142856,
+            "rate_pct": 4.91
+          },
+          "template_variation": {
+            "ci95": [
+              0.027638837274390086,
+              0.08577976070356064
+            ],
+            "ci95_pct": [
+              2.76,
+              8.58
+            ],
+            "n_success": 11,
+            "n_total": 224,
+            "rate": 0.049107142857142856,
+            "rate_pct": 4.91
+          }
+        },
+        "ratio": 0.511,
+        "w4_rate": 8.04,
+        "w4_summary": {
+          "ci95": [
+            0.05143202575355614,
+            0.12343280800810101
+          ],
+          "ci95_pct": [
+            5.14,
+            12.34
+          ],
+          "n_success": 18,
+          "n_total": 224,
+          "rate": 0.08035714285714286,
+          "rate_pct": 8.04
+        },
+        "w5_rate": 4.11,
+        "w5_summary": {
+          "ci95": [
+            0.0309318644574246,
+            0.05434836619118094
+          ],
+          "ci95_pct": [
+            3.09,
+            5.43
+          ],
+          "n_success": 46,
+          "n_total": 1120,
+          "rate": 0.04107142857142857,
+          "rate_pct": 4.11
+        }
+      },
+      "LEAKCERT": {
+        "per_mode": {
+          "base64_decode": {
+            "ci95": [
+              0.009571183418320913,
+              0.05117921245931008
+            ],
+            "ci95_pct": [
+              0.96,
+              5.12
+            ],
+            "n_success": 5,
+            "n_total": 224,
+            "rate": 0.022321428571428572,
+            "rate_pct": 2.23
+          },
+          "language_variation": {
+            "ci95": [
+              0.006965655209693718,
+              0.04500670698455063
+            ],
+            "ci95_pct": [
+              0.7,
+              4.5
+            ],
+            "n_success": 4,
+            "n_total": 224,
+            "rate": 0.017857142857142856,
+            "rate_pct": 1.79
+          },
+          "natural_language": {
+            "ci95": [
+              0.004565045268033415,
+              0.03862928324282432
+            ],
+            "ci95_pct": [
+              0.46,
+              3.86
+            ],
+            "n_success": 3,
+            "n_total": 224,
+            "rate": 0.013392857142857142,
+            "rate_pct": 1.34
+          },
+          "regex_class": {
+            "ci95": [
+              0.0024519610273981245,
+              0.03196433380007298
+            ],
+            "ci95_pct": [
+              0.25,
+              3.2
+            ],
+            "n_success": 2,
+            "n_total": 224,
+            "rate": 0.008928571428571428,
+            "rate_pct": 0.89
+          },
+          "template_variation": {
+            "ci95": [
+              0.004565045268033415,
+              0.03862928324282432
+            ],
+            "ci95_pct": [
+              0.46,
+              3.86
+            ],
+            "n_success": 3,
+            "n_total": 224,
+            "rate": 0.013392857142857142,
+            "rate_pct": 1.34
+          }
+        },
+        "ratio": 0.567,
+        "w4_rate": 2.68,
+        "w4_summary": {
+          "ci95": [
+            0.012332698500849157,
+            0.05719573106016845
+          ],
+          "ci95_pct": [
+            1.23,
+            5.72
+          ],
+          "n_success": 6,
+          "n_total": 224,
+          "rate": 0.026785714285714284,
+          "rate_pct": 2.68
+        },
+        "w5_rate": 1.52,
+        "w5_summary": {
+          "ci95": [
+            0.009498092681623787,
+            0.024173435026922534
+          ],
+          "ci95_pct": [
+            0.95,
+            2.42
+          ],
+          "n_success": 17,
+          "n_total": 1120,
+          "rate": 0.015178571428571428,
+          "rate_pct": 1.52
+        }
+      }
+    }
+  },
+  "source_commit": "2db56de71fec53de66679842c36e1748b51dfb1f",
   "w3_diagnostic": {
     "metadata": {
       "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",
