@@ -4,16 +4,16 @@ Leakage certificate computation.
 Implements the five core theorems from Section 3 of the study:
 
   Theorem 5  : Query-budget leakage upper bound (uniform prior)
-               L_B ≤ B · D_KL(p_K ‖ q_K) + log|K|
+               L_B ≤ min{B · D_KL(p_K ‖ q_K), log|K|}
 
   Theorem 7  : Non-uniform prior generalisation
-               L_B ≤ B · E_π[D_KL(p_k ‖ q_k)] + H(K)
+               L_B ≤ min{B · E_π[D_KL(p_k ‖ q_k)], H(K)}
 
   Theorem 10 : Black-box Hoeffding concentration
-               L̂_B^{1-δ} = B(D̂_KL_n + κ_max √(log(2/δ)/(2n))) + log|K|
+               L̂_B^{1-δ} = min{B(D̂_KL_n + κ_max √(log(2/δ)/(2n))), H(K)}
 
   Theorem 13 : MI-surrogate Bernstein concentration (tighter for small σ²)
-               L̂_B^{1-δ} = B(D̂_KL_n + σ√(2log(2/δ)/n)) + H(K)
+               L̂_B^{1-δ} = min{B(D̂_KL_n + σ√(2log(2/δ)/n)), H(K)}
 
   Theorem 17 : Adaptive-attacker extraction probability bound
                P(K̂=K) ≤ (L̂_B^{1-δ} + 1) / log|K|
@@ -46,8 +46,8 @@ class CertificateResult:
     delta: float                        # δ
 
     # Theorem 5 / 7 (population)
-    population_certificate: float       # B · D_KL^max + log|K|   (Theorem 5)
-    nonuniform_certificate: float       # B · E_π[D_KL] + H(K)    (Theorem 7)
+    population_certificate: float       # capped B · D_KL^max     (Theorem 5)
+    nonuniform_certificate: float       # capped B · E_π[D_KL]    (Theorem 7)
 
     # Theorem 10 (Hoeffding concentration)
     hoeffding_certificate: float        # L̂_B^{1-δ} (Theorem 10)
@@ -172,13 +172,13 @@ class LeakageCertificate:
 
         # ------------------------------------------------------------------
         # Theorem 5 (population upper bound, uniform prior)
-        # L_B ≤ B · D_KL^max + log|K|
+        # L_B ≤ B · D_KL^max, capped later by H(K)
         # ------------------------------------------------------------------
         pop_cert = self._theorem5(B, kappa_max, K)
 
         # ------------------------------------------------------------------
         # Theorem 7 (non-uniform prior)
-        # L_B ≤ B · E_π[D_KL] + H(K)
+        # L_B ≤ B · E_π[D_KL], capped later by H(K)
         # ------------------------------------------------------------------
         if prior is None:
             prior = [1.0 / n] * n
@@ -190,7 +190,7 @@ class LeakageCertificate:
 
         # ------------------------------------------------------------------
         # Theorem 10 (Hoeffding concentration, black-box)
-        # L̂_B^{1-δ} = B(D̂_KL_n + κ_max √(log(2/δ)/(2n))) + log|K|
+        # L̂_B^{1-δ} = B(D̂_KL_n + κ_max √(log(2/δ)/(2n))), capped by H(K)
         # ------------------------------------------------------------------
         hoeffding_slack, hoeffding_cert = self._theorem10(
             B, mean_kl, kappa_max, n, K, delta
@@ -198,7 +198,7 @@ class LeakageCertificate:
 
         # ------------------------------------------------------------------
         # Theorem 13 (Bernstein / MI-surrogate, tighter)
-        # L̂_B^{1-δ} = B(D̂_KL_n + σ√(2log(2/δ)/n)) + H(K)
+        # L̂_B^{1-δ} = B(D̂_KL_n + σ√(2log(2/δ)/n)), capped by H(K)
         # ------------------------------------------------------------------
         sigma = std_kl   # empirical std as σ estimate (Assumption 12)
         bernstein_slack, bernstein_cert = self._theorem13(
@@ -294,23 +294,23 @@ class LeakageCertificate:
     @staticmethod
     def _theorem5(B: int, kl_max: float, K: int) -> float:
         """
-        Theorem 5: L_B(M_θ, A) ≤ B · D_KL(p_K ‖ q_K) + log|K|
+        Theorem 5: L_B(M_θ, A) ≤ B · D_KL(p_K ‖ q_K)
 
         The per-query KL upper bound comes from the data-processing inequality
-        applied to the chain rule for mutual information.  The log|K| term is
-        a Fano correction for the maximum entropy of the uniform prior on K.
+        applied to the chain rule for mutual information. The entropy ceiling
+        min{·, H(K)} is applied in compute().
         """
-        return B * kl_max + math.log(K)
+        return B * kl_max
 
     @staticmethod
     def _theorem7(B: int, weighted_kl: float, prior_entropy: float) -> float:
         """
-        Theorem 7: L_B ≤ B · E_π[D_KL(p_k ‖ q_k)] + H(K)
+        Theorem 7: L_B ≤ B · E_π[D_KL(p_k ‖ q_k)]
 
-        Non-uniform prior generalisation. H(K) = -Σ π(k) log π(k) is tighter
-        than log|K| when the prior is concentrated (low entropy).
+        Non-uniform prior generalisation. H(K) = -Σ π(k) log π(k) is applied
+        as the entropy ceiling in compute().
         """
-        return B * weighted_kl + prior_entropy
+        return B * weighted_kl
 
     @staticmethod
     def _theorem10(
@@ -318,13 +318,13 @@ class LeakageCertificate:
     ) -> tuple[float, float]:
         """
         Theorem 10 (Hoeffding concentration):
-            L̂_B^{1-δ} = B(D̂_KL_n + κ_max √(log(2/δ)/(2n))) + log|K|
+            L̂_B^{1-δ} = B(D̂_KL_n + κ_max √(log(2/δ)/(2n)))
 
         The certificate upper-bounds L_B with probability ≥ 1-δ.
         The slack is κ_max · √(log(2/δ)/(2n)).
         """
         slack = kappa_max * math.sqrt(math.log(2.0 / delta) / (2.0 * n))
-        cert = B * (mean_kl + slack) + math.log(K)
+        cert = B * (mean_kl + slack)
         return slack, cert
 
     @staticmethod
@@ -338,13 +338,13 @@ class LeakageCertificate:
     ) -> tuple[float, float]:
         """
         Theorem 13 (Bernstein-style concentration, MI-surrogate):
-            L̂_B^{1-δ} = B(D̂_KL_n + σ√(2log(2/δ)/n)) + H(K)
+            L̂_B^{1-δ} = B(D̂_KL_n + σ√(2log(2/δ)/n))
 
         Uses the bounded variance assumption (Assumption 12) for a tighter
         O(n^{-1/2}) convergence rate with a Bernstein constant σ instead of κ_max.
         """
         slack = sigma * math.sqrt(2.0 * math.log(2.0 / delta) / n)
-        cert = B * (mean_kl + slack) + prior_entropy
+        cert = B * (mean_kl + slack)
         return slack, cert
 
     @staticmethod
@@ -425,8 +425,8 @@ class LeakageCertificate:
     ) -> float:
         """
         Analytic DP bound for a (ε,δ)-DP model (Section 5.7):
-            I(K; Y^B) ≤ B · ε²/2     (Rényi DP composition)
+            I(K; Y^B) ≤ min{B · ε²/2, H(K)}     (Rényi DP composition + entropy cap)
 
         Used for comparison with LEAKCERT in Table 8.
         """
-        return query_budget * (epsilon ** 2) / 2.0 + math.log(canary_set_size)
+        return min(query_budget * (epsilon ** 2) / 2.0, math.log(canary_set_size))

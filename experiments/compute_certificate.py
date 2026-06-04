@@ -210,7 +210,7 @@ def main(args):
     baseline_cert = uniform_result.hoeffding_certificate
     raw_baseline_cert = uniform_result.raw_hoeffding_certificate or baseline_cert
     for eps in dp_epsilons:
-        raw_dp_bound = LeakageCertificate.dp_composition_certificate(eps, B_ref, K)
+        raw_dp_bound = B_ref * (eps ** 2) / 2.0
         dp_bound = min(raw_dp_bound, uniform_result.prior_entropy)
         ratio = baseline_cert / dp_bound if dp_bound > 0 else float("inf")
         table8.append({

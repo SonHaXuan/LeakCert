@@ -107,12 +107,15 @@ def get_git_status() -> list[str]:
 
 
 def latest_dir(pattern: str) -> Path | None:
-    dirs = sorted(path for path in ROOT.glob(pattern) if path.is_dir())
+    dirs = sorted((path for path in ROOT.glob(pattern) if path.is_dir()), key=lambda p: p.stat().st_mtime)
     return dirs[-1] if dirs else None
 
 
 def latest_completed_dir(pattern: str, required_file: str = "summary.json") -> Path | None:
-    dirs = sorted(path for path in ROOT.glob(pattern) if path.is_dir() and (path / required_file).exists())
+    dirs = sorted(
+        (path for path in ROOT.glob(pattern) if path.is_dir() and (path / required_file).exists()),
+        key=lambda p: p.stat().st_mtime,
+    )
     return dirs[-1] if dirs else None
 
 
@@ -376,6 +379,16 @@ def main() -> int:
         copy_sanitized(str(rel / "certificate_entropy_cap_audit.md"), "certificate_entropy_cap_audit.md")
         entropy_audit_summary = read_json(rel / "certificate_entropy_cap_audit.json")
 
+    informative_sweep_latest = latest_dir("_run_results/informative_budget_sweep_*")
+    informative_summaries = {}
+    if informative_sweep_latest:
+        for child in sorted(p for p in informative_sweep_latest.iterdir() if p.is_dir()):
+            rel = child.relative_to(ROOT)
+            key = child.name
+            copy_sanitized(str(rel / "informative_budget_sweep.json"), f"informative_budget_sweep_{key}.json")
+            copy_sanitized(str(rel / "informative_budget_sweep.md"), f"informative_budget_sweep_{key}.md")
+            informative_summaries[key] = read_json(rel / "informative_budget_sweep.json")
+
     w3_diag = read_json("_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json")
     learned_w3 = read_json("_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json")
     seed42_w5 = extract_w5_rows("_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/table6_paraphrase_robustness.json")
@@ -475,6 +488,7 @@ The current package supports a careful small-scale/positive-control claim: learn
         "lcct_comparable_model_full": lcct_model_full_summary,
         "lcct_comparable_model_full_live": lcct_model_full_live,
         "entropy_cap_audit": entropy_audit_summary,
+        "informative_budget_sweeps": informative_summaries,
     }
     write_json("machine_readable_summary.json", machine)
 
@@ -588,6 +602,13 @@ These are the numbers that are most defensible to reuse in the current draft. Th
 | checked values | raw violations | capped values | reviewer-facing action |
 |---:|---:|---:|---|
 | {entropy_audit_summary.get('n_checked_values', 'n/a') if entropy_audit_summary else 'n/a'} | {entropy_audit_summary.get('n_raw_violations', 'n/a') if entropy_audit_summary else 'n/a'} | {entropy_audit_summary.get('n_values_capped', 'n/a') if entropy_audit_summary else 'n/a'} | use capped certificate/MI columns; raw values are diagnostics only |
+
+## Table E: Informative-Budget Pilot
+
+| KL source | any non-vacuous capped certificate | interpretation |
+|---|---|---|
+| certificate_refresh | {informative_summaries.get('certificate_refresh', {}).get('any_non_vacuous', 'n/a')} | high-leakage diagnostic; certificate saturates immediately |
+| safe_positive | {informative_summaries.get('safe_positive', {}).get('any_non_vacuous', 'n/a')} | low/zero-KL diagnostic; verifies non-vacuous regime path |
 
 ## Safe Claim Wording
 

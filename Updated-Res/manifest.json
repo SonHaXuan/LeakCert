@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "sha256": "94cb8006577eb59df744711845f0360322b0bfd8e0ee5f80bbb9760e6266ed09",
+    "sha256": "65abd9c3c1abffb0f888ff11269d665625936c1bd0600f7b96680761795cdcff",
     "size_bytes": 2876
   },
   {
@@ -11,7 +11,7 @@
   },
   {
     "path": "artifacts/certificate_entropy_cap_audit.json",
-    "sha256": "523fb7cd27f10e137659661186310479ddf7227817f4fdaf3ac8f19adb919dfc",
+    "sha256": "0770793a436b8a30cc9113a0cfb6d76dda540d3dd3bf2f9e8d007b8d8c417d29",
     "size_bytes": 8587
   },
   {
@@ -43,6 +43,26 @@
     "path": "artifacts/hcr_supplement.json",
     "sha256": "fa9caf08bb92cc29ec75232690ab3ed3a49306e5affdcfe2840efbee1662be20",
     "size_bytes": 1068
+  },
+  {
+    "path": "artifacts/informative_budget_sweep_certificate_refresh.json",
+    "sha256": "d6c9c729adbdae627a2ce119ac919076e803da30c7646f8aeaf6234e74fe83d5",
+    "size_bytes": 8106
+  },
+  {
+    "path": "artifacts/informative_budget_sweep_certificate_refresh.md",
+    "sha256": "c0d9e094ec36dd6675739f7031ea1f4a1d62bfce045878afa40947f9c48ec9dd",
+    "size_bytes": 1099
+  },
+  {
+    "path": "artifacts/informative_budget_sweep_safe_positive.json",
+    "sha256": "a0cb360f374a4ba548eed0f3ee1e015bf7ecd239ff80da23feceb70a7dde2e88",
+    "size_bytes": 6273
+  },
+  {
+    "path": "artifacts/informative_budget_sweep_safe_positive.md",
+    "sha256": "0546c92c66f083f33f7cc8196f02e4c790d2afe00cb5133545d9306f92d2ec1f",
+    "size_bytes": 1029
   },
   {
     "path": "artifacts/lcct_author_response.md",
@@ -151,8 +171,8 @@
   },
   {
     "path": "machine_readable_summary.json",
-    "sha256": "00f3d0ae71adaf8b991f6ca22f09dc4a1928575fc9406e5a60f7492556530f8f",
-    "size_bytes": 22404
+    "sha256": "69310193c815d3c515fe7c6b7a3f46cd2209b091bb54ff74708eb39b06d4323b",
+    "size_bytes": 39165
   },
   {
     "path": "next_experiments.md",
@@ -161,8 +181,8 @@
   },
   {
     "path": "paper_ready_tables.md",
-    "sha256": "2aa45417a9ad131d182cafb4345a1255e56286db240553323d8fd83631a1b5b8",
-    "size_bytes": 2608
+    "sha256": "12d0c72617ad054a3a33e626e18dc93ee7a4d39d1d611318ea6a3a73b6fa9cd5",
+    "size_bytes": 2906
   },
   {
     "path": "reviewer_experiment_plan.md",

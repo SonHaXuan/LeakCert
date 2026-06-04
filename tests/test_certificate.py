@@ -30,13 +30,13 @@ def make_kl_results(n: int, kl_val: float = 0.05) -> list[PerCanaryKL]:
 
 
 class TestTheorem5:
-    """L_B ≤ B · D_KL^max + log|K|"""
+    """L_B ≤ min{B · D_KL^max, H(K)}."""
 
     def test_formula(self):
         cert = LeakageCertificate()
         B, K, kl_max = 1000, 10_000, 0.05
         result = cert._theorem5(B, kl_max, K)
-        expected = B * kl_max + math.log(K)
+        expected = B * kl_max
         assert abs(result - expected) < 1e-10
 
     def test_grows_linearly_with_budget(self):
@@ -44,14 +44,12 @@ class TestTheorem5:
         K, kl_max = 1000, 0.05
         c1 = cert._theorem5(100, kl_max, K)
         c2 = cert._theorem5(200, kl_max, K)
-        log_K = math.log(K)
-        # C(2B) - log|K| should be 2 × (C(B) - log|K|)
-        assert abs((c2 - log_K) / (c1 - log_K) - 2.0) < 1e-6
+        assert abs(c2 / c1 - 2.0) < 1e-6
 
-    def test_zero_kl_gives_log_K(self):
+    def test_zero_kl_gives_zero_raw_leakage(self):
         cert = LeakageCertificate()
         result = cert._theorem5(10_000, 0.0, 1000)
-        assert abs(result - math.log(1000)) < 1e-10
+        assert abs(result) < 1e-10
 
 
 class TestTheorem7:
@@ -157,10 +155,10 @@ class TestVacuous:
 
 class TestDPComposition:
     def test_dp_bound_formula(self):
-        """DP bound = B · ε²/2 + log|K|"""
+        """DP bound = min{B · ε²/2, log|K|}"""
         eps, B, K = 8.0, 10_000, 10_000
         result = LeakageCertificate.dp_composition_certificate(eps, B, K)
-        expected = B * eps ** 2 / 2 + math.log(K)
+        expected = min(B * eps ** 2 / 2, math.log(K))
         assert abs(result - expected) < 1e-10
 
     def test_leakcert_tighter_than_dp_for_large_eps(self):

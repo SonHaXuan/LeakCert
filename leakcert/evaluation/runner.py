@@ -584,7 +584,7 @@ class ExperimentRunner:
                 for r in kl_results
             ]
             cert_result = self.cert_computer.compute(clamped, B, K, delta)
-            raw_dp_analytic = LeakageCertificate.dp_composition_certificate(eps, B, K)
+            raw_dp_analytic = B * (eps ** 2) / 2.0
             dp_analytic = min(raw_dp_analytic, cert_result.prior_entropy)
             ratio = cert_result.hoeffding_certificate / dp_analytic
             rows.append({

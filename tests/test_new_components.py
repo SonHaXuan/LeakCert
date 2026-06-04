@@ -352,7 +352,7 @@ class TestDPSweep:
         from leakcert.certificate.certificate import LeakageCertificate
         eps, B, K = 8.0, 10_000, 10_000
         result = LeakageCertificate.dp_composition_certificate(eps, B, K)
-        expected = B * eps**2 / 2 + math.log(K)
+        expected = min(B * eps**2 / 2, math.log(K))
         assert abs(result - expected) < 1e-6
 
 
