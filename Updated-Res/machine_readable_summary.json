@@ -1,20 +1,213 @@
 {
-  "generated": "2026-06-03T23:17:12+0700",
+  "generated": "2026-06-04T08:06:16+0700",
   "git_status_at_generation": [
     " M Updated-Res/README.md",
-    " M Updated-Res/artifacts/phase_a_seed42.json",
-    " M Updated-Res/artifacts/phase_a_seed43.json",
+    " D Updated-Res/lcct_comparable_reimplementation.md",
     " D Updated-Res/machine_readable_summary.json",
     " D Updated-Res/manifest.json",
     " D Updated-Res/next_experiments.md",
     " D Updated-Res/paper_ready_tables.md",
-    " M scripts/build_updated_res_package.py",
-    "?? .log",
-    "?? Updated-Res/artifacts/lcct_comparable_fullsize_metadata.json",
-    "?? Updated-Res/artifacts/lcct_comparable_scorer_smoke_summary.json",
-    "?? scripts/prepare_lcct_comparable_benchmark.py",
-    "?? scripts/score_lcct_comparable.py"
+    " M scripts/build_updated_res_package.py"
   ],
+  "lcct_comparable_model_full": null,
+  "lcct_comparable_model_smoke": {
+    "benchmark": "_run_results/lcct_comparable_fullsize_20260603_231546/benchmark/lcct_comparable_benchmark.jsonl",
+    "defenses": {
+      "B1_no_defense": {
+        "by_category": {
+          "api_key": {
+            "hits": 0,
+            "n": 18,
+            "rate_pct": 0.0
+          },
+          "aws_access_key": {
+            "hits": 0,
+            "n": 16,
+            "rate_pct": 0.0
+          },
+          "db_password": {
+            "hits": 0,
+            "n": 22,
+            "rate_pct": 0.0
+          },
+          "github_pat": {
+            "hits": 0,
+            "n": 24,
+            "rate_pct": 0.0
+          },
+          "jwt": {
+            "hits": 0,
+            "n": 21,
+            "rate_pct": 0.0
+          },
+          "profile_email": {
+            "hits": 0,
+            "n": 21,
+            "rate_pct": 0.0
+          },
+          "profile_location": {
+            "hits": 0,
+            "n": 18,
+            "rate_pct": 0.0
+          }
+        },
+        "by_match_mode": {
+          "email_exact": {
+            "hits": 0,
+            "n": 21,
+            "rate_pct": 0.0
+          },
+          "location_fuzzy": {
+            "hits": 0,
+            "n": 18,
+            "rate_pct": 0.0
+          },
+          "secret_exact": {
+            "hits": 0,
+            "n": 101,
+            "rate_pct": 0.0
+          }
+        },
+        "duration_sec": 80.80283308029175,
+        "hit_rate_pct": 0.0,
+        "hits": 0,
+        "n": 140
+      },
+      "B5_content_filter": {
+        "by_category": {
+          "api_key": {
+            "hits": 0,
+            "n": 18,
+            "rate_pct": 0.0
+          },
+          "aws_access_key": {
+            "hits": 0,
+            "n": 16,
+            "rate_pct": 0.0
+          },
+          "db_password": {
+            "hits": 0,
+            "n": 22,
+            "rate_pct": 0.0
+          },
+          "github_pat": {
+            "hits": 0,
+            "n": 24,
+            "rate_pct": 0.0
+          },
+          "jwt": {
+            "hits": 0,
+            "n": 21,
+            "rate_pct": 0.0
+          },
+          "profile_email": {
+            "hits": 0,
+            "n": 21,
+            "rate_pct": 0.0
+          },
+          "profile_location": {
+            "hits": 0,
+            "n": 18,
+            "rate_pct": 0.0
+          }
+        },
+        "by_match_mode": {
+          "email_exact": {
+            "hits": 0,
+            "n": 21,
+            "rate_pct": 0.0
+          },
+          "location_fuzzy": {
+            "hits": 0,
+            "n": 18,
+            "rate_pct": 0.0
+          },
+          "secret_exact": {
+            "hits": 0,
+            "n": 101,
+            "rate_pct": 0.0
+          }
+        },
+        "duration_sec": 80.1476058959961,
+        "hit_rate_pct": 0.0,
+        "hits": 0,
+        "n": 140
+      },
+      "LEAKCERT": {
+        "by_category": {
+          "api_key": {
+            "hits": 0,
+            "n": 18,
+            "rate_pct": 0.0
+          },
+          "aws_access_key": {
+            "hits": 0,
+            "n": 16,
+            "rate_pct": 0.0
+          },
+          "db_password": {
+            "hits": 0,
+            "n": 22,
+            "rate_pct": 0.0
+          },
+          "github_pat": {
+            "hits": 0,
+            "n": 24,
+            "rate_pct": 0.0
+          },
+          "jwt": {
+            "hits": 0,
+            "n": 21,
+            "rate_pct": 0.0
+          },
+          "profile_email": {
+            "hits": 0,
+            "n": 21,
+            "rate_pct": 0.0
+          },
+          "profile_location": {
+            "hits": 0,
+            "n": 18,
+            "rate_pct": 0.0
+          }
+        },
+        "by_match_mode": {
+          "email_exact": {
+            "hits": 0,
+            "n": 21,
+            "rate_pct": 0.0
+          },
+          "location_fuzzy": {
+            "hits": 0,
+            "n": 18,
+            "rate_pct": 0.0
+          },
+          "secret_exact": {
+            "hits": 0,
+            "n": 101,
+            "rate_pct": 0.0
+          }
+        },
+        "duration_sec": 84.7249002456665,
+        "hit_rate_pct": 0.0,
+        "hits": 0,
+        "latency": {
+          "median": 601.3768911361694,
+          "p99": 648.1493401527401
+        },
+        "n": 140,
+        "refusal_rate_pct": 0.0
+      }
+    },
+    "device": "mps",
+    "duration_sec": 249.46744513511658,
+    "max_new_tokens": 32,
+    "max_prompts": 140,
+    "n_prompts": 140,
+    "ref_model": "Qwen/Qwen2.5-Coder-0.5B",
+    "target_model_path": "_run_results/safe_real_suite_positive_control_stable_20260528_220342/target_model",
+    "timestamp": "2026-06-04T07:06:00+0700"
+  },
   "learned_w3_threshold_sweep": {
     "metadata": {
       "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",
@@ -38,7 +231,7 @@
       }
     }
   },
-  "source_commit": "3c4fd6f518cc0d14ee12b8d52811294012bd7346",
+  "source_commit": "d014a8405b31252b53ce033b377942ce10a2b0bb",
   "w3_diagnostic": {
     "metadata": {
       "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",

@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "sha256": "b9ba83e6fbb47e86555fb8ccd365ac368bd36b17eca60a115f0bedf9094823f5",
+    "sha256": "d2923f70c50c3f1e1c5502a54a75aa7aaab16cdec1a263c77ddc2b04a02d5306",
     "size_bytes": 2876
   },
   {
@@ -43,6 +43,16 @@
     "path": "artifacts/lcct_comparable_fullsize_metadata.json",
     "sha256": "5c55fce9612faa11eacf4f55a1f4898756818587fd3f5ebd7ac54b7b1a1bb8bb",
     "size_bytes": 802
+  },
+  {
+    "path": "artifacts/lcct_comparable_model_smoke_summary.json",
+    "sha256": "1a3ce09e7ae5c0fa43caf011d6db5f568159a05dd0d6f7a8de2f19f4375cd2bf",
+    "size_bytes": 4227
+  },
+  {
+    "path": "artifacts/lcct_comparable_model_smoke_summary.md",
+    "sha256": "a0922f1ffe32d297bfac2c01a359dcf619f2484aeae8bfa8827aa94988b350e9",
+    "size_bytes": 451
   },
   {
     "path": "artifacts/lcct_comparable_scorer_smoke_summary.json",
@@ -116,13 +126,13 @@
   },
   {
     "path": "lcct_comparable_reimplementation.md",
-    "sha256": "4e4a543c5fde88bb165058b955982e22b4aa7477266d26468c0d625d1f15caf5",
-    "size_bytes": 2056
+    "sha256": "43ae8d22fba8fe3d8889200630f3c5a4e182a64d2ceea3b362b7abe0b089edad",
+    "size_bytes": 2828
   },
   {
     "path": "machine_readable_summary.json",
-    "sha256": "3d04c02cbfb367630d0b27a65a24f58e7ca5516734a248217bb81b2e6e6e0209",
-    "size_bytes": 4052
+    "sha256": "5bea50bc62a1eedc8cb2f523a6dd7f52a3b9e3be5e6bd0f7f6f7edffcb0ad31f",
+    "size_bytes": 8441
   },
   {
     "path": "next_experiments.md",

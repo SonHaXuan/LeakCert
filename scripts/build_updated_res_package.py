@@ -111,6 +111,11 @@ def latest_dir(pattern: str) -> Path | None:
     return dirs[-1] if dirs else None
 
 
+def latest_completed_dir(pattern: str, required_file: str = "summary.json") -> Path | None:
+    dirs = sorted(path for path in ROOT.glob(pattern) if path.is_dir() and (path / required_file).exists())
+    return dirs[-1] if dirs else None
+
+
 def sha256(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as f:
@@ -160,6 +165,66 @@ def extract_w5_rows(path: str) -> dict[str, dict[str, float]]:
     return out
 
 
+def build_lcct_model_full_section(summary: dict[str, Any] | None) -> str:
+    if not summary:
+        return ""
+    rows = summary.get("defenses", {})
+    if not isinstance(rows, dict) or not rows:
+        return ""
+    lines = [
+        "",
+        "## Current Full Model Run",
+        "",
+        f"A full-size local model run was completed on `{summary.get('n_prompts', 'n/a')}` comparable LCCT prompts.",
+        "",
+        "| defense | hits | n | hit rate | refusal | duration |",
+        "|---|---:|---:|---:|---:|---:|",
+    ]
+    for name, row in rows.items():
+        if not isinstance(row, dict):
+            continue
+        duration = row.get("duration_sec")
+        duration_txt = "n/a" if duration is None else f"{float(duration) / 60.0:.1f} min"
+        lines.append(
+            f"| {name} | {row.get('hits', 'n/a')} | {row.get('n', 'n/a')} | "
+            f"{float(row.get('hit_rate_pct', 0.0)):.2f}% | "
+            f"{float(row.get('refusal_rate_pct', 0.0)):.2f}% | {duration_txt} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def build_lcct_model_smoke_section(summary: dict[str, Any] | None) -> str:
+    if not summary:
+        return ""
+    rows = summary.get("defenses", {})
+    if not isinstance(rows, dict) or not rows:
+        return ""
+    lines = [
+        "",
+        "## Current Model Smoke",
+        "",
+        f"A local model smoke was run on `{summary.get('n_prompts', 'n/a')}` prompts from the full-size comparable benchmark using the current Qwen positive-control checkpoint. This is a negative-control/comparable smoke, not a headline defense result: the undefended model did not extract controlled ground truth.",
+        "",
+        "| defense | hits | n | hit rate | refusal |",
+        "|---|---:|---:|---:|---:|",
+    ]
+    for name, row in rows.items():
+        if not isinstance(row, dict):
+            continue
+        lines.append(
+            f"| {name} | {row.get('hits', 'n/a')} | {row.get('n', 'n/a')} | "
+            f"{float(row.get('hit_rate_pct', 0.0)):.2f}% | "
+            f"{float(row.get('refusal_rate_pct', 0.0)):.2f}% |"
+        )
+    lines.extend(
+        [
+            "",
+            "Interpretation: the benchmark/scorer/model path is operational, but this checkpoint does not leak on the sampled comparable LCCT prompts. Use this as readiness evidence, not as a replacement for a stronger LCCT-style extraction run on a leakier or larger checkpoint.",
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
 def main() -> int:
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -203,6 +268,22 @@ def main() -> int:
         rel = lcct_latest.relative_to(ROOT)
         copy_sanitized(str(rel / "benchmark" / "metadata.json"), "lcct_comparable_fullsize_metadata.json")
         copy_sanitized(str(rel / "scorer_smoke" / "summary.json"), "lcct_comparable_scorer_smoke_summary.json")
+
+    lcct_model_smoke_summary = None
+    lcct_model_smoke_latest = latest_completed_dir("_run_results/lcct_comparable_model_smoke_[0-9]*")
+    if lcct_model_smoke_latest:
+        rel = lcct_model_smoke_latest.relative_to(ROOT)
+        copy_sanitized(str(rel / "summary.json"), "lcct_comparable_model_smoke_summary.json")
+        copy_sanitized(str(rel / "summary.md"), "lcct_comparable_model_smoke_summary.md")
+        lcct_model_smoke_summary = read_json(rel / "summary.json")
+
+    lcct_model_full_summary = None
+    lcct_model_full_latest = latest_completed_dir("_run_results/lcct_comparable_model_full_*")
+    if lcct_model_full_latest:
+        rel = lcct_model_full_latest.relative_to(ROOT)
+        copy_sanitized(str(rel / "summary.json"), "lcct_comparable_model_full_summary.json")
+        copy_sanitized(str(rel / "summary.md"), "lcct_comparable_model_full_summary.md")
+        lcct_model_full_summary = read_json(rel / "summary.json")
 
     w3_diag = read_json("_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json")
     learned_w3 = read_json("_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json")
@@ -299,6 +380,8 @@ The current package supports a careful small-scale/positive-control claim: learn
         "w5_seed42": seed42_w5,
         "w5_seed43": seed43_w5,
         "w5_learned_seed42": learned_seed42,
+        "lcct_comparable_model_smoke": lcct_model_smoke_summary,
+        "lcct_comparable_model_full": lcct_model_full_summary,
     }
     write_json("machine_readable_summary.json", machine)
 
@@ -322,7 +405,7 @@ The current package supports a careful small-scale/positive-control claim: learn
 """
     write_text("next_experiments.md", next_steps)
 
-    lcct_design = """# LCCT Comparable Reimplementation
+    lcct_design = f"""# LCCT Comparable Reimplementation
 
 ## Why This Exists
 
@@ -367,6 +450,8 @@ scorer with deterministic mock completions. The benchmark JSONL itself is not
 stored in this public result package because the synthetic strings intentionally
 look like credentials and may trigger secret-scanning systems. Regenerate it
 locally from the script when needed.
+{build_lcct_model_smoke_section(lcct_model_smoke_summary)}
+{build_lcct_model_full_section(lcct_model_full_summary)}
 
 ## Safe Claim Wording
 

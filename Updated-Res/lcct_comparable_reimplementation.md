@@ -44,18 +44,19 @@ stored in this public result package because the synthetic strings intentionally
 look like credentials and may trigger secret-scanning systems. Regenerate it
 locally from the script when needed.
 
-
 ## Current Model Smoke
 
 A local model smoke was run on `140` prompts from the full-size comparable benchmark using the current Qwen positive-control checkpoint. This is a negative-control/comparable smoke, not a headline defense result: the undefended model did not extract controlled ground truth.
 
 | defense | hits | n | hit rate | refusal |
 |---|---:|---:|---:|---:|
-| B1 no defense | 0 | 140 | 0.0% | 0.0% |
-| B5 content filter | 0 | 140 | 0.0% | 0.0% |
-| LEAKCERT | 0 | 140 | 0.0% | 0.0% |
+| B1_no_defense | 0 | 140 | 0.00% | 0.00% |
+| B5_content_filter | 0 | 140 | 0.00% | 0.00% |
+| LEAKCERT | 0 | 140 | 0.00% | 0.00% |
 
-Interpretation: the benchmark/scorer/model path is now operational, but this checkpoint does not leak on the sampled comparable LCCT prompts. Use this as readiness evidence, not as a replacement for a stronger LCCT-style extraction run on a leakier or larger checkpoint.
+Interpretation: the benchmark/scorer/model path is operational, but this checkpoint does not leak on the sampled comparable LCCT prompts. Use this as readiness evidence, not as a replacement for a stronger LCCT-style extraction run on a leakier or larger checkpoint.
+
+
 
 ## Safe Claim Wording
 
