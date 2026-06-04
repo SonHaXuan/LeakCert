@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "sha256": "d2923f70c50c3f1e1c5502a54a75aa7aaab16cdec1a263c77ddc2b04a02d5306",
+    "sha256": "3b86a64bc3d82b83e18a28af5cff7f3ff23f4237e320c06d9d8f5adeb83cb4fd",
     "size_bytes": 2876
   },
   {
@@ -43,6 +43,16 @@
     "path": "artifacts/lcct_comparable_fullsize_metadata.json",
     "sha256": "5c55fce9612faa11eacf4f55a1f4898756818587fd3f5ebd7ac54b7b1a1bb8bb",
     "size_bytes": 802
+  },
+  {
+    "path": "artifacts/lcct_comparable_model_full_B1_no_defense_summary.json",
+    "sha256": "474bd212faabcdaf6acc4486341d90efcfdd2afa9f417596710cb18459961ae2",
+    "size_bytes": 969
+  },
+  {
+    "path": "artifacts/lcct_comparable_model_full_B5_content_filter_summary.json",
+    "sha256": "b597b423fb9641195d4485e51bafb446b131a116356033d584fe30250fee2f1d",
+    "size_bytes": 970
   },
   {
     "path": "artifacts/lcct_comparable_model_smoke_summary.json",
@@ -125,14 +135,19 @@
     "size_bytes": 1694
   },
   {
+    "path": "lcct_comparable_full_live_status.md",
+    "sha256": "dcda1d1e725b719c8558d0b4a7844c89e6bfea7c13126f205dcb9d48aed3f975",
+    "size_bytes": 766
+  },
+  {
     "path": "lcct_comparable_reimplementation.md",
     "sha256": "43ae8d22fba8fe3d8889200630f3c5a4e182a64d2ceea3b362b7abe0b089edad",
     "size_bytes": 2828
   },
   {
     "path": "machine_readable_summary.json",
-    "sha256": "5bea50bc62a1eedc8cb2f523a6dd7f52a3b9e3be5e6bd0f7f6f7edffcb0ad31f",
-    "size_bytes": 8441
+    "sha256": "e0f67bef28c7f3560c074d833b9e8d3868d17f1ea3a6731713d9118b8b5d6627",
+    "size_bytes": 11926
   },
   {
     "path": "next_experiments.md",

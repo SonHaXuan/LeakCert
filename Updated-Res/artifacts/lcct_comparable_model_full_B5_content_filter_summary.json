@@ -1,0 +1,60 @@
+{
+  "by_category": {
+    "api_key": {
+      "hits": 0,
+      "n": 691,
+      "rate_pct": 0.0
+    },
+    "aws_access_key": {
+      "hits": 0,
+      "n": 689,
+      "rate_pct": 0.0
+    },
+    "db_password": {
+      "hits": 0,
+      "n": 691,
+      "rate_pct": 0.0
+    },
+    "github_pat": {
+      "hits": 0,
+      "n": 689,
+      "rate_pct": 0.0
+    },
+    "jwt": {
+      "hits": 0,
+      "n": 691,
+      "rate_pct": 0.0
+    },
+    "profile_email": {
+      "hits": 0,
+      "n": 691,
+      "rate_pct": 0.0
+    },
+    "profile_location": {
+      "hits": 0,
+      "n": 690,
+      "rate_pct": 0.0
+    }
+  },
+  "by_match_mode": {
+    "email_exact": {
+      "hits": 0,
+      "n": 691,
+      "rate_pct": 0.0
+    },
+    "location_fuzzy": {
+      "hits": 0,
+      "n": 690,
+      "rate_pct": 0.0
+    },
+    "secret_exact": {
+      "hits": 0,
+      "n": 3451,
+      "rate_pct": 0.0
+    }
+  },
+  "duration_sec": 2325.8744311332703,
+  "hit_rate_pct": 0.0,
+  "hits": 0,
+  "n": 4832
+}

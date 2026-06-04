@@ -225,6 +225,83 @@ def build_lcct_model_smoke_section(summary: dict[str, Any] | None) -> str:
     return "\n".join(lines) + "\n"
 
 
+def parse_lcct_live_progress(log_path: Path) -> dict[str, Any] | None:
+    if not log_path.exists():
+        return None
+    progress_re = re.compile(r'"defense": "([^"]+)", "completed": (\d+), "total": (\d+)')
+    latest: dict[str, dict[str, int]] = {}
+    for line in log_path.read_text(errors="replace").splitlines():
+        m = progress_re.search(line)
+        if m:
+            latest[m.group(1)] = {
+                "completed": int(m.group(2)),
+                "total": int(m.group(3)),
+            }
+    if not latest:
+        return None
+    return {
+        "log": str(log_path.relative_to(ROOT)),
+        "latest_progress": latest,
+        "updated": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+    }
+
+
+def build_lcct_live_status(run_dir: Path | None) -> tuple[dict[str, Any] | None, str]:
+    if not run_dir:
+        return None, ""
+    rel = run_dir.relative_to(ROOT)
+    log_path = ROOT / "_run_logs" / f"{run_dir.name.replace('lcct_comparable_model_full_', 'lcct_comparable_model_full_')}.log"
+    live = parse_lcct_live_progress(log_path)
+    if live is None:
+        live = {"latest_progress": {}, "updated": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
+    live["run_dir"] = str(rel)
+
+    defense_summaries: dict[str, Any] = {}
+    for defense_dir in sorted(p for p in run_dir.iterdir() if p.is_dir()):
+        summary_path = defense_dir / "summary.json"
+        if summary_path.exists():
+            key = f"lcct_comparable_model_full_{defense_dir.name}_summary.json"
+            copy_sanitized(str(summary_path.relative_to(ROOT)), key)
+            summary = read_json(summary_path.relative_to(ROOT))
+            defense_summaries[defense_dir.name] = summary
+            if isinstance(summary, dict) and summary.get("n") is not None:
+                live.setdefault("latest_progress", {})[defense_dir.name] = {
+                    "completed": int(summary.get("n", 0)),
+                    "total": int(summary.get("n", 0)),
+                }
+    live["completed_defense_summaries"] = defense_summaries
+
+    lines = [
+        "# Current LCCT Comparable Full-Run Status",
+        "",
+        "This file tracks the current long-running LCCT comparable model evaluation. It includes only progress counters and completed defense-level summaries, not raw completions or synthetic secret-like benchmark rows.",
+        "",
+        f"- run dir: `{rel}`",
+        f"- updated: `{live['updated']}`",
+        "",
+        "## Progress",
+        "",
+        "| defense | completed | total | progress |",
+        "|---|---:|---:|---:|",
+    ]
+    for defense, row in live.get("latest_progress", {}).items():
+        completed = int(row.get("completed", 0))
+        total = int(row.get("total", 0))
+        pct_done = 100.0 * completed / total if total else 0.0
+        lines.append(f"| {defense} | {completed} | {total} | {pct_done:.2f}% |")
+
+    if defense_summaries:
+        lines.extend(["", "## Completed Defense Summaries", "", "| defense | hits | n | hit rate | duration |", "|---|---:|---:|---:|---:|"])
+        for defense, row in defense_summaries.items():
+            duration = row.get("duration_sec")
+            duration_txt = "n/a" if duration is None else f"{float(duration) / 60.0:.1f} min"
+            lines.append(
+                f"| {defense} | {row.get('hits', 'n/a')} | {row.get('n', 'n/a')} | "
+                f"{float(row.get('hit_rate_pct', 0.0)):.2f}% | {duration_txt} |"
+            )
+    return live, "\n".join(lines) + "\n"
+
+
 def main() -> int:
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -284,6 +361,12 @@ def main() -> int:
         copy_sanitized(str(rel / "summary.json"), "lcct_comparable_model_full_summary.json")
         copy_sanitized(str(rel / "summary.md"), "lcct_comparable_model_full_summary.md")
         lcct_model_full_summary = read_json(rel / "summary.json")
+
+    lcct_model_full_live = None
+    lcct_model_full_live_latest = latest_dir("_run_results/lcct_comparable_model_full_*")
+    if lcct_model_full_live_latest and not (lcct_model_full_live_latest / "summary.json").exists():
+        lcct_model_full_live, lcct_live_status_doc = build_lcct_live_status(lcct_model_full_live_latest)
+        write_text("lcct_comparable_full_live_status.md", lcct_live_status_doc)
 
     w3_diag = read_json("_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json")
     learned_w3 = read_json("_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json")
@@ -382,6 +465,7 @@ The current package supports a careful small-scale/positive-control claim: learn
         "w5_learned_seed42": learned_seed42,
         "lcct_comparable_model_smoke": lcct_model_smoke_summary,
         "lcct_comparable_model_full": lcct_model_full_summary,
+        "lcct_comparable_model_full_live": lcct_model_full_live,
     }
     write_json("machine_readable_summary.json", machine)
 

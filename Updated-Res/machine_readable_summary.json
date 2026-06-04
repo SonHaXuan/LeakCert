@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-04T08:06:16+0700",
+  "generated": "2026-06-04T08:43:04+0700",
   "git_status_at_generation": [
     " M Updated-Res/README.md",
     " D Updated-Res/lcct_comparable_reimplementation.md",
@@ -7,9 +7,153 @@
     " D Updated-Res/manifest.json",
     " D Updated-Res/next_experiments.md",
     " D Updated-Res/paper_ready_tables.md",
-    " M scripts/build_updated_res_package.py"
+    " M scripts/build_updated_res_package.py",
+    "?? Updated-Res/artifacts/lcct_comparable_model_full_B1_no_defense_summary.json",
+    "?? Updated-Res/artifacts/lcct_comparable_model_full_B5_content_filter_summary.json",
+    "?? Updated-Res/lcct_comparable_full_live_status.md"
   ],
   "lcct_comparable_model_full": null,
+  "lcct_comparable_model_full_live": {
+    "completed_defense_summaries": {
+      "B1_no_defense": {
+        "by_category": {
+          "api_key": {
+            "hits": 0,
+            "n": 691,
+            "rate_pct": 0.0
+          },
+          "aws_access_key": {
+            "hits": 0,
+            "n": 689,
+            "rate_pct": 0.0
+          },
+          "db_password": {
+            "hits": 0,
+            "n": 691,
+            "rate_pct": 0.0
+          },
+          "github_pat": {
+            "hits": 0,
+            "n": 689,
+            "rate_pct": 0.0
+          },
+          "jwt": {
+            "hits": 0,
+            "n": 691,
+            "rate_pct": 0.0
+          },
+          "profile_email": {
+            "hits": 0,
+            "n": 691,
+            "rate_pct": 0.0
+          },
+          "profile_location": {
+            "hits": 0,
+            "n": 690,
+            "rate_pct": 0.0
+          }
+        },
+        "by_match_mode": {
+          "email_exact": {
+            "hits": 0,
+            "n": 691,
+            "rate_pct": 0.0
+          },
+          "location_fuzzy": {
+            "hits": 0,
+            "n": 690,
+            "rate_pct": 0.0
+          },
+          "secret_exact": {
+            "hits": 0,
+            "n": 3451,
+            "rate_pct": 0.0
+          }
+        },
+        "duration_sec": 2904.455841064453,
+        "hit_rate_pct": 0.0,
+        "hits": 0,
+        "n": 4832
+      },
+      "B5_content_filter": {
+        "by_category": {
+          "api_key": {
+            "hits": 0,
+            "n": 691,
+            "rate_pct": 0.0
+          },
+          "aws_access_key": {
+            "hits": 0,
+            "n": 689,
+            "rate_pct": 0.0
+          },
+          "db_password": {
+            "hits": 0,
+            "n": 691,
+            "rate_pct": 0.0
+          },
+          "github_pat": {
+            "hits": 0,
+            "n": 689,
+            "rate_pct": 0.0
+          },
+          "jwt": {
+            "hits": 0,
+            "n": 691,
+            "rate_pct": 0.0
+          },
+          "profile_email": {
+            "hits": 0,
+            "n": 691,
+            "rate_pct": 0.0
+          },
+          "profile_location": {
+            "hits": 0,
+            "n": 690,
+            "rate_pct": 0.0
+          }
+        },
+        "by_match_mode": {
+          "email_exact": {
+            "hits": 0,
+            "n": 691,
+            "rate_pct": 0.0
+          },
+          "location_fuzzy": {
+            "hits": 0,
+            "n": 690,
+            "rate_pct": 0.0
+          },
+          "secret_exact": {
+            "hits": 0,
+            "n": 3451,
+            "rate_pct": 0.0
+          }
+        },
+        "duration_sec": 2325.8744311332703,
+        "hit_rate_pct": 0.0,
+        "hits": 0,
+        "n": 4832
+      }
+    },
+    "latest_progress": {
+      "B1_no_defense": {
+        "completed": 4832,
+        "total": 4832
+      },
+      "B5_content_filter": {
+        "completed": 4832,
+        "total": 4832
+      },
+      "LEAKCERT": {
+        "completed": 375,
+        "total": 4832
+      }
+    },
+    "log": "_run_logs/lcct_comparable_model_full_20260604_071220.log",
+    "run_dir": "_run_results/lcct_comparable_model_full_20260604_071220",
+    "updated": "2026-06-04T08:43:04+0700"
+  },
   "lcct_comparable_model_smoke": {
     "benchmark": "_run_results/lcct_comparable_fullsize_20260603_231546/benchmark/lcct_comparable_benchmark.jsonl",
     "defenses": {
@@ -231,7 +375,7 @@
       }
     }
   },
-  "source_commit": "d014a8405b31252b53ce033b377942ce10a2b0bb",
+  "source_commit": "51a092360e650cde7160d88b9d13b06bb00a7812",
   "w3_diagnostic": {
     "metadata": {
       "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",
