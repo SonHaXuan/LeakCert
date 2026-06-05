@@ -216,22 +216,15 @@
     "n_values_capped": 108,
     "timestamp": "2026-06-04T10:40:59+0700"
   },
-  "generated": "2026-06-04T19:50:59+0700",
+  "generated": "2026-06-05T14:16:19+0700",
   "git_status_at_generation": [
     " M Updated-Res/README.md",
-    " M Updated-Res/claim_gap_matrix.md",
     " M Updated-Res/paper_ready_tables.md",
     " M scripts/build_updated_res_package.py",
-    "?? Updated-Res/artifacts/reviewer_bootstrap_w5_multiseed.json",
-    "?? Updated-Res/artifacts/reviewer_bootstrap_w5_multiseed.md",
-    "?? Updated-Res/artifacts/reviewer_component_ablation_summary.json",
-    "?? Updated-Res/artifacts/reviewer_component_ablation_summary.md",
-    "?? Updated-Res/artifacts/reviewer_w3_error_analysis.json",
-    "?? Updated-Res/artifacts/reviewer_w3_error_analysis.md",
-    "?? Updated-Res/artifacts/reviewer_w3_threshold_sweep.json",
-    "?? scripts/bootstrap_w5_multiseed.py",
-    "?? scripts/run_leakcert_component_ablation.py",
-    "?? scripts/run_w3_error_analysis.py"
+    "?? Updated-Res/artifacts/reviewer_extra_component_ablation_summary.json",
+    "?? Updated-Res/artifacts/reviewer_extra_component_ablation_summary.md",
+    "?? Updated-Res/artifacts/reviewer_extra_light_w5_replications.json",
+    "?? scripts/run_reviewer_local_extra_light.py"
   ],
   "informative_budget_sweeps": {
     "certificate_refresh": {
@@ -3553,6 +3546,1678 @@
       }
     }
   },
+  "reviewer_extra_component_ablation": {
+    "metadata": {
+      "batch_size": 16,
+      "config": "<repo>/_run_results/reviewer_local_extra_light_20260604_222206/w5_seed47/configs/w5_seed47_small.yaml",
+      "n_eval": 16,
+      "ref": "Qwen/Qwen2.5-Coder-0.5B",
+      "target": "<repo>/_run_results/safe_real_suite_positive_control_stable_20260528_220342/target_model",
+      "timestamp": "2026-06-05T14:10:43+0700"
+    },
+    "results": {
+      "B5_content_filter": {
+        "W4": {
+          "duration_sec": 4.575,
+          "extraction": {
+            "ci95": [
+              0.07594026855583394,
+              0.198930741744374
+            ],
+            "ci95_pct": [
+              7.59,
+              19.89
+            ],
+            "n_success": 14,
+            "n_total": 112,
+            "rate": 0.125,
+            "rate_pct": 12.5
+          },
+          "per_mode": {
+            "direct": {
+              "ci95": [
+                0.07594026855583394,
+                0.198930741744374
+              ],
+              "ci95_pct": [
+                7.59,
+                19.89
+              ],
+              "n_success": 14,
+              "n_total": 112,
+              "rate": 0.125,
+              "rate_pct": 12.5
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.32633127457293465,
+                0.6736687254270654
+              ],
+              "ci95_pct": [
+                32.63,
+                67.37
+              ],
+              "n_success": 14,
+              "n_total": 28,
+              "rate": 0.5,
+              "rate_pct": 50.0
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.17900299692765526,
+              0.33757767660581667
+            ],
+            "ci95_pct": [
+              17.9,
+              33.76
+            ],
+            "n_success": 28,
+            "n_total": 112,
+            "rate": 0.25,
+            "rate_pct": 25.0
+          }
+        },
+        "W5": {
+          "duration_sec": 22.056,
+          "extraction": {
+            "ci95": [
+              0.0985303378059959,
+              0.15303232506977676
+            ],
+            "ci95_pct": [
+              9.85,
+              15.3
+            ],
+            "n_success": 69,
+            "n_total": 560,
+            "rate": 0.12321428571428572,
+            "rate_pct": 12.32
+          },
+          "per_mode": {
+            "base64_decode": {
+              "ci95": [
+                0.07594026855583394,
+                0.198930741744374
+              ],
+              "ci95_pct": [
+                7.59,
+                19.89
+              ],
+              "n_success": 14,
+              "n_total": 112,
+              "rate": 0.125,
+              "rate_pct": 12.5
+            },
+            "language_variation": {
+              "ci95": [
+                0.07594026855583394,
+                0.198930741744374
+              ],
+              "ci95_pct": [
+                7.59,
+                19.89
+              ],
+              "n_success": 14,
+              "n_total": 112,
+              "rate": 0.125,
+              "rate_pct": 12.5
+            },
+            "natural_language": {
+              "ci95": [
+                0.06910034144490855,
+                0.18850569291006625
+              ],
+              "ci95_pct": [
+                6.91,
+                18.85
+              ],
+              "n_success": 13,
+              "n_total": 112,
+              "rate": 0.11607142857142858,
+              "rate_pct": 11.61
+            },
+            "regex_class": {
+              "ci95": [
+                0.07594026855583394,
+                0.198930741744374
+              ],
+              "ci95_pct": [
+                7.59,
+                19.89
+              ],
+              "n_success": 14,
+              "n_total": 112,
+              "rate": 0.125,
+              "rate_pct": 12.5
+            },
+            "template_variation": {
+              "ci95": [
+                0.07594026855583394,
+                0.198930741744374
+              ],
+              "ci95_pct": [
+                7.59,
+                19.89
+              ],
+              "n_success": 14,
+              "n_total": 112,
+              "rate": 0.125,
+              "rate_pct": 12.5
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.411345857883062,
+                0.5747499449793583
+              ],
+              "ci95_pct": [
+                41.13,
+                57.47
+              ],
+              "n_success": 69,
+              "n_total": 140,
+              "rate": 0.4928571428571429,
+              "rate_pct": 49.29
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.2720699416901038,
+              0.34839074517107005
+            ],
+            "ci95_pct": [
+              27.21,
+              34.84
+            ],
+            "n_success": 173,
+            "n_total": 560,
+            "rate": 0.30892857142857144,
+            "rate_pct": 30.89
+          }
+        }
+      },
+      "LEAKCERT_full": {
+        "W4": {
+          "duration_sec": 8.643,
+          "extraction": {
+            "ci95": [
+              0.030601922337250245,
+              0.12341425634632565
+            ],
+            "ci95_pct": [
+              3.06,
+              12.34
+            ],
+            "n_success": 7,
+            "n_total": 112,
+            "rate": 0.0625,
+            "rate_pct": 6.25
+          },
+          "per_mode": {
+            "direct": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.12676494919293313,
+                0.4335567031899896
+              ],
+              "ci95_pct": [
+                12.68,
+                43.36
+              ],
+              "n_success": 7,
+              "n_total": 28,
+              "rate": 0.25,
+              "rate_pct": 25.0
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.23408224816940498,
+              0.40335325698069896
+            ],
+            "ci95_pct": [
+              23.41,
+              40.34
+            ],
+            "n_success": 35,
+            "n_total": 112,
+            "rate": 0.3125,
+            "rate_pct": 31.25
+          }
+        },
+        "W5": {
+          "duration_sec": 45.818,
+          "extraction": {
+            "ci95": [
+              0.04376999119626037,
+              0.08364429822288688
+            ],
+            "ci95_pct": [
+              4.38,
+              8.36
+            ],
+            "n_success": 34,
+            "n_total": 560,
+            "rate": 0.060714285714285714,
+            "rate_pct": 6.07
+          },
+          "per_mode": {
+            "base64_decode": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "language_variation": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "natural_language": {
+              "ci95": [
+                0.024780939016041954,
+                0.11197026372230082
+              ],
+              "ci95_pct": [
+                2.48,
+                11.2
+              ],
+              "n_success": 6,
+              "n_total": 112,
+              "rate": 0.05357142857142857,
+              "rate_pct": 5.36
+            },
+            "regex_class": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "template_variation": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.1793125871162926,
+                0.320136315930834
+              ],
+              "ci95_pct": [
+                17.93,
+                32.01
+              ],
+              "n_success": 34,
+              "n_total": 140,
+              "rate": 0.24285714285714285,
+              "rate_pct": 24.29
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.332412211034555,
+              0.4121968492832442
+            ],
+            "ci95_pct": [
+              33.24,
+              41.22
+            ],
+            "n_success": 208,
+            "n_total": 560,
+            "rate": 0.37142857142857144,
+            "rate_pct": 37.14
+          }
+        }
+      },
+      "LEAKCERT_no_accounting": {
+        "W4": {
+          "duration_sec": 3.315,
+          "extraction": {
+            "ci95": [
+              0.030601922337250245,
+              0.12341425634632565
+            ],
+            "ci95_pct": [
+              3.06,
+              12.34
+            ],
+            "n_success": 7,
+            "n_total": 112,
+            "rate": 0.0625,
+            "rate_pct": 6.25
+          },
+          "per_mode": {
+            "direct": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.12676494919293313,
+                0.4335567031899896
+              ],
+              "ci95_pct": [
+                12.68,
+                43.36
+              ],
+              "n_success": 7,
+              "n_total": 28,
+              "rate": 0.25,
+              "rate_pct": 25.0
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.23408224816940498,
+              0.40335325698069896
+            ],
+            "ci95_pct": [
+              23.41,
+              40.34
+            ],
+            "n_success": 35,
+            "n_total": 112,
+            "rate": 0.3125,
+            "rate_pct": 31.25
+          }
+        },
+        "W5": {
+          "duration_sec": 19.534,
+          "extraction": {
+            "ci95": [
+              0.04376999119626037,
+              0.08364429822288688
+            ],
+            "ci95_pct": [
+              4.38,
+              8.36
+            ],
+            "n_success": 34,
+            "n_total": 560,
+            "rate": 0.060714285714285714,
+            "rate_pct": 6.07
+          },
+          "per_mode": {
+            "base64_decode": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "language_variation": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "natural_language": {
+              "ci95": [
+                0.024780939016041954,
+                0.11197026372230082
+              ],
+              "ci95_pct": [
+                2.48,
+                11.2
+              ],
+              "n_success": 6,
+              "n_total": 112,
+              "rate": 0.05357142857142857,
+              "rate_pct": 5.36
+            },
+            "regex_class": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "template_variation": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.1793125871162926,
+                0.320136315930834
+              ],
+              "ci95_pct": [
+                17.93,
+                32.01
+              ],
+              "n_success": 34,
+              "n_total": 140,
+              "rate": 0.24285714285714285,
+              "rate_pct": 24.29
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.332412211034555,
+              0.4121968492832442
+            ],
+            "ci95_pct": [
+              33.24,
+              41.22
+            ],
+            "n_success": 208,
+            "n_total": 560,
+            "rate": 0.37142857142857144,
+            "rate_pct": 37.14
+          }
+        }
+      },
+      "LEAKCERT_no_rate_limit": {
+        "W4": {
+          "duration_sec": 7.609,
+          "extraction": {
+            "ci95": [
+              0.030601922337250245,
+              0.12341425634632565
+            ],
+            "ci95_pct": [
+              3.06,
+              12.34
+            ],
+            "n_success": 7,
+            "n_total": 112,
+            "rate": 0.0625,
+            "rate_pct": 6.25
+          },
+          "per_mode": {
+            "direct": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.12676494919293313,
+                0.4335567031899896
+              ],
+              "ci95_pct": [
+                12.68,
+                43.36
+              ],
+              "n_success": 7,
+              "n_total": 28,
+              "rate": 0.25,
+              "rate_pct": 25.0
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.23408224816940498,
+              0.40335325698069896
+            ],
+            "ci95_pct": [
+              23.41,
+              40.34
+            ],
+            "n_success": 35,
+            "n_total": 112,
+            "rate": 0.3125,
+            "rate_pct": 31.25
+          }
+        },
+        "W5": {
+          "duration_sec": 44.338,
+          "extraction": {
+            "ci95": [
+              0.04376999119626037,
+              0.08364429822288688
+            ],
+            "ci95_pct": [
+              4.38,
+              8.36
+            ],
+            "n_success": 34,
+            "n_total": 560,
+            "rate": 0.060714285714285714,
+            "rate_pct": 6.07
+          },
+          "per_mode": {
+            "base64_decode": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "language_variation": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "natural_language": {
+              "ci95": [
+                0.024780939016041954,
+                0.11197026372230082
+              ],
+              "ci95_pct": [
+                2.48,
+                11.2
+              ],
+              "n_success": 6,
+              "n_total": 112,
+              "rate": 0.05357142857142857,
+              "rate_pct": 5.36
+            },
+            "regex_class": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "template_variation": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.1793125871162926,
+                0.320136315930834
+              ],
+              "ci95_pct": [
+                17.93,
+                32.01
+              ],
+              "n_success": 34,
+              "n_total": 140,
+              "rate": 0.24285714285714285,
+              "rate_pct": 24.29
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.332412211034555,
+              0.4121968492832442
+            ],
+            "ci95_pct": [
+              33.24,
+              41.22
+            ],
+            "n_success": 208,
+            "n_total": 560,
+            "rate": 0.37142857142857144,
+            "rate_pct": 37.14
+          }
+        }
+      },
+      "LEAKCERT_no_refusal": {
+        "W4": {
+          "duration_sec": 7.608,
+          "extraction": {
+            "ci95": [
+              0.07594026855583394,
+              0.198930741744374
+            ],
+            "ci95_pct": [
+              7.59,
+              19.89
+            ],
+            "n_success": 14,
+            "n_total": 112,
+            "rate": 0.125,
+            "rate_pct": 12.5
+          },
+          "per_mode": {
+            "direct": {
+              "ci95": [
+                0.07594026855583394,
+                0.198930741744374
+              ],
+              "ci95_pct": [
+                7.59,
+                19.89
+              ],
+              "n_success": 14,
+              "n_total": 112,
+              "rate": 0.125,
+              "rate_pct": 12.5
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.32633127457293465,
+                0.6736687254270654
+              ],
+              "ci95_pct": [
+                32.63,
+                67.37
+              ],
+              "n_success": 14,
+              "n_total": 28,
+              "rate": 0.5,
+              "rate_pct": 50.0
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.17900299692765526,
+              0.33757767660581667
+            ],
+            "ci95_pct": [
+              17.9,
+              33.76
+            ],
+            "n_success": 28,
+            "n_total": 112,
+            "rate": 0.25,
+            "rate_pct": 25.0
+          }
+        },
+        "W5": {
+          "duration_sec": 44.038,
+          "extraction": {
+            "ci95": [
+              0.0985303378059959,
+              0.15303232506977676
+            ],
+            "ci95_pct": [
+              9.85,
+              15.3
+            ],
+            "n_success": 69,
+            "n_total": 560,
+            "rate": 0.12321428571428572,
+            "rate_pct": 12.32
+          },
+          "per_mode": {
+            "base64_decode": {
+              "ci95": [
+                0.07594026855583394,
+                0.198930741744374
+              ],
+              "ci95_pct": [
+                7.59,
+                19.89
+              ],
+              "n_success": 14,
+              "n_total": 112,
+              "rate": 0.125,
+              "rate_pct": 12.5
+            },
+            "language_variation": {
+              "ci95": [
+                0.07594026855583394,
+                0.198930741744374
+              ],
+              "ci95_pct": [
+                7.59,
+                19.89
+              ],
+              "n_success": 14,
+              "n_total": 112,
+              "rate": 0.125,
+              "rate_pct": 12.5
+            },
+            "natural_language": {
+              "ci95": [
+                0.06910034144490855,
+                0.18850569291006625
+              ],
+              "ci95_pct": [
+                6.91,
+                18.85
+              ],
+              "n_success": 13,
+              "n_total": 112,
+              "rate": 0.11607142857142858,
+              "rate_pct": 11.61
+            },
+            "regex_class": {
+              "ci95": [
+                0.07594026855583394,
+                0.198930741744374
+              ],
+              "ci95_pct": [
+                7.59,
+                19.89
+              ],
+              "n_success": 14,
+              "n_total": 112,
+              "rate": 0.125,
+              "rate_pct": 12.5
+            },
+            "template_variation": {
+              "ci95": [
+                0.07594026855583394,
+                0.198930741744374
+              ],
+              "ci95_pct": [
+                7.59,
+                19.89
+              ],
+              "n_success": 14,
+              "n_total": 112,
+              "rate": 0.125,
+              "rate_pct": 12.5
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.411345857883062,
+                0.5747499449793583
+              ],
+              "ci95_pct": [
+                41.13,
+                57.47
+              ],
+              "n_success": 69,
+              "n_total": 140,
+              "rate": 0.4928571428571429,
+              "rate_pct": 49.29
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.2720699416901038,
+              0.34839074517107005
+            ],
+            "ci95_pct": [
+              27.21,
+              34.84
+            ],
+            "n_success": 173,
+            "n_total": 560,
+            "rate": 0.30892857142857144,
+            "rate_pct": 30.89
+          }
+        }
+      },
+      "LEAKCERT_no_suppression": {
+        "W4": {
+          "duration_sec": 7.589,
+          "extraction": {
+            "ci95": [
+              0.030601922337250245,
+              0.12341425634632565
+            ],
+            "ci95_pct": [
+              3.06,
+              12.34
+            ],
+            "n_success": 7,
+            "n_total": 112,
+            "rate": 0.0625,
+            "rate_pct": 6.25
+          },
+          "per_mode": {
+            "direct": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.3877787807814457e-17,
+                0.12064330476584563
+              ],
+              "ci95_pct": [
+                0.0,
+                12.06
+              ],
+              "n_success": 0,
+              "n_total": 28,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.12676494919293313,
+                0.4335567031899896
+              ],
+              "ci95_pct": [
+                12.68,
+                43.36
+              ],
+              "n_success": 7,
+              "n_total": 28,
+              "rate": 0.25,
+              "rate_pct": 25.0
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.030601922337250245,
+              0.12341425634632565
+            ],
+            "ci95_pct": [
+              3.06,
+              12.34
+            ],
+            "n_success": 7,
+            "n_total": 112,
+            "rate": 0.0625,
+            "rate_pct": 6.25
+          }
+        },
+        "W5": {
+          "duration_sec": 44.288,
+          "extraction": {
+            "ci95": [
+              0.04376999119626037,
+              0.08364429822288688
+            ],
+            "ci95_pct": [
+              4.38,
+              8.36
+            ],
+            "n_success": 34,
+            "n_total": 560,
+            "rate": 0.060714285714285714,
+            "rate_pct": 6.07
+          },
+          "per_mode": {
+            "base64_decode": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "language_variation": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "natural_language": {
+              "ci95": [
+                0.024780939016041954,
+                0.11197026372230082
+              ],
+              "ci95_pct": [
+                2.48,
+                11.2
+              ],
+              "n_success": 6,
+              "n_total": 112,
+              "rate": 0.05357142857142857,
+              "rate_pct": 5.36
+            },
+            "regex_class": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            },
+            "template_variation": {
+              "ci95": [
+                0.030601922337250245,
+                0.12341425634632565
+              ],
+              "ci95_pct": [
+                3.06,
+                12.34
+              ],
+              "n_success": 7,
+              "n_total": 112,
+              "rate": 0.0625,
+              "rate_pct": 6.25
+            }
+          },
+          "per_type": {
+            "T1_literal": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T2_paraphrase": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T3_semantic": {
+              "ci95": [
+                1.734723475976807e-18,
+                0.026706200369412993
+              ],
+              "ci95_pct": [
+                0.0,
+                2.67
+              ],
+              "n_success": 0,
+              "n_total": 140,
+              "rate": 0.0,
+              "rate_pct": 0.0
+            },
+            "T4_vulnerability": {
+              "ci95": [
+                0.1793125871162926,
+                0.320136315930834
+              ],
+              "ci95_pct": [
+                17.93,
+                32.01
+              ],
+              "n_success": 34,
+              "n_total": 140,
+              "rate": 0.24285714285714285,
+              "rate_pct": 24.29
+            }
+          },
+          "refusal": {
+            "ci95": [
+              0.045279592130275055,
+              0.08568179367334725
+            ],
+            "ci95_pct": [
+              4.53,
+              8.57
+            ],
+            "n_success": 35,
+            "n_total": 560,
+            "rate": 0.0625,
+            "rate_pct": 6.25
+          }
+        }
+      }
+    }
+  },
+  "reviewer_extra_light_w5_replications": {
+    "component_ablation": {},
+    "metadata": {
+      "base_config": "_run_results/learnedonly_t095_validation_20260603_190245/configs/w5_seed42_t095.yaml",
+      "batch_size": 16,
+      "hostname": "local-mac",
+      "n_eval_per_type": 4,
+      "output_root": "_run_results/reviewer_local_extra_light_20260604_222206",
+      "platform": "macOS-26.3.1-arm64-arm-64bit",
+      "python": "3.12.12",
+      "seeds": [
+        47,
+        48
+      ],
+      "threads": 4,
+      "timestamp": "2026-06-04T22:22:06+0700"
+    },
+    "w5_replications": {
+      "47": {
+        "B5_content_filter": {
+          "ratio": 0.815,
+          "w4_n": 112,
+          "w4_rate_pct": 11.61,
+          "w5_n": 560,
+          "w5_rate_pct": 9.46
+        },
+        "LEAKCERT": {
+          "ratio": 0.5,
+          "w4_n": 112,
+          "w4_rate_pct": 7.14,
+          "w5_n": 560,
+          "w5_rate_pct": 3.57
+        }
+      },
+      "48": {
+        "B5_content_filter": {
+          "ratio": 0.767,
+          "w4_n": 112,
+          "w4_rate_pct": 5.36,
+          "w5_n": 560,
+          "w5_rate_pct": 4.11
+        },
+        "LEAKCERT": {
+          "ratio": 0.3,
+          "w4_n": 112,
+          "w4_rate_pct": 1.79,
+          "w5_n": 560,
+          "w5_rate_pct": 0.54
+        }
+      }
+    }
+  },
   "reviewer_w3_error_analysis": {
     "defenses": {
       "B1_no_defense": {
@@ -3904,7 +5569,7 @@
       }
     }
   },
-  "source_commit": "b5162935c7d82b3570351b40e6f9c61737ce5bfd",
+  "source_commit": "f3f5124175989fb8432fed9f0c452fcf05299972",
   "w3_diagnostic": {
     "metadata": {
       "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",

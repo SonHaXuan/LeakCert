@@ -79,6 +79,24 @@ These are the numbers that are most defensible to reuse in the current draft. Th
 | LEAKCERT_no_suppression | 6.25% | 0.00% | 100.00% | similar to full on W5 |
 | LEAKCERT_no_refusal | 12.50% | 0.00% | 100.00% | refusal contributes to W4 reduction |
 
+## Table J: Reviewer Extra Light W5 Replications
+
+| seed | B5 W4 | B5 W5 | LEAKCERT W4 | LEAKCERT W5 | takeaway |
+|---:|---:|---:|---:|---:|---|
+| 47 | 11.61% | 9.46% | 7.14% | 3.57% | small-panel replication |
+| 48 | 5.36% | 4.11% | 1.79% | 0.54% | small-panel replication |
+
+## Table K: Reviewer Extra Light Component Ablation
+
+| variant | W4 extraction | W5 extraction | W5 blocked/replaced | takeaway |
+|---|---:|---:|---:|---|
+| B5_content_filter | 12.50% | 12.32% | 30.89% | baseline |
+| LEAKCERT_full | 6.25% | 6.07% | 37.14% | reduced W5 vs B5 |
+| LEAKCERT_no_rate_limit | 6.25% | 6.07% | 37.14% | similar to full in this sanity panel |
+| LEAKCERT_no_accounting | 6.25% | 6.07% | 37.14% | similar to full in this sanity panel |
+| LEAKCERT_no_suppression | 6.25% | 6.07% | 6.25% | similar to full in this sanity panel |
+| LEAKCERT_no_refusal | 12.50% | 12.32% | 30.89% | matches B5; refusal is decisive in this sanity panel |
+
 
 ## Safe Claim Wording
 

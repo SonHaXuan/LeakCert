@@ -445,6 +445,23 @@ def main() -> int:
         copy_sanitized(str(rel / "component_ablation_summary.md"), "reviewer_component_ablation_summary.md")
         reviewer_ablation = read_json(rel / "component_ablation_summary.json")
 
+    reviewer_extra_light_latest = latest_dir("_run_results/reviewer_local_extra_light_*")
+    reviewer_extra_light = None
+    if reviewer_extra_light_latest and (reviewer_extra_light_latest / "summary.json").exists():
+        rel = reviewer_extra_light_latest.relative_to(ROOT)
+        copy_sanitized(str(rel / "summary.json"), "reviewer_extra_light_w5_replications.json")
+        if (reviewer_extra_light_latest / "summary.md").exists():
+            copy_sanitized(str(rel / "summary.md"), "reviewer_extra_light_w5_replications.md")
+        reviewer_extra_light = read_json(rel / "summary.json")
+
+    reviewer_extra_ablation_latest = latest_dir("_run_results/reviewer_local_extra_ablation_resume_*")
+    reviewer_extra_ablation = None
+    if reviewer_extra_ablation_latest and (reviewer_extra_ablation_latest / "component_ablation_summary.json").exists():
+        rel = reviewer_extra_ablation_latest.relative_to(ROOT)
+        copy_sanitized(str(rel / "component_ablation_summary.json"), "reviewer_extra_component_ablation_summary.json")
+        copy_sanitized(str(rel / "component_ablation_summary.md"), "reviewer_extra_component_ablation_summary.md")
+        reviewer_extra_ablation = read_json(rel / "component_ablation_summary.json")
+
     w3_diag = read_json("_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json")
     learned_w3 = read_json("_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json")
     seed42_w5 = extract_w5_rows("_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/table6_paraphrase_robustness.json")
@@ -551,6 +568,8 @@ The current package supports a careful small-scale/positive-control claim: learn
         "reviewer_w3_error_analysis": reviewer_w3_error,
         "reviewer_w3_threshold_sweep": reviewer_threshold,
         "reviewer_component_ablation": reviewer_ablation,
+        "reviewer_extra_light_w5_replications": reviewer_extra_light,
+        "reviewer_extra_component_ablation": reviewer_extra_ablation,
     }
     next_steps = """# Recommended Next Experiments
 
@@ -743,6 +762,46 @@ These are the numbers that are most defensible to reuse in the current draft. Th
                 takeaway = "refusal contributes to W4 reduction"
             else:
                 takeaway = "similar to full on W5"
+            paper_tables += f"| {name} | {w4_rate:.2f}% | {w5_rate:.2f}% | {w5_blocked:.2f}% | {takeaway} |\n"
+    else:
+        paper_tables += "| n/a | n/a | n/a | n/a | pending |\n"
+
+    paper_tables += "\n## Table J: Reviewer Extra Light W5 Replications\n\n"
+    paper_tables += "| seed | B5 W4 | B5 W5 | LEAKCERT W4 | LEAKCERT W5 | takeaway |\n"
+    paper_tables += "|---:|---:|---:|---:|---:|---|\n"
+    extra_rows = (reviewer_extra_light or {}).get("w5_replications", {})
+    if extra_rows:
+        for seed, rows in sorted(extra_rows.items(), key=lambda kv: int(kv[0])):
+            b5 = rows.get("B5_content_filter", {})
+            lc = rows.get("LEAKCERT", {})
+            paper_tables += (
+                f"| {seed} | {float(b5.get('w4_rate_pct', 0.0)):.2f}% | "
+                f"{float(b5.get('w5_rate_pct', 0.0)):.2f}% | "
+                f"{float(lc.get('w4_rate_pct', 0.0)):.2f}% | "
+                f"{float(lc.get('w5_rate_pct', 0.0)):.2f}% | "
+                "small-panel replication |\n"
+            )
+    else:
+        paper_tables += "| n/a | n/a | n/a | n/a | n/a | pending |\n"
+
+    paper_tables += "\n## Table K: Reviewer Extra Light Component Ablation\n\n"
+    paper_tables += "| variant | W4 extraction | W5 extraction | W5 blocked/replaced | takeaway |\n"
+    paper_tables += "|---|---:|---:|---:|---|\n"
+    if reviewer_extra_ablation:
+        for name, row in reviewer_extra_ablation.get("results", {}).items():
+            w4 = row.get("W4", {})
+            w5 = row.get("W5", {})
+            w4_rate = float(w4.get("extraction", {}).get("rate_pct", 0.0))
+            w5_rate = float(w5.get("extraction", {}).get("rate_pct", 0.0))
+            w5_blocked = float(w5.get("refusal", {}).get("rate_pct", 0.0))
+            if name == "B5_content_filter":
+                takeaway = "baseline"
+            elif name == "LEAKCERT_no_refusal":
+                takeaway = "matches B5; refusal is decisive in this sanity panel"
+            elif name == "LEAKCERT_full":
+                takeaway = "reduced W5 vs B5"
+            else:
+                takeaway = "similar to full in this sanity panel"
             paper_tables += f"| {name} | {w4_rate:.2f}% | {w5_rate:.2f}% | {w5_blocked:.2f}% | {takeaway} |\n"
     else:
         paper_tables += "| n/a | n/a | n/a | n/a | pending |\n"

@@ -1,0 +1,52 @@
+{
+  "component_ablation": {},
+  "metadata": {
+    "base_config": "_run_results/learnedonly_t095_validation_20260603_190245/configs/w5_seed42_t095.yaml",
+    "batch_size": 16,
+    "hostname": "local-mac",
+    "n_eval_per_type": 4,
+    "output_root": "_run_results/reviewer_local_extra_light_20260604_222206",
+    "platform": "macOS-26.3.1-arm64-arm-64bit",
+    "python": "3.12.12",
+    "seeds": [
+      47,
+      48
+    ],
+    "threads": 4,
+    "timestamp": "2026-06-04T22:22:06+0700"
+  },
+  "w5_replications": {
+    "47": {
+      "B5_content_filter": {
+        "ratio": 0.815,
+        "w4_n": 112,
+        "w4_rate_pct": 11.61,
+        "w5_n": 560,
+        "w5_rate_pct": 9.46
+      },
+      "LEAKCERT": {
+        "ratio": 0.5,
+        "w4_n": 112,
+        "w4_rate_pct": 7.14,
+        "w5_n": 560,
+        "w5_rate_pct": 3.57
+      }
+    },
+    "48": {
+      "B5_content_filter": {
+        "ratio": 0.767,
+        "w4_n": 112,
+        "w4_rate_pct": 5.36,
+        "w5_n": 560,
+        "w5_rate_pct": 4.11
+      },
+      "LEAKCERT": {
+        "ratio": 0.3,
+        "w4_n": 112,
+        "w4_rate_pct": 1.79,
+        "w5_n": 560,
+        "w5_rate_pct": 0.54
+      }
+    }
+  }
+}

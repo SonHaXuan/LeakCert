@@ -1,7 +1,7 @@
 [
   {
     "path": "README.md",
-    "sha256": "481decc2b358d255b71c0037f4158a81167eff9c2a747d79d409d24271e66fc3",
+    "sha256": "c8ff93025e54135d9915eea0d87ebd32306c5c5269c5aeedaddca13946d57cee",
     "size_bytes": 2894
   },
   {
@@ -195,6 +195,21 @@
     "size_bytes": 518
   },
   {
+    "path": "artifacts/reviewer_extra_component_ablation_summary.json",
+    "sha256": "11cf9a5cc5add6771467a51334d2ddf3e83805a1eab1852efa1fef0a96ac2119",
+    "size_bytes": 38365
+  },
+  {
+    "path": "artifacts/reviewer_extra_component_ablation_summary.md",
+    "sha256": "eb6152e12659e5e0dd24b952b2486ff0baa158081233b7306b2564c75e13433a",
+    "size_bytes": 514
+  },
+  {
+    "path": "artifacts/reviewer_extra_light_w5_replications.json",
+    "sha256": "bd00672e8499a419062f790c5a34f3668cc8389b6ea3164a607d8ac6603c03d7",
+    "size_bytes": 1176
+  },
+  {
     "path": "artifacts/reviewer_w3_error_analysis.json",
     "sha256": "976b2d05e25a74a58c28b4e6af4fd8d981c780bbbc7c3a1b3c20d2eb63b0ee55",
     "size_bytes": 6779
@@ -231,8 +246,8 @@
   },
   {
     "path": "machine_readable_summary.json",
-    "sha256": "d2c720a00c4b4bfb1c7130f0a2c1399c17f9c990ac120b90267068f87627cd4e",
-    "size_bytes": 110976
+    "sha256": "41f72baa69f45500472365aaf6a7dee26606f625d451c9ad222711844a406c6c",
+    "size_bytes": 153569
   },
   {
     "path": "next_experiments.md",
@@ -241,8 +256,8 @@
   },
   {
     "path": "paper_ready_tables.md",
-    "sha256": "3eb21ae7025c40dd79d2c49ffab1026a40fdfcad412c0d98cf20855ffdd17213",
-    "size_bytes": 4742
+    "sha256": "e4c22dc608c7cc974b13289de1b509745e2c1f1413dd06a0172d551bc2a737ec",
+    "size_bytes": 5676
   },
   {
     "path": "reviewer_experiment_plan.md",
