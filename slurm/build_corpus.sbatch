@@ -32,10 +32,18 @@ echo "Using container: $CONTAINER"
 
 mkdir -p "$WORKDIR/data" "$WORKDIR/logs"
 
-DATASET="${DATASET:-codeparrot/github-code-clean}"
-LANGUAGES="${LANGUAGES:-Python}"
+# Default to a parquet-native, ungated dataset. modern `datasets` (>=3) no
+# longer runs script-based loaders like codeparrot/github-code-clean.
+DATASET="${DATASET:-codeparrot/codeparrot-clean}"
+# Leave LANGUAGES empty for single-language datasets (codeparrot-clean is all
+# Python and has no `language` field to filter on). Set it only for multi-language
+# datasets that expose a language field.
+LANGUAGES="${LANGUAGES:-}"
 MAX_ROWS="${MAX_ROWS:-2000000}"
 OUTPUT="$WORKDIR/data/code_corpus.jsonl"
+
+LANG_ARG=""
+[ -n "$LANGUAGES" ] && LANG_ARG="--languages $LANGUAGES"
 
 singularity exec --nv \
     --bind "$WORKDIR:$WORKDIR" \
@@ -47,7 +55,7 @@ singularity exec --nv \
         pip install --user --quiet -U datasets huggingface_hub 2>/dev/null || true
         python3 -u scripts/build_code_corpus.py \
             --dataset '$DATASET' \
-            --languages $LANGUAGES \
+            $LANG_ARG \
             --max-rows $MAX_ROWS \
             --output '$OUTPUT'
     "

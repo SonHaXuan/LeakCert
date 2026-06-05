@@ -52,8 +52,10 @@ def _pick_text_field(record: dict, override: str | None) -> str | None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--dataset", default="codeparrot/github-code-clean",
-                        help="HuggingFace dataset id (default: %(default)s)")
+    parser.add_argument("--dataset", default="codeparrot/codeparrot-clean",
+                        help="HuggingFace dataset id (default: %(default)s). "
+                             "Must be parquet-native; modern datasets>=3 cannot run "
+                             "script-based loaders like codeparrot/github-code-clean.")
     parser.add_argument("--config", default=None,
                         help="Dataset config/subset name, if the dataset requires one")
     parser.add_argument("--split", default="train")
