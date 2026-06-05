@@ -1,0 +1,4 @@
+# Shell and Slurm scripts must use LF so the Linux/HPC side does not choke on
+# CRLF ("sbatch: error: Batch script contains DOS line breaks").
+*.sh    text eol=lf
+*.sbatch text eol=lf

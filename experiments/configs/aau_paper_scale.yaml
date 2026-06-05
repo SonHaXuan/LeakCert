@@ -1,0 +1,102 @@
+# Paper-scale W1 training config for the AAU AI Cloud HPC.
+#
+# Paths are RELATIVE to the repo working dir ($HOME/LeakCert on the cluster), so
+# the Slurm scripts that `cd $WORKDIR` resolve them correctly. Base models are
+# downloaded by slurm/download_model.sbatch; the corpus is built by
+# slurm/build_corpus.sbatch.
+#
+# Code-Small = Qwen2.5-Coder-1.5B (~1.5B), Code-Mid = Qwen2.5-Coder-7B (~7B).
+# Both are open on HuggingFace; swap the ids/paths here to use different models.
+
+model:
+  target_model_small: "models/qwen2.5-coder-1.5b"
+  target_model_mid: "models/qwen2.5-coder-7b"
+  ref_model: "models/qwen2.5-coder-1.5b"
+  device: "cuda"
+  max_new_tokens: 128
+  temperature: 1.0
+  top_p: 1.0
+
+canary:
+  n_canaries: 10000
+  n_eval_per_type: 283
+  n_eval: 1132
+  seed: 42
+  include_paraphrase: true
+
+corpus:
+  # Built by scripts/build_code_corpus.py (slurm/build_corpus.sbatch).
+  path: "data/code_corpus.jsonl"
+  lcct_path: "TODO_REAL_LCCT_JSONL"
+  utility_eval_path: ""
+  max_seq_length: 512
+  stride: 256
+
+finetune:
+  num_train_epochs: 3
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 8
+  learning_rate: 2.0e-5
+  warmup_steps: 100
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  fp16: false
+  torch_dtype: "bfloat16"
+  use_dp: false
+  output_dir: "checkpoints/target_small"
+
+finetune_mid:
+  num_train_epochs: 3
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  learning_rate: 2.0e-5
+  warmup_steps: 100
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  fp16: false
+  torch_dtype: "bfloat16"
+  use_dp: false
+  output_dir: "checkpoints/target_mid"
+
+finetune_dp:
+  use_dp: true
+  dp_delta: 1.0e-5
+  dp_max_grad_norm: 1.0
+  # Output dirs per epsilon are passed on the command line by
+  # slurm/train_dp_sweep.sbatch (checkpoints/dp_eps<E>).
+  checkpoints:
+    "1": "checkpoints/dp_eps1"
+    "2": "checkpoints/dp_eps2"
+    "4": "checkpoints/dp_eps4"
+    "8": "checkpoints/dp_eps8"
+    "16": "checkpoints/dp_eps16"
+
+certificate:
+  delta: 0.01
+  budgets: [100, 1000, 5000, 10000, 50000, 100000, 1000000, 10000000]
+  n_queries_per_canary: 1
+  calibration_panel_sizes: [100, 500, 1000, 5000, 10000]
+  calibration_seeds: [42, 43, 44, 45, 46]
+
+evaluation:
+  query_budget: 10000
+  n_eval_canaries: 1132
+  require_real_lcct: false
+  run_workloads: [W1, W3, W4, W5]
+  run_defenses: [B1, B2, B3, B4, B5, B6, LEAKCERT]
+  run_attackers: [A_fixed, A_grid, A_adaptive, A_greedy_LRT]
+  b2_temperatures: [0.2, 0.5, 1.5]
+  b3_top_p_values: [0.5, 0.7, 0.9]
+  dp_epsilons: [1, 2, 4, 8, 16]
+  w2_smoke_samples: 100
+  w3_smoke_samples: 20
+
+runtime:
+  query_budget: 10000
+  window_days: 10
+  refusal_threshold: 0.5
+  target_refusal_rate: 0.01
+  use_canary_hashes: false
+
+output_dir: "./_run_results/aau_paper_scale"
+seed: 42
