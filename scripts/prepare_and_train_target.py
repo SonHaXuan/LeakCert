@@ -40,6 +40,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import platform
 import socket
 import time
@@ -173,10 +174,41 @@ def make_finetune_config(
     return FineTuneConfig(**kwargs)
 
 
+def maybe_init_distributed() -> tuple[int, int]:
+    """Init the process group when launched under torchrun (WORLD_SIZE>1).
+
+    Returns (rank, world_size). HF Trainer reuses an already-initialized group,
+    so calling this before training is safe and lets us guard the one-time
+    canary injection to rank 0 with a barrier.
+    """
+    world_size = int(os.environ.get("WORLD_SIZE", "1"))
+    rank = int(os.environ.get("RANK", "0"))
+    if world_size <= 1:
+        return rank, world_size
+    import torch
+    import torch.distributed as dist
+
+    local_rank = int(os.environ.get("LOCAL_RANK", "0"))
+    if torch.cuda.is_available():
+        torch.cuda.set_device(local_rank)
+    if not dist.is_initialized():
+        dist.init_process_group(backend="nccl" if torch.cuda.is_available() else "gloo")
+    return rank, world_size
+
+
+def barrier(world_size: int) -> None:
+    if world_size > 1:
+        import torch.distributed as dist
+
+        if dist.is_initialized():
+            dist.barrier()
+
+
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     args = parse_args()
     cfg = load_config(args.config)
+    rank, world_size = maybe_init_distributed()
 
     base_model = resolve_base_model(cfg, args.model_key, args.base_model)
 
@@ -203,19 +235,27 @@ def main() -> int:
     injected_corpus = Path(args.injected_corpus or (out / "corpus_with_canaries.jsonl"))
     manifest_path = out / "canary_injection_manifest.json"
 
-    # ---- 1 & 2: canaries + injection ---------------------------------------
-    panel = build_panel(cfg, args.max_canaries)
-    n_canaries = len(panel.canaries)
-    logger.info("Generated canary panel: %d canaries", n_canaries)
-
-    if args.reuse_injected and injected_corpus.exists() and manifest_path.exists():
-        logger.info("Reusing existing injected corpus: %s", injected_corpus)
+    # ---- 1 & 2: canaries + injection (rank 0 only under multi-GPU) ----------
+    # Every torchrun process runs this script; only rank 0 may write the
+    # injected corpus/manifest. Other ranks wait at the barrier and then read.
+    n_canaries = -1
+    if rank == 0:
+        panel = build_panel(cfg, args.max_canaries)
+        n_canaries = len(panel.canaries)
+        logger.info("Generated canary panel: %d canaries", n_canaries)
+        if args.reuse_injected and injected_corpus.exists() and manifest_path.exists():
+            logger.info("Reusing existing injected corpus: %s", injected_corpus)
+        else:
+            injector = CorpusInjector(seed=cfg.get("canary", {}).get("seed", 42))
+            logger.info("Injecting canaries into %s -> %s", base_corpus, injected_corpus)
+            positions = injector.inject_into_dataset(base_corpus, panel, injected_corpus)
+            injector.save_manifest(positions, panel, manifest_path)
+            logger.info("Wrote injection manifest: %s", manifest_path)
     else:
-        injector = CorpusInjector(seed=cfg.get("canary", {}).get("seed", 42))
-        logger.info("Injecting canaries into %s -> %s", base_corpus, injected_corpus)
-        positions = injector.inject_into_dataset(base_corpus, panel, injected_corpus)
-        injector.save_manifest(positions, panel, manifest_path)
-        logger.info("Wrote injection manifest: %s", manifest_path)
+        logger.info("Rank %d waiting for rank-0 canary injection", rank)
+    barrier(world_size)
+    if not injected_corpus.exists():
+        raise RuntimeError(f"Injected corpus missing after injection: {injected_corpus}")
 
     # ---- 3: fine-tune config ----------------------------------------------
     ft_config = make_finetune_config(
@@ -243,17 +283,23 @@ def main() -> int:
         "dry_run": args.dry_run,
     }
 
+    summary["world_size"] = world_size
+
     if args.dry_run:
-        summary["status"] = "dry-run (training skipped)"
-        (out / "train_summary.json").write_text(json.dumps(summary, indent=2))
-        print(json.dumps(summary, indent=2))
+        if rank == 0:
+            summary["status"] = "dry-run (training skipped)"
+            (out / "train_summary.json").write_text(json.dumps(summary, indent=2))
+            print(json.dumps(summary, indent=2))
         return 0
 
-    # ---- 4: train ----------------------------------------------------------
-    logger.info("Starting fine-tuning: model=%s dp=%s eps=%s",
-                base_model, ft_config.use_dp, args.dp_epsilon)
+    # ---- 4: train (HF Trainer auto-enables DDP under torchrun) --------------
+    logger.info("Starting fine-tuning: model=%s dp=%s eps=%s world_size=%d",
+                base_model, ft_config.use_dp, args.dp_epsilon, world_size)
     tuner = CanaryFineTuner(ft_config)
     tuner.train()
+
+    if rank != 0:
+        return 0
 
     dp_accounting = out / "dp_accounting.json"
     if ft_config.use_dp:
