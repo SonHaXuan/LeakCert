@@ -170,7 +170,10 @@ class CanaryFineTuner:
             logging_steps=cfg.logging_steps,
             save_steps=cfg.save_steps,
             seed=cfg.seed,
-            dataloader_num_workers=4,
+            # 0 workers: the in-memory TextDataset would be copy-on-write forked
+            # by each worker and, across DDP ranks, blow up host RAM (OOM). Data
+            # prep is trivial vs the GPU step, so inline loading costs ~nothing.
+            dataloader_num_workers=0,
             remove_unused_columns=False,
         )
         trainer = Trainer(
