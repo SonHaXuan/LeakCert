@@ -40,6 +40,12 @@ done
 CANARY_ARG=""
 [[ -n "$MAX_CANARIES" ]] && CANARY_ARG="--max-canaries $MAX_CANARIES"
 
+# Re-inject fresh by default. Set REUSE_INJECTED=1 only to resume an interrupted
+# run with an already-correct injected corpus (avoids silently reusing stale data
+# when the base corpus changed).
+REUSE_ARG=""
+[[ -n "$REUSE_INJECTED" ]] && REUSE_ARG="--reuse-injected"
+
 echo "=========================================="
 echo "LeakCert W1 multi-GPU — model-key=$MODEL_KEY"
 echo "Job ID:    $SLURM_JOB_ID"
@@ -64,7 +70,7 @@ singularity exec --nv \
             scripts/prepare_and_train_target.py \
             --config '$CONFIG' \
             --model-key $MODEL_KEY \
-            --reuse-injected \
+            $REUSE_ARG \
             $CANARY_ARG
     "
 
