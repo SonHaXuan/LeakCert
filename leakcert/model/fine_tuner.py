@@ -145,17 +145,58 @@ class CanaryFineTuner:
             torch_dtype=torch.float32 if cfg.use_dp else dtype,
         )
 
-        dataset = TextDataset(cfg.corpus_path, self.tokenizer, cfg.max_seq_length)
         collator = DataCollatorForLanguageModeling(
             tokenizer=self.tokenizer, mlm=False
         )
 
         if cfg.use_dp:
+            # DP path runs a manual single-GPU loop on small corpora; the eager
+            # in-memory dataset is fine there.
+            dataset = TextDataset(cfg.corpus_path, self.tokenizer, cfg.max_seq_length)
             self._train_with_dp(model, dataset, collator)
         else:
-            self._train_standard(model, dataset, collator)
+            self._train_standard(model, collator)
 
-    def _train_standard(self, model, dataset, collator) -> None:
+    def _build_tokenized_dataset(self, args):
+        """Tokenize the corpus once into a memory-mapped Arrow dataset.
+
+        Unlike the eager in-memory TextDataset, this:
+          - tokenizes in batches with multiple processes (fast), and
+          - is memory-mapped from disk, so all DDP ranks share one copy
+            (low host RAM) instead of each rank holding the whole corpus.
+        Under torchrun the rank-0 process builds the cache inside
+        ``main_process_first`` while other ranks wait, then reuse the cache.
+        """
+        from datasets import load_dataset
+
+        cfg = self.config
+        max_len = cfg.max_seq_length
+        stride = min(256, max(0, max_len - 1))
+        tokenizer = self.tokenizer
+
+        def tokenize_fn(batch):
+            enc = tokenizer(
+                batch["text"],
+                truncation=True,
+                max_length=max_len,
+                return_overflowing_tokens=True,
+                stride=stride,
+            )
+            return {"input_ids": enc["input_ids"]}
+
+        with args.main_process_first(desc="corpus tokenization"):
+            raw = load_dataset("json", data_files=cfg.corpus_path, split="train")
+            tokenized = raw.map(
+                tokenize_fn,
+                batched=True,
+                remove_columns=raw.column_names,
+                num_proc=8,
+                desc="Tokenizing corpus",
+            )
+        logger.info("Tokenized dataset: %d sequences", len(tokenized))
+        return tokenized
+
+    def _train_standard(self, model, collator) -> None:
         cfg = self.config
         args = TrainingArguments(
             output_dir=cfg.output_dir,
@@ -170,12 +211,10 @@ class CanaryFineTuner:
             logging_steps=cfg.logging_steps,
             save_steps=cfg.save_steps,
             seed=cfg.seed,
-            # 0 workers: the in-memory TextDataset would be copy-on-write forked
-            # by each worker and, across DDP ranks, blow up host RAM (OOM). Data
-            # prep is trivial vs the GPU step, so inline loading costs ~nothing.
-            dataloader_num_workers=0,
+            dataloader_num_workers=2,
             remove_unused_columns=False,
         )
+        dataset = self._build_tokenized_dataset(args)
         trainer = Trainer(
             model=model,
             args=args,
