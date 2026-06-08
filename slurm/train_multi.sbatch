@@ -46,6 +46,11 @@ CANARY_ARG=""
 REUSE_ARG=""
 [[ -n "$REUSE_INJECTED" ]] && REUSE_ARG="--reuse-injected"
 
+# Override the checkpoint output dir (e.g. to run a second job concurrently
+# without clobbering an in-progress run's checkpoints/injected corpus).
+OUTDIR_ARG=""
+[[ -n "$OUTPUT_DIR" ]] && OUTDIR_ARG="--output-dir $OUTPUT_DIR"
+
 echo "=========================================="
 echo "LeakCert W1 multi-GPU — model-key=$MODEL_KEY"
 echo "Job ID:    $SLURM_JOB_ID"
@@ -71,6 +76,7 @@ singularity exec --nv \
             --config '$CONFIG' \
             --model-key $MODEL_KEY \
             $REUSE_ARG \
+            $OUTDIR_ARG \
             $CANARY_ARG
     "
 
