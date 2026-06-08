@@ -43,6 +43,8 @@ finetune:
   fp16: false
   torch_dtype: "bfloat16"
   use_dp: false
+  save_steps: 3000
+  save_total_limit: 2
   output_dir: "checkpoints/target_small"
 
 finetune_mid:
@@ -56,6 +58,8 @@ finetune_mid:
   fp16: false
   torch_dtype: "bfloat16"
   use_dp: false
+  save_steps: 3000
+  save_total_limit: 2
   output_dir: "checkpoints/target_mid"
 
 finetune_dp:

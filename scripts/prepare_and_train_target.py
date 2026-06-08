@@ -69,6 +69,7 @@ _FINETUNE_KEYS = (
     "torch_dtype",
     "logging_steps",
     "save_steps",
+    "save_total_limit",
     "dp_delta",
     "dp_max_grad_norm",
     "dp_noise_multiplier",

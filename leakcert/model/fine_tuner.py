@@ -65,7 +65,8 @@ class FineTuneConfig:
 
     # Logging
     logging_steps: int = 50
-    save_steps: int = 500
+    save_steps: int = 3000
+    save_total_limit: int = 2   # keep only the latest N checkpoints (bounds disk usage)
     eval_steps: int = 500
     seed: int = 42
 
@@ -210,6 +211,7 @@ class CanaryFineTuner:
             fp16=cfg.fp16,
             logging_steps=cfg.logging_steps,
             save_steps=cfg.save_steps,
+            save_total_limit=cfg.save_total_limit,
             seed=cfg.seed,
             dataloader_num_workers=2,
             remove_unused_columns=False,
