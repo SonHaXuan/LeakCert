@@ -81,8 +81,14 @@ def main(args):
         logger.error(f"Target checkpoint not found at {target_path}. Run W1 first.")
         sys.exit(1)
 
-    target = BackendCompletionService(target_path, temperature=1.0, max_new_tokens=128)
-    ref = BackendCompletionService(target_model_name, temperature=1.0, max_new_tokens=128)
+    model_cfg = cfg.get("model", {})
+    device = model_cfg.get("device", "auto")
+    temperature = float(model_cfg.get("temperature", 1.0))
+    max_new_tokens = int(model_cfg.get("max_new_tokens", 128))
+    target = BackendCompletionService(
+        target_path, temperature=temperature, max_new_tokens=max_new_tokens, device=device)
+    ref = BackendCompletionService(
+        target_model_name, temperature=temperature, max_new_tokens=max_new_tokens, device=device)
 
     # ── Generate eval panel (stratified subset of W1-injected panel) ────
     # Must use the same generate_panel(seed, n_t3, n_t4) call as W1 so the

@@ -91,15 +91,16 @@ def main(args):
 
     model_cfg = cfg.get("model", {})
     device = model_cfg.get("device", "auto")
+    temperature = float(model_cfg.get("temperature", 1.0))
     target = BackendCompletionService(
         target_path,
-        temperature=1.0,
+        temperature=temperature,
         max_new_tokens=int(model_cfg.get("max_new_tokens", 128)),
         device=device,
     )
     ref = BackendCompletionService(
         target_model_name,
-        temperature=1.0,
+        temperature=temperature,
         max_new_tokens=int(model_cfg.get("max_new_tokens", 128)),
         device=device,
     )

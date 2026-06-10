@@ -1,0 +1,41 @@
+# Greedy-decode (temperature=0) rerun of the W4/W5 attack workloads against the
+# trained W1 Code-Small target. Greedy decoding is the right setting to probe
+# *verbatim* memorization extraction (temperature=1.0 sampling gave a 0% baseline
+# that made the defense comparison vacuous — see attack_eval_target_small_2026-06-10.md).
+# Adaptive Path B kept minimal (single small budget, LRT off) since the headline
+# W5 paraphrase-robustness contrast comes from the one-query W4/W5 workloads.
+
+model:
+  target_model_small: "models/qwen2.5-coder-1.5b"
+  ref_model: "models/qwen2.5-coder-1.5b"
+  device: "cuda"
+  max_new_tokens: 128
+  temperature: 0.0          # greedy decoding
+  top_p: 1.0
+
+canary:
+  n_canaries: 10000
+  n_eval_per_type: 25
+  n_eval: 100
+  seed: 42
+  include_paraphrase: true
+
+finetune:
+  output_dir: "checkpoints/target_small"
+
+evaluation:
+  query_budget: 10000
+  batch_size: 16
+  run_defenses: [B1, B5, LEAKCERT]
+  adaptive_budgets: [100]
+  run_attackers_lrt: false
+
+runtime:
+  query_budget: 10000
+  window_days: 10
+  refusal_threshold: 0.5
+  target_refusal_rate: 0.01
+  use_canary_hashes: false
+
+output_dir: "./_run_results/aau_eval_attacks_greedy"
+seed: 42
