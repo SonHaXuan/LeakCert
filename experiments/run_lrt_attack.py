@@ -104,10 +104,15 @@ def main(args):
         ref_name, temperature=temperature, max_new_tokens=max_new_tokens, device=device)
 
     n_per_type = cfg["canary"].get("n_eval_per_type", 283)
+    # FP control: a different generator seed yields canaries the target never
+    # trained on (held-out non-members). For those, detection rate == false
+    # positive rate, and any verbatim "hit" is a fluke.
+    is_fp_control = args.nonmember_seed is not None
+    panel_seed = args.nonmember_seed if is_fp_control else cfg["canary"]["seed"]
     gen = CanaryGenerator(
         n_canaries=cfg["canary"]["n_canaries"],
         n_eval=n_per_type * 4,
-        seed=cfg["canary"]["seed"],
+        seed=panel_seed,
     )
     panel = gen.generate_panel(
         include_paraphrase=cfg["canary"].get("include_paraphrase", True),
@@ -115,7 +120,8 @@ def main(args):
         n_t4=n_per_type,
     )
     eval_panel = panel.stratified_subset(n_per_type)
-    logger.info(f"Eval panel: {len(eval_panel)} canaries; LRT budget {budget}/canary")
+    tag = f"FP-CONTROL non-member seed={panel_seed}" if is_fp_control else "members"
+    logger.info(f"Eval panel: {len(eval_panel)} canaries ({tag}); LRT budget {budget}/canary")
 
     kl_estimator = KLEstimator(target, ref)
     leakcert_runtime = LeakCertRuntime(
@@ -132,7 +138,8 @@ def main(args):
 
     attacker = AGreedyLRT(budget=budget, ref_service=ref)
     table11 = {}
-    audit_path = output_dir / "lrt_audit.jsonl"
+    suffix = "_fpcontrol" if is_fp_control else ""
+    audit_path = output_dir / f"lrt_audit{suffix}.jsonl"
     audit_f = open(audit_path, "w")
 
     for def_name, service in defences.items():
@@ -185,13 +192,20 @@ def main(args):
         )
 
     audit_f.close()
-    with open(output_dir / "table11_lrt.json", "w") as f:
+    with open(output_dir / f"table11_lrt{suffix}.json", "w") as f:
         json.dump(table11, f, indent=2)
+    if is_fp_control:
+        logger.info("FP-CONTROL detection rates above == false positive rates "
+                    "(non-member canaries the target never trained on).")
     logger.info(f"LRT results saved to {output_dir}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Standalone A-greedy-LRT attack (Table 11)")
     parser.add_argument("--config", required=True)
+    parser.add_argument("--nonmember-seed", type=int, default=None,
+                        help="If set, generate the panel with this seed (held-out "
+                             "non-members) and report detection rate as the false "
+                             "positive rate.")
     args = parser.parse_args()
     main(args)
