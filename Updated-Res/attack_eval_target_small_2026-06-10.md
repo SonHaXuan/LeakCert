@@ -51,10 +51,37 @@ completed after ~35 min of active GPU compute. Extrapolated, B=1,000 / B=10,000 
    (sampling). Verbatim-memorization extraction should be probed with **greedy / low-temperature
    decoding**. A greedy rerun is the correct next step to obtain a meaningful baseline.
 
-## Next step (in progress)
-Greedy-decode rerun: the W4/W5 scripts were updated to honor `model.temperature` from the config, and a
-`temperature: 0.0` config (`aau_eval_attacks_greedy.yaml`) reruns the suite to establish whether
-verbatim extraction is non-zero under greedy decoding (and only then compare defenses).
+## Greedy rerun (job `944672`, temperature = 0.0) — CONFIRMS 0%
+
+The greedy-decode rerun (`aau_eval_attacks_greedy.yaml`, scripts updated to honor `model.temperature`)
+reproduced the result exactly:
+
+| Stage | B1 no_defense | B5 content_filter | LEAKCERT |
+|---|---|---|---|
+| W5 Table 6 (W4/W5 rates) | 0.00% / 0.00% | 0.00% / 0.00% | 0.00% / 0.00% |
+| W4 Path A (0/700 each) | 0.00% | 0.00% | 0.00% |
+| W4 Path B, A-adaptive B=100 | 0.00% | (timeout) | (timeout) |
+
+Job hit the 12h wall-clock during Path B (the A-adaptive attacker needs ~6.5h per (budget, defense)
+pair even at B=100 — note for future runs). All decisive stages completed.
+Raw outputs: `_run_results/aau_eval_attacks_greedy/w5/table6_paraphrase_robustness.json` (+ audit JSONL).
+
+## Final conclusion
+**Verbatim extraction is 0% under every tested condition** — sampled (temp 1.0) and greedy (temp 0)
+decoding, template prompts (W4), five paraphrase modes (W5), and the UCB-adaptive attacker against the
+undefended model. Combined with the certificate result (mean KL ≈ 20 nats, vacuous certificate), the
+clean finding is:
+
+> **Likelihood-level memorization and verbatim extractability are different phenomena at this model
+> scale.** The 1.5B target demonstrably memorizes the canaries (KL signal strong enough to make the
+> certificate vacuous) yet never emits them verbatim under direct or adaptive prompting. The KL-based
+> certificate detects leakage that string-matching extraction metrics entirely miss — an argument *for*
+> certificate-based accounting over extraction-rate-based auditing.
+
+Caveats: 1.5B model, 100-canary eval subset, ≤B=100 adaptive search completed; larger models (Code-Mid 7B),
+longer adaptive budgets, or likelihood-ranking attacks (A-greedy-LRT, MIA-style) may extract where
+sampling/greedy generation does not — those are the natural follow-ups, alongside the small-budget
+certificate sweep where the bound can become non-vacuous.
 
 ## Reproduce
 ```bash
