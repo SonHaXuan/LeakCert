@@ -60,6 +60,7 @@ def main(args):
             kl_estimate=row["kl"],
             log_p_target=row.get("log_p_target", 0.0),
             log_p_ref=row.get("log_p_ref", 0.0),
+            n_tokens=row.get("n_tokens", 0),   # metadata only; absent from saved JSON
             canary_type=row.get("type", ""),
         )
         for row in kl_rows
