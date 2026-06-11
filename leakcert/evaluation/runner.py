@@ -732,10 +732,15 @@ class ExperimentRunner:
                 "target_met": mean_ratio <= 1.3 if ratios else None,
                 "n_seeds": len(certs),
             })
+            tightness_msg = (
+                f"{mean_ratio:.2f}× "
+                f"({'≤1.3×' if mean_ratio <= 1.3 else '>1.3× FAIL'})"
+                if mean_ratio is not None
+                else "n/a (entropy-capped or unavailable)"
+            )
             logger.info(
                 f"  E1 B={B} n={n}: cert={mean_cert:.2f} "
-                f"tightness={mean_ratio:.2f}× "
-                f"({'≤1.3×' if mean_ratio <= 1.3 else '>1.3× FAIL'})"
+                f"tightness={tightness_msg}"
             )
 
         self._save("certificate/e1_calibration.json",

@@ -17,6 +17,19 @@ The workflow is intentionally gated:
 
 Do not commit API keys, SSH keys, raw private data, checkpoints, or paper files.
 
+For a one-command, review-grade evidence run, use
+`server_deploy/run_quality_evidence_pipeline.sh` and read
+`server_deploy/QUALITY_EVIDENCE_RUNBOOK.md` first. The wrapper performs setup,
+bundle install, input validation, unit tests, smoke/small/full runs, artifact
+collection, and optional gated post-analyses.
+
+```bash
+export LEAKCERT_RUN_ROOT=/data/LeakCert_runs
+export LEAKCERT_DATA_BUNDLE=/tmp/leakcert_server_payload_<timestamp>.tgz
+bash server_deploy/run_quality_evidence_pipeline.sh smoke
+bash server_deploy/run_quality_evidence_pipeline.sh core
+```
+
 ## 0. Clone On Server
 
 ```bash
