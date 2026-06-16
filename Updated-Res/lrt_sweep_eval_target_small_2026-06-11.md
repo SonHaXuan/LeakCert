@@ -35,9 +35,12 @@ T4 canary with probability ≤ 57.4% (vs the trivial bound of 1). The crossover 
 B* ≈ H(K)/C₁ = 5.645/1.84 ≈ 3. The certificate becomes informative exactly where memorization is
 weak — **type-stratified certificate accounting matters**.
 
-*Honesty note:* the `vacuous` flag in the raw JSON reads `false` for the capped T1–T3 rows — a
-floating-point artifact (`is_vacuous` compares cert ≥ ln(K); the capped cert equals the prior entropy
-computed as −Σp·log p, which is ε below ln(K)). Only T4 at B ≤ 2 is *meaningfully* below the cap.
+*Resolved (2026-06-16, job 948772, commit `f56e8dc`):* the earlier `vacuous`-flag float artifact is
+fixed. Vacuity is now judged on the **raw (uncapped)** Hoeffding certificate vs H(K), not the capped
+value vs `math.log(K)`, so capped T1–T3 rows no longer spuriously read non-vacuous. The corrected
+`certificate_sweep.json` flags exactly **T4 at B∈{1,2}** as non-vacuous (2.645 / 5.290 nats < H=5.645)
+and nothing else — which satisfies the Quality-Evidence Target B gate (every value ≤ H(K); ≥1 real
+setting with 0 < cert < H(K)).
 
 ---
 

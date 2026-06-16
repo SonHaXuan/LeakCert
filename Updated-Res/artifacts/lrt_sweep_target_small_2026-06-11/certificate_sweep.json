@@ -120,7 +120,7 @@
           "entropy_H_K_nats": 9.2103,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 2,
@@ -130,7 +130,7 @@
           "entropy_H_K_nats": 9.2103,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 5,
@@ -140,7 +140,7 @@
           "entropy_H_K_nats": 9.2103,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 10,
@@ -150,7 +150,7 @@
           "entropy_H_K_nats": 9.2103,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 25,
@@ -160,7 +160,7 @@
           "entropy_H_K_nats": 9.2103,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 50,
@@ -170,7 +170,7 @@
           "entropy_H_K_nats": 9.2103,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 100,
@@ -180,7 +180,7 @@
           "entropy_H_K_nats": 9.2103,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 250,
@@ -190,7 +190,7 @@
           "entropy_H_K_nats": 9.2103,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 500,
@@ -200,7 +200,7 @@
           "entropy_H_K_nats": 9.2103,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 1000,
@@ -210,7 +210,7 @@
           "entropy_H_K_nats": 9.2103,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         }
       ]
     },
@@ -226,7 +226,7 @@
           "entropy_H_K_nats": 6.9078,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 2,
@@ -236,7 +236,7 @@
           "entropy_H_K_nats": 6.9078,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 5,
@@ -246,7 +246,7 @@
           "entropy_H_K_nats": 6.9078,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 10,
@@ -256,7 +256,7 @@
           "entropy_H_K_nats": 6.9078,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 25,
@@ -266,7 +266,7 @@
           "entropy_H_K_nats": 6.9078,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 50,
@@ -276,7 +276,7 @@
           "entropy_H_K_nats": 6.9078,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 100,
@@ -286,7 +286,7 @@
           "entropy_H_K_nats": 6.9078,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 250,
@@ -296,7 +296,7 @@
           "entropy_H_K_nats": 6.9078,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 500,
@@ -306,7 +306,7 @@
           "entropy_H_K_nats": 6.9078,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 1000,
@@ -316,7 +316,7 @@
           "entropy_H_K_nats": 6.9078,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         }
       ]
     },
@@ -332,7 +332,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 2,
@@ -342,7 +342,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 5,
@@ -352,7 +352,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 10,
@@ -362,7 +362,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 25,
@@ -372,7 +372,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 50,
@@ -382,7 +382,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 100,
@@ -392,7 +392,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 250,
@@ -402,7 +402,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 500,
@@ -412,7 +412,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 1000,
@@ -422,7 +422,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         }
       ]
     },
@@ -458,7 +458,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 10,
@@ -468,7 +468,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 25,
@@ -478,7 +478,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 50,
@@ -488,7 +488,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 100,
@@ -498,7 +498,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 250,
@@ -508,7 +508,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 500,
@@ -518,7 +518,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         },
         {
           "B": 1000,
@@ -528,7 +528,7 @@
           "entropy_H_K_nats": 5.6454,
           "entropy_cap_applied": true,
           "extraction_prob_bound": 1.0,
-          "vacuous": false
+          "vacuous": true
         }
       ]
     }
