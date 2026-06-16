@@ -71,6 +71,7 @@ _FINETUNE_KEYS = (
     "gradient_checkpointing",
     "fsdp",
     "fsdp_transformer_layer_cls_to_wrap",
+    "fsdp_activation_checkpointing",
     "logging_steps",
     "save_steps",
     "save_total_limit",

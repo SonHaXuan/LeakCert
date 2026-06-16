@@ -59,6 +59,11 @@ class FineTuneConfig:
     # 44GB GPUs). Empty string = off. Typical: "full_shard auto_wrap".
     fsdp: str = ""
     fsdp_transformer_layer_cls_to_wrap: str = ""   # e.g. "Qwen2DecoderLayer"
+    # Under FSDP, prefer activation checkpointing via fsdp_config over the
+    # TrainingArguments gradient_checkpointing path: the latter adds a redundant
+    # AllGather in the backward pass (HF issue #30404), which roughly doubles
+    # step time for 7B full-shard. When this is True we disable the TA path.
+    fsdp_activation_checkpointing: bool = False
 
     # DP-SGD parameters (B6)
     use_dp: bool = False
@@ -206,14 +211,24 @@ class CanaryFineTuner:
     def _train_standard(self, model, collator) -> None:
         cfg = self.config
         extra_args = {}
+        # Route activation checkpointing through fsdp_config when requested, and
+        # in that case turn OFF the TrainingArguments gradient_checkpointing path
+        # (the two together produce a redundant backward AllGather).
+        use_ta_grad_ckpt = cfg.gradient_checkpointing and not (
+            cfg.fsdp and cfg.fsdp_activation_checkpointing
+        )
         if cfg.fsdp:
             extra_args["fsdp"] = cfg.fsdp
+            fsdp_config: dict = {}
             if cfg.fsdp_transformer_layer_cls_to_wrap:
-                extra_args["fsdp_config"] = {
-                    "transformer_layer_cls_to_wrap":
-                        cfg.fsdp_transformer_layer_cls_to_wrap,
-                }
-        if cfg.gradient_checkpointing:
+                fsdp_config["transformer_layer_cls_to_wrap"] = (
+                    cfg.fsdp_transformer_layer_cls_to_wrap
+                )
+            if cfg.fsdp_activation_checkpointing:
+                fsdp_config["activation_checkpointing"] = True
+            if fsdp_config:
+                extra_args["fsdp_config"] = fsdp_config
+        if use_ta_grad_ckpt:
             # non-reentrant checkpointing is required for FSDP compatibility
             extra_args["gradient_checkpointing_kwargs"] = {"use_reentrant": False}
         args = TrainingArguments(
@@ -227,7 +242,7 @@ class CanaryFineTuner:
             max_grad_norm=cfg.max_grad_norm,
             fp16=cfg.fp16,
             bf16=cfg.bf16,
-            gradient_checkpointing=cfg.gradient_checkpointing,
+            gradient_checkpointing=use_ta_grad_ckpt,
             logging_steps=cfg.logging_steps,
             save_steps=cfg.save_steps,
             save_total_limit=cfg.save_total_limit,

@@ -51,6 +51,12 @@ REUSE_ARG=""
 OUTDIR_ARG=""
 [[ -n "$OUTPUT_DIR" ]] && OUTDIR_ARG="--output-dir $OUTPUT_DIR"
 
+# Override the base (clean) corpus before canary injection, e.g. a subset for a
+# cheaper scaled-demonstration target. Canaries are still injected on top, so
+# the panel stays identical to the certificate/attack panel.
+BASE_CORPUS_ARG=""
+[[ -n "$BASE_CORPUS" ]] && BASE_CORPUS_ARG="--base-corpus $BASE_CORPUS"
+
 echo "=========================================="
 echo "LeakCert W1 multi-GPU — model-key=$MODEL_KEY"
 echo "Job ID:    $SLURM_JOB_ID"
@@ -77,6 +83,7 @@ singularity exec --nv \
             --model-key $MODEL_KEY \
             $REUSE_ARG \
             $OUTDIR_ARG \
+            $BASE_CORPUS_ARG \
             $CANARY_ARG
     "
 

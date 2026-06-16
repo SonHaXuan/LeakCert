@@ -48,22 +48,32 @@ finetune:
   output_dir: "checkpoints/target_small"
 
 finetune_mid:
-  num_train_epochs: 3
-  per_device_train_batch_size: 1
-  gradient_accumulation_steps: 16
+  # Scaled-demonstration target (NOT an apples-to-apples replica of the 1.5B
+  # target, which trained 3 epochs on the full 500k corpus). The full-corpus /
+  # 3-epoch 7B run cleared the OOM under FSDP but ran at ~29 s/it x 186k steps
+  # (~60-day ETA) — infeasible under the 72h Slurm limit. This config trains a
+  # *memorized* 7B target cheaply (<24h) so cert/W4/W5 (Target E) can run:
+  #   - subset corpus (~40k clean + the 11,566 canaries) via --base-corpus
+  #   - 1 epoch, larger per-device batch, seq_len 256
+  #   - FSDP-native activation checkpointing (no redundant backward AllGather)
+  num_train_epochs: 1
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 4
   learning_rate: 2.0e-5
-  warmup_steps: 100
+  warmup_steps: 50
   weight_decay: 0.01
   max_grad_norm: 1.0
+  max_seq_length: 256
   fp16: false
   bf16: true                 # mixed-precision; pairs with FSDP
   torch_dtype: "bfloat16"
   # 7B does not fit under plain DDP on 44GB L40S (optimizer states ~112GB/GPU).
-  # FSDP full-shard + gradient checkpointing shards params/grads/optimizer
+  # FSDP full-shard + activation checkpointing shards params/grads/optimizer
   # across the 4 GPUs and trades compute for activation memory.
   gradient_checkpointing: true
   fsdp: "full_shard auto_wrap"
   fsdp_transformer_layer_cls_to_wrap: "Qwen2DecoderLayer"
+  fsdp_activation_checkpointing: true
   use_dp: false
   save_steps: 3000
   save_total_limit: 2
