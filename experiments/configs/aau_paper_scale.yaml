@@ -56,7 +56,14 @@ finetune_mid:
   weight_decay: 0.01
   max_grad_norm: 1.0
   fp16: false
+  bf16: true                 # mixed-precision; pairs with FSDP
   torch_dtype: "bfloat16"
+  # 7B does not fit under plain DDP on 44GB L40S (optimizer states ~112GB/GPU).
+  # FSDP full-shard + gradient checkpointing shards params/grads/optimizer
+  # across the 4 GPUs and trades compute for activation memory.
+  gradient_checkpointing: true
+  fsdp: "full_shard auto_wrap"
+  fsdp_transformer_layer_cls_to_wrap: "Qwen2DecoderLayer"
   use_dp: false
   save_steps: 3000
   save_total_limit: 2

@@ -52,7 +52,13 @@ class FineTuneConfig:
     max_seq_length: int = 512
     weight_decay: float = 0.01
     fp16: bool = True
+    bf16: bool = False
     torch_dtype: str = "auto"
+    gradient_checkpointing: bool = False
+    # FSDP sharding for large models that don't fit under plain DDP (e.g. 7B on
+    # 44GB GPUs). Empty string = off. Typical: "full_shard auto_wrap".
+    fsdp: str = ""
+    fsdp_transformer_layer_cls_to_wrap: str = ""   # e.g. "Qwen2DecoderLayer"
 
     # DP-SGD parameters (B6)
     use_dp: bool = False
@@ -199,6 +205,17 @@ class CanaryFineTuner:
 
     def _train_standard(self, model, collator) -> None:
         cfg = self.config
+        extra_args = {}
+        if cfg.fsdp:
+            extra_args["fsdp"] = cfg.fsdp
+            if cfg.fsdp_transformer_layer_cls_to_wrap:
+                extra_args["fsdp_config"] = {
+                    "transformer_layer_cls_to_wrap":
+                        cfg.fsdp_transformer_layer_cls_to_wrap,
+                }
+        if cfg.gradient_checkpointing:
+            # non-reentrant checkpointing is required for FSDP compatibility
+            extra_args["gradient_checkpointing_kwargs"] = {"use_reentrant": False}
         args = TrainingArguments(
             output_dir=cfg.output_dir,
             num_train_epochs=cfg.num_train_epochs,
@@ -209,12 +226,15 @@ class CanaryFineTuner:
             weight_decay=cfg.weight_decay,
             max_grad_norm=cfg.max_grad_norm,
             fp16=cfg.fp16,
+            bf16=cfg.bf16,
+            gradient_checkpointing=cfg.gradient_checkpointing,
             logging_steps=cfg.logging_steps,
             save_steps=cfg.save_steps,
             save_total_limit=cfg.save_total_limit,
             seed=cfg.seed,
             dataloader_num_workers=2,
             remove_unused_columns=False,
+            **extra_args,
         )
         dataset = self._build_tokenized_dataset(args)
         trainer = Trainer(
