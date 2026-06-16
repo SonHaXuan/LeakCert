@@ -65,22 +65,45 @@ Findings:
    (~156 nats/query) that a single emitted completion decides the SPRT. Suppressing
    literal strings cannot help when the *distribution shift itself* is the signal.
 
-*Caveat:* the eval panel contains only true members, so detection rate is a true-positive rate with
-no false-positive control. A full MIA-style evaluation needs held-out non-member canaries; the SPRT's
-α = 0.05 bounds the nominal false-positive rate analytically, but it is not measured here.
+### ⚠️ FP control (job 946249) — RETRACTS the membership-detection claim
+
+A false-positive control was run on **held-out non-member canaries** (panel regenerated with
+seed=999 — canaries the target never trained on; `--nonmember-seed 999`). If "detection" were a real
+membership signal, it should be near-zero on non-members. It is not:
+
+| Defense | Detection on MEMBERS | Detection on NON-MEMBERS (FPR) |
+|---|---|---|
+| B1 no_defense | 99% | **100%** |
+| B5 content_filter | 94% | 90% |
+| LEAKCERT | 88% | 93% |
+
+**TPR ≈ FPR ≈ 90–100% → the LRT "detection rate" does NOT discriminate members from non-members,
+so it is not evidence of membership inference.** Root cause: the SPRT here scores *self-generated
+completions* with Λ = log p_target − log p_ref. Since the target is fine-tuned **from** the reference
+and the completion is produced **by** the target, Λ > 0 for almost any target generation regardless of
+membership — the test detects "text came from the fine-tuned model," not "this canary was memorized."
+
+What survives: **verbatim rate is 0% on members and non-members alike** (consistent with all other
+runs), and the **per-defense query cost** still shows LEAKCERT forcing ~3 queries on T1 vs ~1 (its
+suppression is active). A valid membership attack must instead score the **secret's** likelihood ratio
+(as the KL estimator does, log p_target(secret|ctx) − log p_ref(secret|ctx)) and be calibrated against
+this non-member panel — that is the corrected follow-up, not the completion-based SPRT.
 
 ---
 
 ## Combined narrative (certificate + W4/W5 + LRT + sweep)
 
 1. The target **memorizes** the canaries (mean KL ≈ 20 nats; certificate vacuous for the full panel).
-2. The memorization is **not verbatim-extractable** (0% across W4/W5/adaptive/LRT, greedy and sampled).
-3. It **is attackable as membership inference** (LRT: 99% detection in ~1 query undefended).
-4. The **certificate is the right abstraction**: it bounds the attackable quantity (information,
-   not strings) and becomes non-vacuous precisely where memorization is weak (T4, B ≤ 2).
-5. The **runtime defense measurably helps** where its mechanisms apply (T1: 96→60% detection) and
-   cannot help where the distributional signal is overwhelming (T3) — motivating KL-budget throttling
-   (certificate accounting) over content filtering as the load-bearing defense layer.
+2. The memorization is **not verbatim-extractable** (0% across W4/W5/adaptive/LRT, greedy and sampled,
+   members and non-members).
+3. The **completion-based SPRT does NOT yield a valid membership signal** (FP control: TPR≈FPR≈100%).
+   A membership attack must score the *secret's* likelihood ratio and be calibrated vs non-members;
+   the KL certificate already operates on exactly that secret-likelihood quantity.
+4. The **certificate is the right abstraction**: it bounds extractable information (not strings) and
+   becomes non-vacuous precisely where memorization is weak (T4, B ≤ 2).
+5. The **runtime defense measurably raises attacker cost** where its mechanisms apply (T1: ~1 → ~3
+   queries under LEAKCERT) — motivating KL-budget throttling (certificate accounting) over content
+   filtering as the load-bearing defense layer.
 
 ## Reproduce
 ```bash
