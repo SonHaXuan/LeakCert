@@ -36,18 +36,27 @@ def sweep(kl_results: list[PerCanaryKL], budgets: list[int], delta: float) -> li
     rows = []
     for B in budgets:
         r = cert.compute(kl_results, B, K, delta)
+        # Vacuity must be judged on the RAW (uncapped) certificate against the
+        # actual entropy ceiling H(K) used as the cap. Comparing the *capped*
+        # value to math.log(K) produced a float artifact: when capped,
+        # hoeffding_certificate == prior_entropy, which can round just below
+        # math.log(K) and be misreported as non-vacuous. The raw value carries
+        # no such ambiguity — if it reaches H(K) the bound is trivial.
+        raw_h = (r.raw_hoeffding_certificate
+                 if r.raw_hoeffding_certificate is not None
+                 else r.hoeffding_certificate)
+        vacuous = bool(raw_h >= r.prior_entropy - 1e-9)
         rows.append({
             "B": B,
             "hoeffding_cert_nats": round(r.hoeffding_certificate, 4),
             "bernstein_cert_nats": round(r.bernstein_certificate, 4),
-            "raw_hoeffding_cert_nats": round(
-                r.raw_hoeffding_certificate or r.hoeffding_certificate, 4),
+            "raw_hoeffding_cert_nats": round(raw_h, 4),
             "entropy_H_K_nats": round(r.prior_entropy, 4),
             "entropy_cap_applied": bool(r.entropy_cap_applied),
             "extraction_prob_bound": (
                 round(r.extraction_prob_bound, 6)
                 if r.extraction_prob_bound is not None else None),
-            "vacuous": LeakageCertificate.is_vacuous(r.hoeffding_certificate, K),
+            "vacuous": vacuous,
         })
     return rows
 
