@@ -3,7 +3,7 @@
 #SBATCH --partition=prioritized
 #SBATCH --gres=gpu:l40s:4
 #SBATCH --cpus-per-task=16
-#SBATCH --mem=160G
+#SBATCH --mem=320G
 #SBATCH --time=72:00:00
 #SBATCH --output=logs/train_multi_%j.out
 #SBATCH --error=logs/train_multi_%j.err
