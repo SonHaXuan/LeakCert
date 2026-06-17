@@ -64,6 +64,11 @@ class FineTuneConfig:
     # AllGather in the backward pass (HF issue #30404), which roughly doubles
     # step time for 7B full-shard. When this is True we disable the TA path.
     fsdp_activation_checkpointing: bool = False
+    # Worker count for corpus tokenization (.map). Each worker forks while the
+    # model is already resident in CPU RAM, so for large models (7B) a high count
+    # multiplies host-RAM use via copy-on-write and OOM-kills the job. Keep low
+    # for 7B (e.g. 2); 8 is fine for 1.5B.
+    tokenize_num_proc: int = 8
 
     # DP-SGD parameters (B6)
     use_dp: bool = False
@@ -202,7 +207,7 @@ class CanaryFineTuner:
                 tokenize_fn,
                 batched=True,
                 remove_columns=raw.column_names,
-                num_proc=8,
+                num_proc=cfg.tokenize_num_proc,
                 desc="Tokenizing corpus",
             )
         logger.info("Tokenized dataset: %d sequences", len(tokenized))

@@ -74,6 +74,7 @@ finetune_mid:
   fsdp: "full_shard auto_wrap"
   fsdp_transformer_layer_cls_to_wrap: "Qwen2DecoderLayer"
   fsdp_activation_checkpointing: true
+  tokenize_num_proc: 2       # 7B is resident in CPU RAM; high fork count OOMs host
   use_dp: false
   save_steps: 3000
   save_total_limit: 2

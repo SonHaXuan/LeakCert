@@ -72,6 +72,7 @@ _FINETUNE_KEYS = (
     "fsdp",
     "fsdp_transformer_layer_cls_to_wrap",
     "fsdp_activation_checkpointing",
+    "tokenize_num_proc",
     "logging_steps",
     "save_steps",
     "save_total_limit",
