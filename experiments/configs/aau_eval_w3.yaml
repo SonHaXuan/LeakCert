@@ -1,0 +1,29 @@
+# Target C (Quality-Evidence runbook): W3 utility evaluation on the real W1
+# Code-Small target. pass@1 on HumanEval (164 Python problems) for B1 / B2 / B5 /
+# LEAKCERT — all on the SAME checkpoint (checkpoints/target_small), with the
+# LEAKCERT refusal rate reported. Fully offline: reads a pre-materialised
+# HumanEval JSONL (data/humaneval_w3.jsonl), so no HF download on the compute node.
+
+model:
+  target_model_small: "models/qwen2.5-coder-1.5b"   # reference (base) model
+  ref_model: "models/qwen2.5-coder-1.5b"
+  device: "cuda"
+  max_new_tokens: 256
+  temperature: 0.2        # standard low-temp decoding for pass@1
+  top_p: 0.95
+
+finetune:
+  output_dir: "checkpoints/target_small"   # the trained W1 target
+
+corpus:
+  utility_eval_path: "data/humaneval_w3.jsonl"
+  utility_subset: "utility_eval"
+  utility_multilingual: false
+
+evaluation:
+  query_budget: 10000
+  batch_size: 16
+  test_workers: 8
+
+output_dir: "./_run_results/aau_eval_w3"
+seed: 42
