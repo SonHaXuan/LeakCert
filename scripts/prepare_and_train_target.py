@@ -192,6 +192,7 @@ def maybe_init_distributed() -> tuple[int, int]:
     rank = int(os.environ.get("RANK", "0"))
     if world_size <= 1:
         return rank, world_size
+    import datetime
     import torch
     import torch.distributed as dist
 
@@ -199,7 +200,13 @@ def maybe_init_distributed() -> tuple[int, int]:
     if torch.cuda.is_available():
         torch.cuda.set_device(local_rank)
     if not dist.is_initialized():
-        dist.init_process_group(backend="nccl" if torch.cuda.is_available() else "gloo")
+        # Use a 2-hour timeout: non-rank-0 processes wait at an NCCL barrier
+        # inside main_process_first() while rank 0 tokenizes the corpus (~70 min
+        # for the 7B/40k config). The default 10-min watchdog kills the job.
+        dist.init_process_group(
+            backend="nccl" if torch.cuda.is_available() else "gloo",
+            timeout=datetime.timedelta(hours=2),
+        )
     return rank, world_size
 
 

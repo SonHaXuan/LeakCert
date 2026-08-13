@@ -231,11 +231,22 @@ class CanaryFineTuner:
                 )
             if cfg.fsdp_activation_checkpointing:
                 fsdp_config["activation_checkpointing"] = True
-            if fsdp_config:
-                extra_args["fsdp_config"] = fsdp_config
+            # Use sharded optimizer state dict so each rank saves only its own
+            # shard instead of consolidating the full optimizer state on rank 0.
+            # Consolidation requires ~56 GB VRAM for 7B Adam states, which
+            # exceeds 48 GB L40S capacity and OOM-kills the checkpoint save.
+            fsdp_config["state_dict_type"] = "SHARDED_STATE_DICT"
+            extra_args["fsdp_config"] = fsdp_config
         if use_ta_grad_ckpt:
             # non-reentrant checkpointing is required for FSDP compatibility
             extra_args["gradient_checkpointing_kwargs"] = {"use_reentrant": False}
+        # FSDP checkpoint saves consolidate the full optimizer state on rank 0
+        # (~56 GB for 7B Adam at FP32), exceeding 48 GB L40S VRAM and also
+        # writing ~50 GB of checkpoint files that hit disk quota. Skip
+        # intermediate saves entirely; the final model is written via
+        # trainer.save_model() below, which only saves model weights.
+        effective_save_steps = 10_000_000 if cfg.fsdp else cfg.save_steps
+        effective_save_limit = 0 if cfg.fsdp else cfg.save_total_limit
         args = TrainingArguments(
             output_dir=cfg.output_dir,
             num_train_epochs=cfg.num_train_epochs,
@@ -249,8 +260,8 @@ class CanaryFineTuner:
             bf16=cfg.bf16,
             gradient_checkpointing=use_ta_grad_ckpt,
             logging_steps=cfg.logging_steps,
-            save_steps=cfg.save_steps,
-            save_total_limit=cfg.save_total_limit,
+            save_steps=effective_save_steps,
+            save_total_limit=effective_save_limit,
             seed=cfg.seed,
             dataloader_num_workers=2,
             remove_unused_columns=False,

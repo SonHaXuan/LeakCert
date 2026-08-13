@@ -70,6 +70,7 @@ singularity exec --nv \
     --bind "$WORKDIR:$WORKDIR" \
     --bind "$HOME/.local:$HOME/.local" \
     --env PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+    --env TORCH_NCCL_HEARTBEAT_TIMEOUT_SEC=7200 \
     "$CONTAINER" \
     bash -c "
         set -e
