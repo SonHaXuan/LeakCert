@@ -1,0 +1,42 @@
+AAU AI Cloud — SSH Connection Details
+======================================
+
+Host:     ai-fe02.srv.aau.dk
+Username: tungkvt@cs.aau.dk
+Password: [HIDDEN — ask the project owner]
+
+Port:     22 (default SSH)
+
+---
+
+Python connection snippet (paramiko):
+
+    import paramiko
+
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(
+        hostname="ai-fe02.srv.aau.dk",
+        username="tungkvt@cs.aau.dk",
+        password="<PASSWORD>",       # fill in
+    )
+
+    stdin, stdout, stderr = ssh.exec_command("squeue -u $USER")
+    print(stdout.read().decode())
+    ssh.close()
+
+---
+
+Slurm partition used: prioritized
+Working directory on server: ~/LeakCert/
+
+Useful commands once connected:
+  squeue -u $USER                        # list my jobs
+  sacct -j <JOB_ID> --format=State,Elapsed,ExitCode  # job result
+  tail -f ~/LeakCert/logs/eval_attacks_<JOB_ID>.out  # live log
+  df -h ~                                # disk usage
+
+---
+
+Note: The server uses Singularity containers for GPU jobs.
+      Container path: /home/container/pytorch/pytorch_25.09.sif
