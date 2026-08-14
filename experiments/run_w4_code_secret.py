@@ -71,6 +71,21 @@ def main(args):
     query_budget = eval_cfg.get("query_budget", 10_000)
     batch_size = int(eval_cfg.get("batch_size", 8))
 
+    table2_path = output_dir / "table2_extraction.json"
+
+    def _flush_table2(w4_res, adaptive_res, defence_names):
+        """Persist partial Table 2 after every stage so a wall-clock timeout
+        never discards already-completed (path A / budget) results."""
+        partial = {
+            name: {
+                "W4_workload": w4_res.get(name, {}),
+                "A_adaptive": adaptive_res.get(name, {}),
+            }
+            for name in defence_names
+        }
+        with open(table2_path, "w") as f:
+            json.dump(partial, f, indent=2)
+
     # ── Load models ───────────────────────────────────────────────────
     target_path = cfg["finetune"].get("output_dir", "./checkpoints/target_model")
     target_model_name = cfg["model"].get("target_model_small",
@@ -164,6 +179,7 @@ def main(args):
         rate = hits / max(total, 1)
         w4_results[def_name] = rate_summary(hits, total)
         logger.info(f"  {def_name:<25} W4 rate = {rate:.2%} ({hits}/{total})")
+        _flush_table2(w4_results, {d: {} for d in defences}, defences)
 
     # ── (B) Adaptive attacker at multiple budgets ─────────────────────
     # Each (budget, defence) run gets its own api_key for isolation.
@@ -185,6 +201,7 @@ def main(args):
             adaptive_results[def_name][f"B={B}"] = summary
             rate = summary["rate"]
             logger.info(f"    extraction rate = {rate:.2%}")
+            _flush_table2(w4_results, adaptive_results, defences)
 
     # ── Merge and print Table 2 ───────────────────────────────────────
     table2: dict[str, dict] = {}

@@ -27,7 +27,9 @@ evaluation:
   query_budget: 10000
   batch_size: 16
   run_defenses: [B1, B5, LEAKCERT]
-  adaptive_budgets: [100, 1000, 10000]
+  # B=1000/10000 are intractable on one L40S (~48h+ per (budget,defence) pair)
+  # and stay at 0% extraction; keep only B=100 so the sweep actually finishes.
+  adaptive_budgets: [100]
   run_attackers_lrt: true
 
 runtime:
