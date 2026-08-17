@@ -16,7 +16,7 @@ Cập nhật cột **Status** mỗi khi làm; ghi commit / job ID vào **Notes**
 Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ toàn bài**:
 
 - [ ] **Bỏ headline "first non-vacuous certificate".** Dạng min chứng minh được nhưng vẫn vacuous ở mọi budget trừ T4 @ B∈{1,2}. Reframe headline = *honest audit + memorization ≠ extraction + FP-control làm sập SPRT (retraction trung thực)*.
-- [ ] **Chốt mức resubmit:** ⬜ Tối thiểu (không train, hạ claim đo lường) · ⬜ **Chuẩn — train đúng 1 model D1** (khuyến nghị) · ⬜ Mạnh (D2–D5).
+- [x] **Chốt mức resubmit (2026-08-17): CHUẨN — train đúng 1 model D1.** ⇒ giữ claim "memorization thật, tách khỏi fine-tuning shift"; D1 là bắt buộc, D2–D5 chỉ nếu kịp.
 - [ ] **C1 và D1 là bổ sung, KHÔNG thay thế.** C1 = non-member control trên cùng model; D1 = sửa reference sai marginal. Giữ claim "memorization thật" ⇒ cần D1.
 
 ---
@@ -54,8 +54,8 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 | # | Việc | Prio | Cost | Status | Notes |
 |:--|:--|:--|:--|:--|:--|
 | B1 | Tính lại **Clopper–Pearson theo canary** (0/100 → 3.62%); báo cáo 2 estimand; sửa mọi 0.55%/0.11% | P0 | REANALYZE | ✅ | `results/B1_extraction_ci_recompute.md` + `compute_cp_ci.awk`. Còn lại: sửa số trong doc/PDF |
-| B2 | Báo cáo thẳng 1 hit sampled-decoding (nội dung, true/false/ambiguous) | P0 | REANALYZE | ⬜ | đã có trong audit rows |
-| B3 | **Cluster/hierarchical bootstrap** seed→canary→prompt-family; cập nhật bảng W5 multiseed | P0 | REANALYZE | ⬜ | CI sẽ rộng ra |
+| B2 | Báo cáo thẳng 1 hit sampled-decoding (nội dung, true/false/ambiguous) | P0 | REANALYZE | ✅ | `results/B2_sampled_hit_report.md` + row. 1/142632, T4 pattern, **ambiguous/false-pos**, chỉ B1 |
+| B3 | **Cluster/hierarchical bootstrap** seed→canary→prompt-family; cập nhật bảng W5 multiseed | P0 | REANALYZE | 🔄 | audit rows là **single-seed**; cần raw multiseed (đang locate trên HPC) |
 | B4 | "no utility cost" → non-inferiority độ phân giải thấp + CI (n=164, pass@1 6.1%) | P1 | REANALYZE | ⬜ | |
 | B5 | Báo cáo max per-secret leakage + phân bố theo canary + P(any secret extracted) | P1 | REANALYZE | ⬜ | |
 | B6 | Entropy-cap audit: trình raw vs capped vs vacuity flag cho mọi bảng | P2 | REANALYZE | ✅ | đã có |
