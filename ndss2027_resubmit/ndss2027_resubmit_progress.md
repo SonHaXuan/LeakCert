@@ -45,7 +45,7 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 | A16 | Rescope hệ thống = "offline audit monitor"; deployable → future work (latency 52s) | P1 | WRITE | ⬜ | |
 | A17 | Sửa câu "1 completion mang >toàn bộ MI panel": LLR điểm có thể >H(K) nhưng ≠ MI | P1 | WRITE | 🔄 | drafted |
 | A18 | Phân biệt exact / semantic extraction / MIA / likelihood exposure | P1 | WRITE | ⬜ | |
-| **A19** | **[THÊM từ review] Related-work: định vị so với Secret Sharer / Carlini extraction / DP** | P1 | WRITE | ⬜ | panel security chắc chắn hỏi |
+| **A19** | **[THÊM từ review] Related-work: định vị so với Secret Sharer / Carlini extraction / DP** | P1 | WRITE | 🔄 | draft `results/A19_related_work_positioning_draft.md` |
 
 ---
 
