@@ -81,7 +81,7 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 
 | # | Việc | Prio | Cost | Status | Notes |
 |:--|:--|:--|:--|:--|:--|
-| D1 | **Train 1 model corpus 500k KHÔNG canary** làm reference đúng | **P0** | TRAIN (1 lần) | ⬜ | **cái quyết định claim đo lường**; khả thi AAU HPC |
+| D1 | **Train 1 model corpus 500k KHÔNG canary** làm reference đúng | **P0** | TRAIN (1 lần) | 🔄 | config+slurm READY (`--no-canary`, `slurm/train_reference_nocanary.sbatch`, `results/D1_reference_model_setup.md`). **CHƯA submit** — chờ OK |
 | D2 | Shadow models canary ngẫu nhiên cho concentration (mẫu độc lập) | P1→"nếu kịp" | TRAIN (nhiều) | ⏸ | phương án lui: hạ claim, giả thiết yếu hơn |
 | D3 | Train nhiều matched models đo empirical coverage "99%" | P1→"nếu kịp" | TRAIN (nhiều) | ⏸ | rất tốn; nếu không → **bỏ claim 99% coverage** |
 | D4 | ≥1 checkpoint DP-SGD (vd ε=8) so sánh thực thay bảng analytic | P1 | TRAIN | ⬜ | |

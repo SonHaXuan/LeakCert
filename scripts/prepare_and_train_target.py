@@ -102,6 +102,11 @@ def parse_args() -> argparse.Namespace:
                         help="Where to write the injected corpus (default: <output>/corpus_with_canaries.jsonl)")
     parser.add_argument("--reuse-injected", action="store_true",
                         help="Reuse an existing injected corpus if present instead of regenerating")
+    parser.add_argument("--no-canary", action="store_true",
+                        help="Train on the clean base corpus with ZERO canaries injected. "
+                             "Produces a matched reference model (D1) for the same corpus/epochs, "
+                             "differing from the target only in canary presence. "
+                             "Skips panel generation and injection; writes a 0-canary manifest.")
     parser.add_argument("--dry-run", action="store_true",
                         help="Generate canaries + inject + write manifest, but skip training")
     return parser.parse_args()
@@ -253,7 +258,20 @@ def main() -> int:
     # Every torchrun process runs this script; only rank 0 may write the
     # injected corpus/manifest. Other ranks wait at the barrier and then read.
     n_canaries = -1
-    if rank == 0:
+    if args.no_canary:
+        # D1 reference: no injection. Train directly on the clean base corpus so
+        # this model differs from the target ONLY in canary presence. The shared
+        # barrier() below syncs ranks; base_corpus already exists on disk.
+        injected_corpus = Path(base_corpus)
+        if rank == 0:
+            n_canaries = 0
+            logger.info("--no-canary: training on clean corpus %s (0 canaries)", base_corpus)
+            manifest_path.write_text(
+                json.dumps({"n_canaries": 0, "no_canary_reference": True,
+                            "base_corpus": str(base_corpus)}, indent=2)
+            )
+            logger.info("Wrote 0-canary manifest: %s", manifest_path)
+    elif rank == 0:
         panel = build_panel(cfg, args.max_canaries)
         n_canaries = len(panel.canaries)
         logger.info("Generated canary panel: %d canaries", n_canaries)
