@@ -23,25 +23,27 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 
 ## NHÓM A — Sửa bằng VIẾT / TOÁN (không chạy lại gì)
 
+> ⚠️ Repo **không chứa source LaTeX** của paper → các mục WRITE được làm thành **bản draft hand-off** trong `results/` (bạn dán vào .tex), không edit trực tiếp bài.
+
 | # | Việc | Prio | Cost | Status | Notes |
 |:--|:--|:--|:--|:--|:--|
-| A1 | Phát biểu lại định lý 5/7/10/12 ở dạng `I(K;Y^B) ≤ min{H(K), Σ E[KL]}` + chứng minh lại | P0 | WRITE | ⬜ | Cả 2 cận đều hợp lệ → min hợp lệ, chứng minh được |
-| A2 | Viết đầy đủ Appendix A, B (chứng minh) vào PDF nộp | P0 | WRITE | ⬜ | |
-| A3 | Định nghĩa tường minh game rò rỉ + joint `P_{K,M,X^B,Y^B}` (K index cái gì, ai biết c_K) | P0 | WRITE | ⬜ | |
-| A4 | Định lý 15: sửa "submartingale" → **supermartingale** | P0 | WRITE | ⬜ | dễ |
-| A5 | Bỏ/hạ mệnh đề nhảy từ "SPRT optimal stopping" → "optimal adaptive prompt design" | P0 | WRITE | ⬜ | |
-| A6 | Fano prior không đều: sửa mẫu số `log|K|` | P0 | WRITE | ⬜ | |
-| A7 | Định lý utility–leakage: hạ thành "quan sát thực nghiệm" hoặc bỏ | P0 | WRITE | ⬜ | |
-| A8 | Đổi nhãn "KL divergence" → **exposure / LLR / memorization score** xuyên suốt | P0 | WRITE | ⬜ | |
+| A1 | Phát biểu lại định lý 5/7/10/12 ở dạng `I(K;Y^B) ≤ min{H(K), Σ E[KL]}` + chứng minh lại | P0 | WRITE | 🔄 | draft `results/A_theory_corrections_draft.md`; còn dán vào .tex |
+| A2 | Viết đầy đủ Appendix A, B (chứng minh) vào PDF nộp | P0 | WRITE | 🔄 | proof sketch A1/A6 đã có trong draft; còn viết full vào Appendix |
+| A3 | Định nghĩa tường minh game rò rỉ + joint `P_{K,M,X^B,Y^B}` (K index cái gì, ai biết c_K) | P0 | WRITE | 🔄 | drafted (A3 trong file) |
+| A4 | Định lý 15: sửa "submartingale" → **supermartingale** | P0 | WRITE | 🔄 | drafted; sửa 1 từ trong .tex |
+| A5 | Bỏ/hạ mệnh đề nhảy từ "SPRT optimal stopping" → "optimal adaptive prompt design" | P0 | WRITE | 🔄 | drafted (3 phương án) |
+| A6 | Fano prior không đều: sửa mẫu số `log|K|` | P0 | WRITE | 🔄 | drafted (viết theo H(K)) |
+| A7 | Định lý utility–leakage: hạ thành "quan sát thực nghiệm" hoặc bỏ | P0 | WRITE | 🔄 | drafted |
+| A8 | Đổi nhãn "KL divergence" → **exposure / LLR / memorization score** xuyên suốt | P0 | WRITE | 🔄 | glossary trong draft |
 | A9 | Định nghĩa lại threat model = **gray-box likelihood audit**, phân tầng sample/logprob/local | P0 | WRITE | ⬜ | |
-| A10 | Đổi "per-secret certificate" → **panel-average / canary-panel audit** | P0 | WRITE | ⬜ | |
+| A10 | Đổi "per-secret certificate" → **panel-average / canary-panel audit** | P0 | WRITE | 🔄 | glossary trong draft |
 | A11 | Bỏ "first non-vacuous certificate" tới khi định lý đã sửa + so literature | P1 | WRITE | ⬜ | gắn với §0 |
 | A12 | "no utility cost" → "không phát hiện khác biệt utility ở độ phân giải này" | P1 | WRITE | ⬜ | |
 | A13 | Nói rõ: audit panel canary, không guarantee toàn deployment | P1 | WRITE | ⬜ | |
 | A14 | Trình bày 7B là **pipeline smoke test**, gỡ khỏi vai trò "bằng chứng scale" | P1 | WRITE | ⬜ | |
 | A15 | Ghi rõ arm nào dùng checkpoint nào (1.5B/7B/0.5B) | P1 | WRITE | ⬜ | |
 | A16 | Rescope hệ thống = "offline audit monitor"; deployable → future work (latency 52s) | P1 | WRITE | ⬜ | |
-| A17 | Sửa câu "1 completion mang >toàn bộ MI panel": LLR điểm có thể >H(K) nhưng ≠ MI | P1 | WRITE | ⬜ | |
+| A17 | Sửa câu "1 completion mang >toàn bộ MI panel": LLR điểm có thể >H(K) nhưng ≠ MI | P1 | WRITE | 🔄 | drafted |
 | A18 | Phân biệt exact / semantic extraction / MIA / likelihood exposure | P1 | WRITE | ⬜ | |
 | **A19** | **[THÊM từ review] Related-work: định vị so với Secret Sharer / Carlini extraction / DP** | P1 | WRITE | ⬜ | panel security chắc chắn hỏi |
 
@@ -51,7 +53,7 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 
 | # | Việc | Prio | Cost | Status | Notes |
 |:--|:--|:--|:--|:--|:--|
-| B1 | Tính lại **Clopper–Pearson theo canary** (0/100 → 3.62%); báo cáo 2 estimand; sửa mọi 0.55%/0.11% | P0 | REANALYZE | ⬜ | bắt buộc |
+| B1 | Tính lại **Clopper–Pearson theo canary** (0/100 → 3.62%); báo cáo 2 estimand; sửa mọi 0.55%/0.11% | P0 | REANALYZE | ✅ | `results/B1_extraction_ci_recompute.md` + `compute_cp_ci.awk`. Còn lại: sửa số trong doc/PDF |
 | B2 | Báo cáo thẳng 1 hit sampled-decoding (nội dung, true/false/ambiguous) | P0 | REANALYZE | ⬜ | đã có trong audit rows |
 | B3 | **Cluster/hierarchical bootstrap** seed→canary→prompt-family; cập nhật bảng W5 multiseed | P0 | REANALYZE | ⬜ | CI sẽ rộng ra |
 | B4 | "no utility cost" → non-inferiority độ phân giải thấp + CI (n=164, pass@1 6.1%) | P1 | REANALYZE | ⬜ | |
