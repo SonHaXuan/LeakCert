@@ -66,7 +66,7 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 
 | # | Việc | Prio | Cost | Status | Notes |
 |:--|:--|:--|:--|:--|:--|
-| C1 | **Non-member control**: chạy estimator exposure/LLR trên panel non-member seed 999; so phân bố member vs non-member | P0 | INFER (vài giờ GPU) | 🔄 base-ref RUNNING | `scripts/run_c1_nonmember_control.py` + `slurm/eval_c1_control.sbatch`. **base-ref = job 1004390** (PENDING). D1-ref chờ 1004389 xong |
+| C1 | **Non-member control**: chạy estimator exposure/LLR trên panel non-member seed 999; so phân bố member vs non-member | P0 | INFER (vài giờ GPU) | ✅ base-ref / 🔄 D1-ref | **base-ref DONE (job 1004390)**: AUC=0.49, gap=0.001 → 156-nat = fine-tuning shift, non chứng minh critique. `results/C1_base_ref_result.md`. D1-ref chờ 1004389 |
 | C2 | Scorer **semantic/AST/data-flow/similarity** cho T2/T3, chấm lại output | P0 | INFER + code | ⬜ | |
 | C3 | Chấm T4 theo **vulnerability-pattern / hành vi** thay vì exact | P1 | INFER + code | ⬜ | |
 | C4 | Nested threshold: tune trên validation, freeze, đánh giá trên split disjoint | P1 | INFER | ⬜ | t=0.95 |
@@ -86,6 +86,7 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 | D3 | Train nhiều matched models đo empirical coverage "99%" | P1→"nếu kịp" | TRAIN (nhiều) | ⏸ | rất tốn; nếu không → **bỏ claim 99% coverage** |
 | D4 | ≥1 checkpoint DP-SGD (vd ε=8) so sánh thực thay bảng analytic | P1 | TRAIN | ⬜ | |
 | D5 | 7B trên corpus tương đương 1.5B + đủ attack/utility, hoặc gỡ hẳn 7B | P1 | TRAIN | ⬜ | gắn A14 |
+| D5-eval | **7B attack suite (W4/W5/LRT)** trên `target_mid_sub2/ckpt-20614` (smoke 7B) — 7B có verbatim-leak nơi 1.5B không? | P1 | INFER | 🔄 RUNNING | **job 1004391** (`aau_eval_attacks_mid.yaml` + `eval_attacks_mid.sbatch`). Chạy meantime while D1 trains |
 | D6 | Lặp trên model code hữu dụng (instruction-tuned) | P1/P2 | TRAIN | ⬜ | |
 | D7 | Inject secret cấu trúc repo-level (trùng lặp & tương quan) | P2 | TRAIN | ⬜ | |
 
