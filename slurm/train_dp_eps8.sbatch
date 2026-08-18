@@ -23,7 +23,7 @@
 set -e
 
 WORKDIR="$HOME/LeakCert"
-CONFIG="$WORKDIR/experiments/configs/aau_paper_scale.yaml"
+CONFIG="$WORKDIR/experiments/configs/aau_dp_eps8.yaml"   # DP-tuned: batch=2, seq=256, 40k corpus
 BASE_CORPUS="data/code_corpus_40k.jsonl"
 OUTDIR="checkpoints/dp_eps8"
 

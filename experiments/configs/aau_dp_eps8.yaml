@@ -1,0 +1,57 @@
+# D4 DP-SGD (ε=8) config — memory-tuned for Opacus per-sample gradients.
+#
+# Why a dedicated config: DP-SGD stores per-sample gradients, so GPU memory
+# scales with per_device_train_batch_size. The shared config's batch=4 OOMs a
+# 1.5B model on a 44GB L40S (needs ~41GB + more). Here we use batch=2 (fits,
+# ~29GB) with accumulation to keep the effective batch, and seq-len 256 for
+# extra activation headroom. Corpus = 40k subset (tractable on 1 GPU / 48h).
+# Canary injection is ON (default path) so the DP model carries the same
+# seed-42 panel as the non-DP target, for a valid leakage comparison.
+
+model:
+  target_model_small: "models/qwen2.5-coder-1.5b"
+  ref_model: "models/qwen2.5-coder-1.5b"
+  device: "cuda"
+  max_new_tokens: 128
+  temperature: 1.0
+  top_p: 1.0
+
+canary:
+  n_canaries: 10000
+  n_eval_per_type: 283
+  n_eval: 1132
+  seed: 42
+  include_paraphrase: true
+
+corpus:
+  path: "data/code_corpus_40k.jsonl"
+  max_seq_length: 256
+  stride: 256
+
+finetune:
+  num_train_epochs: 3
+  per_device_train_batch_size: 2       # DP per-sample grads OOM at 4 -> 2
+  gradient_accumulation_steps: 16      # effective batch 32 (2x16), matches non-DP
+  learning_rate: 2.0e-5
+  warmup_steps: 100
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  max_seq_length: 256
+  fp16: false
+  torch_dtype: "float32"               # DP requires fp32 (fine-tuner forces it too)
+  use_dp: false                        # enabled via --dp-epsilon on the CLI
+  save_steps: 2000
+  save_total_limit: 2
+  output_dir: "checkpoints/dp_eps8"
+
+finetune_dp:
+  use_dp: true
+  dp_delta: 1.0e-5
+  dp_max_grad_norm: 1.0
+
+certificate:
+  delta: 0.01
+  budgets: [100, 1000, 10000]
+  n_queries_per_canary: 1
+
+seed: 42
