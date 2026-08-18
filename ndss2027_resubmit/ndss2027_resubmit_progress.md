@@ -81,7 +81,7 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 
 | # | Việc | Prio | Cost | Status | Notes |
 |:--|:--|:--|:--|:--|:--|
-| D1 | **Train 1 model corpus 500k KHÔNG canary** làm reference đúng | **P0** | TRAIN (1 lần) | 🔄 RUNNING | **job 1003719** (a768-l40s-04, submit 2026-08-17). Out: `checkpoints/reference_nocanary`. Xong → C1 dùng làm ref_model |
+| D1 | **Train 1 model corpus 500k KHÔNG canary** làm reference đúng | **P0** | TRAIN (1 lần) | 🔄 PENDING | **job 1004389** (4×L40S, 72h wall). Thay 1003719 (1-GPU sai — target train 4-GPU, 93282 steps/3ep; 1-GPU cần 372042 → timeout <1ep). `NO_CANARY=1 OUTPUT_DIR=... train_multi.sbatch`. Xong → C1 |
 | D2 | Shadow models canary ngẫu nhiên cho concentration (mẫu độc lập) | P1→"nếu kịp" | TRAIN (nhiều) | ⏸ | phương án lui: hạ claim, giả thiết yếu hơn |
 | D3 | Train nhiều matched models đo empirical coverage "99%" | P1→"nếu kịp" | TRAIN (nhiều) | ⏸ | rất tốn; nếu không → **bỏ claim 99% coverage** |
 | D4 | ≥1 checkpoint DP-SGD (vd ε=8) so sánh thực thay bảng analytic | P1 | TRAIN | ⬜ | |

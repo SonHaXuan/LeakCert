@@ -39,6 +39,10 @@ done
 
 CANARY_ARG=""
 [[ -n "$MAX_CANARIES" ]] && CANARY_ARG="--max-canaries $MAX_CANARIES"
+# Train a matched reference with ZERO canaries injected (D1). Combine with
+# OUTPUT_DIR to keep it separate from the target checkpoint, e.g.:
+#   NO_CANARY=1 OUTPUT_DIR=checkpoints/reference_nocanary sbatch slurm/train_multi.sbatch
+[[ -n "$NO_CANARY" ]] && CANARY_ARG="--no-canary"
 
 # Re-inject fresh by default. Set REUSE_INJECTED=1 only to resume an interrupted
 # run with an already-correct injected corpus (avoids silently reusing stale data
