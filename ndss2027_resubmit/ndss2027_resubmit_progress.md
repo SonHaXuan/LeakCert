@@ -66,7 +66,7 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 
 | # | Việc | Prio | Cost | Status | Notes |
 |:--|:--|:--|:--|:--|:--|
-| C1 | **Non-member control**: chạy estimator exposure/LLR trên panel non-member seed 999; so phân bố member vs non-member | P0 | INFER (vài giờ GPU) | 🔄 script READY | `scripts/run_c1_nonmember_control.py` (py_compile OK) + `results/C1_runbook.md`. Chạy 2 ref (base + D1) sau khi GPU rảnh/D1 xong |
+| C1 | **Non-member control**: chạy estimator exposure/LLR trên panel non-member seed 999; so phân bố member vs non-member | P0 | INFER (vài giờ GPU) | 🔄 base-ref RUNNING | `scripts/run_c1_nonmember_control.py` + `slurm/eval_c1_control.sbatch`. **base-ref = job 1004390** (PENDING). D1-ref chờ 1004389 xong |
 | C2 | Scorer **semantic/AST/data-flow/similarity** cho T2/T3, chấm lại output | P0 | INFER + code | ⬜ | |
 | C3 | Chấm T4 theo **vulnerability-pattern / hành vi** thay vì exact | P1 | INFER + code | ⬜ | |
 | C4 | Nested threshold: tune trên validation, freeze, đánh giá trên split disjoint | P1 | INFER | ⬜ | t=0.95 |
