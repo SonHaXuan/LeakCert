@@ -3,7 +3,7 @@
 #SBATCH --partition=prioritized
 #SBATCH --gres=gpu:l40s:1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=80G
+#SBATCH --mem=200G
 #SBATCH --time=48:00:00
 #SBATCH --output=logs/train_dp_eps8_%j.out
 #SBATCH --error=logs/train_dp_eps8_%j.err

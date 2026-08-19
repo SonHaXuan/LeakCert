@@ -84,9 +84,9 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 | D1 | **Train 1 model corpus 500k KHÔNG canary** làm reference đúng | **P0** | TRAIN (1 lần) | 🔄 PENDING | **job 1004389** (4×L40S, 72h wall). Thay 1003719 (1-GPU sai — target train 4-GPU, 93282 steps/3ep; 1-GPU cần 372042 → timeout <1ep). `NO_CANARY=1 OUTPUT_DIR=... train_multi.sbatch`. Xong → C1 |
 | D2 | Shadow models canary ngẫu nhiên cho concentration (mẫu độc lập) | P1→"nếu kịp" | TRAIN (nhiều) | ⏸ | phương án lui: hạ claim, giả thiết yếu hơn |
 | D3 | Train nhiều matched models đo empirical coverage "99%" | P1→"nếu kịp" | TRAIN (nhiều) | ⏸ | rất tốn; nếu không → **bỏ claim 99% coverage** |
-| D4 | ≥1 checkpoint DP-SGD (vd ε=8) so sánh thực thay bảng analytic | P1 | TRAIN (1 GPU) | 🔄 PENDING | **job 1004396** (retry). 1004393 OOM (DP per-sample grad @batch4) → fix `aau_dp_eps8.yaml` batch=2 seq=256. 40k subset, canary ON |
+| D4 | ≥1 checkpoint DP-SGD (vd ε=8) so sánh thực thay bảng analytic | P1 | TRAIN (1 GPU) | 🔄 PENDING | **job 1005225** (retry2, mem 200G). 1004393 CUDA-OOM @batch4 → batch2; 1004396 host-RAM-OOM @mem80G → mem 200G. 40k, canary ON |
 | D5 | 7B trên corpus tương đương 1.5B + đủ attack/utility, hoặc gỡ hẳn 7B | P1 | TRAIN | ⬜ | gắn A14 |
-| D5-eval | **7B attack suite (W4/W5/LRT)** trên `target_mid_sub2/ckpt-20614` (smoke 7B) — 7B có verbatim-leak nơi 1.5B không? | P1 | INFER | 🔄 RUNNING | **job 1004391** (`aau_eval_attacks_mid.yaml` + `eval_attacks_mid.sbatch`). Chạy meantime while D1 trains |
+| D5-eval | **7B attack suite (W4/W5/LRT)** trên `target_mid_sub2/ckpt-20614` (smoke 7B) — 7B có verbatim-leak nơi 1.5B không? | P1 | INFER | ✅ W4/W5 | **CÓ leak: W4 10.3%, A-adaptive 16%, W5 ~8%** (vs 1.5B 0%). `results/D5eval_7B_extraction_result.md`. Caveat: corpus mismatch (A14). Defense KHÔNG giảm leak — cần điều tra. LRT có thể timeout (đã lưu W4/W5) |
 | D6 | Lặp trên model code hữu dụng (instruction-tuned) | P1/P2 | TRAIN | ⬜ | |
 | D7 | Inject secret cấu trúc repo-level (trùng lặp & tương quan) | P2 | TRAIN | ⬜ | |
 
