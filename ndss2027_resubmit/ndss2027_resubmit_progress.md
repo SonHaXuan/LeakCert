@@ -81,7 +81,7 @@ Ba hệ quả từ review — **chốt sớm vì nó quyết định câu chữ 
 
 | # | Việc | Prio | Cost | Status | Notes |
 |:--|:--|:--|:--|:--|:--|
-| D1 | **Train 1 model corpus 500k KHÔNG canary** làm reference đúng | **P0** | TRAIN (1 lần) | 🔄 PENDING | **job 1004389** (4×L40S, 72h wall). Thay 1003719 (1-GPU sai — target train 4-GPU, 93282 steps/3ep; 1-GPU cần 372042 → timeout <1ep). `NO_CANARY=1 OUTPUT_DIR=... train_multi.sbatch`. Xong → C1 |
+| D1 | **Train 1 model corpus 500k KHÔNG canary** làm reference đúng | **P0** | TRAIN (1 lần) | 🔄 PENDING | **job 1005226** (3×L40S, 72h, ~53h/3ep). Trước: 1003719 1-GPU (timeout<1ep), 1004389 4-GPU (cancel). Lower→3 GPU. **Cluster L40S+A40 100% full** → chờ free. Xong → C1 |
 | D2 | Shadow models canary ngẫu nhiên cho concentration (mẫu độc lập) | P1→"nếu kịp" | TRAIN (nhiều) | ⏸ | phương án lui: hạ claim, giả thiết yếu hơn |
 | D3 | Train nhiều matched models đo empirical coverage "99%" | P1→"nếu kịp" | TRAIN (nhiều) | ⏸ | rất tốn; nếu không → **bỏ claim 99% coverage** |
 | D4 | ≥1 checkpoint DP-SGD (vd ε=8) so sánh thực thay bảng analytic | P1 | TRAIN (1 GPU) | 🔄 PENDING | **job 1005225** (retry2, mem 200G). 1004393 CUDA-OOM @batch4 → batch2; 1004396 host-RAM-OOM @mem80G → mem 200G. 40k, canary ON |
