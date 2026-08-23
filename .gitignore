@@ -15,7 +15,6 @@ _run_backups/
 
 data/
 checkpoints/
-results/
 experiments/data/
 experiments/checkpoints/
 experiments/results/
