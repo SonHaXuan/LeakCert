@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -85,6 +86,11 @@ class FineTuneConfig:
     save_total_limit: int = 2   # keep only the latest N checkpoints (bounds disk usage)
     eval_steps: int = 500
     seed: int = 42
+
+    # Resume a standard (non-DP) run from a prior checkpoint directory
+    # (model + optimizer + scheduler + rng + trainer_state), e.g. after a job
+    # was killed mid-run. Not supported on the DP-SGD path (no checkpointing there).
+    resume_from_checkpoint: Optional[str] = None
 
 
 class TextDataset(Dataset):
@@ -168,8 +174,19 @@ class CanaryFineTuner:
 
         if cfg.use_dp:
             # DP path runs a manual single-GPU loop on small corpora; the eager
-            # in-memory dataset is fine there.
-            dataset = TextDataset(cfg.corpus_path, self.tokenizer, cfg.max_seq_length)
+            # in-memory dataset is fine there -- PROVIDED stride is a fraction of
+            # max_seq_length. TextDataset's default stride=256 was tuned for the
+            # 512-length non-DP path (50% overlap); at max_seq_length=256 (this DP
+            # config) `min(stride, max_length-1)` degenerates to 255, i.e. a
+            # 1-token sliding-window step. On a ~1.7k-token doc that turns ~7
+            # intended windows into ~1445, and across 51k docs balloons the
+            # in-memory example list past 200GB host RAM before training even
+            # starts (jobs 1005225, 1005981: OOM ~1h in, no training step ever
+            # logged). Pass an explicit 50%-overlap stride to avoid this.
+            dataset = TextDataset(
+                cfg.corpus_path, self.tokenizer, cfg.max_seq_length,
+                stride=max(1, cfg.max_seq_length // 2),
+            )
             self._train_with_dp(model, dataset, collator)
         else:
             self._train_standard(model, collator)
@@ -274,7 +291,7 @@ class CanaryFineTuner:
             train_dataset=dataset,
             data_collator=collator,
         )
-        trainer.train()
+        trainer.train(resume_from_checkpoint=cfg.resume_from_checkpoint)
         trainer.save_model(cfg.output_dir)
         self.tokenizer.save_pretrained(cfg.output_dir)
         logger.info(f"Model saved to {cfg.output_dir}")
@@ -319,10 +336,18 @@ class CanaryFineTuner:
         model.train()
 
         # Opacus requires standard (non-HF Trainer) training loop
+        # foreach=False: the foreach/multi-tensor Adam path stacks every
+        # parameter's exp_avg_sq into one big buffer to call torch._foreach_sqrt
+        # on, which is an extra ~6GB spike for a 1.5B model in fp32 -- enough to
+        # OOM a 44GB L40S that's already at its ceiling from Opacus per-sample
+        # grads (job 1006649: OOM inside exactly that call, 57MB free at the
+        # time). The per-tensor loop foreach=False uses is slower but never
+        # allocates more than one parameter's worth of temp buffer at a time.
         optimizer = torch.optim.AdamW(
             model.parameters(),
             lr=cfg.learning_rate,
             weight_decay=cfg.weight_decay,
+            foreach=False,
         )
         dataloader = DataLoader(
             dataset,
@@ -368,21 +393,29 @@ class CanaryFineTuner:
                     scheduler.step()
                     optimizer.zero_grad()
 
-                if global_step % cfg.logging_steps == 0:
+                if global_step > 0 and global_step % cfg.logging_steps == 0:
                     eps = privacy_engine.get_epsilon(cfg.dp_delta)
                     logger.info(
                         f"Step {global_step} | loss={loss.item():.4f} | ε={eps:.4f}"
                     )
+
+                # The DP loop used to save only once, after the full epoch loop
+                # finished -- fine for a run that completes, but a run that
+                # exceeds the Slurm wall-time limit gets killed mid-loop with no
+                # save at all (D4 jobs run ~48h at batch=1; hitting the limit
+                # partway through would lose everything). Save periodically like
+                # the non-DP Trainer path does via save_steps.
+                if global_step > 0 and global_step % cfg.save_steps == 0:
+                    self._save_dp_checkpoint(
+                        privacy_engine, model,
+                        os.path.join(cfg.output_dir, f"checkpoint-{global_step}"),
+                    )
+                    self._prune_dp_checkpoints(cfg.output_dir, cfg.save_total_limit)
+
                 global_step += 1
 
         # Save
-        Path(cfg.output_dir).mkdir(parents=True, exist_ok=True)
-        unwrapped = privacy_engine.module if hasattr(privacy_engine, "module") else model
-        # Opacus wraps the model; get original
-        if hasattr(unwrapped, "_module"):
-            unwrapped = unwrapped._module
-        unwrapped.save_pretrained(cfg.output_dir)
-        self.tokenizer.save_pretrained(cfg.output_dir)
+        self._save_dp_checkpoint(privacy_engine, model, cfg.output_dir)
 
         final_eps = privacy_engine.get_epsilon(cfg.dp_delta)
         logger.info(f"DP training done. Final ε={final_eps:.4f}, δ={cfg.dp_delta}")
@@ -392,6 +425,25 @@ class CanaryFineTuner:
                    "max_grad_norm": cfg.dp_max_grad_norm}
         with open(os.path.join(cfg.output_dir, "dp_accounting.json"), "w") as f:
             json.dump(dp_meta, f, indent=2)
+
+    def _save_dp_checkpoint(self, privacy_engine, model, output_dir: str) -> None:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        unwrapped = privacy_engine.module if hasattr(privacy_engine, "module") else model
+        # Opacus wraps the model; get original
+        if hasattr(unwrapped, "_module"):
+            unwrapped = unwrapped._module
+        unwrapped.save_pretrained(output_dir)
+        self.tokenizer.save_pretrained(output_dir)
+
+    def _prune_dp_checkpoints(self, output_dir: str, save_total_limit: int) -> None:
+        """Keep only the newest `save_total_limit` checkpoint-N dirs (disk quota)."""
+        base = Path(output_dir)
+        checkpoints = sorted(
+            (p for p in base.glob("checkpoint-*") if p.is_dir()),
+            key=lambda p: int(p.name.split("-")[-1]),
+        )
+        for stale in checkpoints[:-save_total_limit] if save_total_limit > 0 else []:
+            shutil.rmtree(stale, ignore_errors=True)
 
     def _untie_shared_lm_head_for_dp(self, model) -> None:
         """Opacus per-sample gradients do not handle tied LM head weights reliably."""

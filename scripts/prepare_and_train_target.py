@@ -102,6 +102,9 @@ def parse_args() -> argparse.Namespace:
                         help="Where to write the injected corpus (default: <output>/corpus_with_canaries.jsonl)")
     parser.add_argument("--reuse-injected", action="store_true",
                         help="Reuse an existing injected corpus if present instead of regenerating")
+    parser.add_argument("--resume-from-checkpoint", default=None,
+                        help="Resume a standard (non-DP) run from this checkpoint dir "
+                             "(e.g. checkpoints/reference_nocanary/checkpoint-6000)")
     parser.add_argument("--no-canary", action="store_true",
                         help="Train on the clean base corpus with ZERO canaries injected. "
                              "Produces a matched reference model (D1) for the same corpus/epochs, "
@@ -154,6 +157,7 @@ def make_finetune_config(
     injected_corpus: str,
     output_dir: str,
     dp_epsilon: float | None,
+    resume_from_checkpoint: str | None = None,
 ) -> FineTuneConfig:
     section = "finetune" if model_key == "small" else "finetune_mid"
     ft = dict(cfg.get(section, {}))
@@ -164,6 +168,7 @@ def make_finetune_config(
         "output_dir": output_dir,
         "corpus_path": injected_corpus,
         "seed": seed,
+        "resume_from_checkpoint": resume_from_checkpoint,
     }
     for key in _FINETUNE_KEYS:
         if key in ft and ft[key] is not None:
@@ -228,6 +233,10 @@ def main() -> int:
     args = parse_args()
     cfg = load_config(args.config)
     rank, world_size = maybe_init_distributed()
+
+    if args.resume_from_checkpoint and args.dp_epsilon is not None:
+        raise SystemExit("--resume-from-checkpoint is not supported with --dp-epsilon "
+                          "(the DP-SGD path has no checkpointing)")
 
     base_model = resolve_base_model(cfg, args.model_key, args.base_model)
 
@@ -296,6 +305,7 @@ def main() -> int:
         injected_corpus=str(injected_corpus),
         output_dir=str(out),
         dp_epsilon=args.dp_epsilon,
+        resume_from_checkpoint=args.resume_from_checkpoint,
     )
 
     summary = {

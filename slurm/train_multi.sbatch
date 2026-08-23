@@ -61,6 +61,13 @@ OUTDIR_ARG=""
 BASE_CORPUS_ARG=""
 [[ -n "$BASE_CORPUS" ]] && BASE_CORPUS_ARG="--base-corpus $BASE_CORPUS"
 
+# Resume a standard (non-DP) run from a prior checkpoint dir after a job died
+# mid-run, e.g.:
+#   RESUME_FROM=checkpoints/reference_nocanary/checkpoint-6000 \
+#     NO_CANARY=1 OUTPUT_DIR=checkpoints/reference_nocanary sbatch slurm/train_multi.sbatch
+RESUME_ARG=""
+[[ -n "$RESUME_FROM" ]] && RESUME_ARG="--resume-from-checkpoint $RESUME_FROM"
+
 echo "=========================================="
 echo "LeakCert W1 multi-GPU — model-key=$MODEL_KEY"
 echo "Job ID:    $SLURM_JOB_ID"
@@ -89,7 +96,8 @@ singularity exec --nv \
             $REUSE_ARG \
             $OUTDIR_ARG \
             $BASE_CORPUS_ARG \
-            $CANARY_ARG
+            $CANARY_ARG \
+            $RESUME_ARG
     "
 
 echo "Multi-GPU training complete (model-key=$MODEL_KEY)."
