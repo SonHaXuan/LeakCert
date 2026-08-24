@@ -1,0 +1,95 @@
+# Real-input evaluation template.
+# Copy this file to _run_results/<run_id>/configs/real_inputs.yaml and
+# replace every TODO path before launching full runs.
+
+model:
+  # Use real model IDs or local base checkpoints. Placeholder values must not
+  # be used for paper claims.
+  target_model_small: "TODO_REAL_SMALL_BASE_OR_MODEL_ID"
+  target_model_mid: "TODO_REAL_MID_BASE_OR_MODEL_ID"
+  ref_model: "TODO_REAL_SMALL_BASE_OR_MODEL_ID"
+  device: "mps"
+  max_new_tokens: 128
+  temperature: 1.0
+  top_p: 1.0
+
+canary:
+  n_canaries: 10000
+  n_eval_per_type: 283
+  n_eval: 1132
+  seed: 42
+  include_paraphrase: true
+
+corpus:
+  # Real training corpus for W1, DP-SGD, and multi-model evaluation.
+  path: "TODO_REAL_TRAINING_CORPUS_JSONL"
+  # Real LCCT benchmark. Required when evaluation.require_real_lcct is true.
+  lcct_path: "TODO_REAL_LCCT_JSONL"
+  # Optional local W3 JSONL. If absent, W3 uses the configured public datasets.
+  utility_eval_path: ""
+  max_seq_length: 512
+  stride: 256
+
+finetune:
+  num_train_epochs: 3
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 8
+  learning_rate: 2.0e-5
+  warmup_steps: 100
+  weight_decay: 0.01
+  fp16: false
+  use_dp: false
+  output_dir: "TODO_REAL_SMALL_TARGET_CHECKPOINT"
+
+finetune_mid:
+  num_train_epochs: 3
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 16
+  learning_rate: 2.0e-5
+  warmup_steps: 100
+  weight_decay: 0.01
+  fp16: false
+  use_dp: false
+  output_dir: "TODO_REAL_MID_TARGET_CHECKPOINT"
+
+finetune_dp:
+  use_dp: true
+  dp_delta: 1.0e-5
+  dp_max_grad_norm: 1.0
+  # Each epsilon needs a real trained checkpoint and dp_accounting.json.
+  checkpoints:
+    "1": "TODO_DP_EPS1_CHECKPOINT"
+    "2": "TODO_DP_EPS2_CHECKPOINT"
+    "4": "TODO_DP_EPS4_CHECKPOINT"
+    "8": "TODO_DP_EPS8_CHECKPOINT"
+    "16": "TODO_DP_EPS16_CHECKPOINT"
+
+certificate:
+  delta: 0.01
+  budgets: [100, 1000, 5000, 10000, 50000, 100000, 1000000, 10000000]
+  n_queries_per_canary: 1
+  calibration_panel_sizes: [100, 500, 1000, 5000, 10000]
+  calibration_seeds: [42, 43, 44, 45, 46]
+
+evaluation:
+  query_budget: 10000
+  n_eval_canaries: 1132
+  require_real_lcct: true
+  run_workloads: [W1, W2, W3, W4, W5]
+  run_defenses: [B1, B2, B3, B4, B5, B6, LEAKCERT]
+  run_attackers: [A_fixed, A_grid, A_adaptive, A_greedy_LRT]
+  b2_temperatures: [0.2, 0.5, 1.5]
+  b3_top_p_values: [0.5, 0.7, 0.9]
+  dp_epsilons: [1, 2, 4, 8, 16]
+  w2_smoke_samples: 100
+  w3_smoke_samples: 20
+
+runtime:
+  query_budget: 10000
+  window_days: 10
+  refusal_threshold: 0.5
+  target_refusal_rate: 0.01
+  use_canary_hashes: false
+
+output_dir: "./_run_results/real_inputs"
+seed: 42

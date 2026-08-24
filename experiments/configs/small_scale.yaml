@@ -1,0 +1,48 @@
+# Small-scale config: test model + 100 canaries — for local testing / CI
+# Run time: ~30 min on a single GPU
+
+model:
+  target_model: "local-test-model"          # 124M — quick iteration
+  ref_model: "local-test-model"             # same arch, no fine-tuning = base reference
+  device: "auto"
+  max_new_tokens: 64
+  temperature: 1.0
+  top_p: 1.0
+
+canary:
+  n_canaries: 100               # |K_train|
+  n_eval_per_type: 20           # 20 × 4 types = 80 eval canaries
+  n_eval: 80                    # total eval size (= n_eval_per_type × 4)
+  seed: 42
+  include_paraphrase: true
+
+finetune:
+  num_train_epochs: 2
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 4
+  learning_rate: 2.0e-5
+  max_seq_length: 256
+  fp16: false
+  use_dp: false
+
+certificate:
+  delta: 0.01
+  budgets: [10, 100, 1000, 10000]
+  n_queries_per_canary: 1
+
+evaluation:
+  query_budget: 1000
+  n_eval_canaries: 80
+  run_workloads: [W1, W4, W5]
+  run_defenses: [B1, B2, B3, B5, LEAKCERT]
+  run_attackers: [A_fixed, A_adaptive]
+  b2_temperatures: [0.5]
+  b3_top_p_values: [0.7]
+
+runtime:
+  query_budget: 1000
+  refusal_threshold: 0.5
+  target_refusal_rate: 0.01
+
+output_dir: "./results/small_scale"
+seed: 42

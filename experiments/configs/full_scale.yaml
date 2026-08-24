@@ -1,0 +1,70 @@
+# Full-scale config: Code-Small (1.5B) + Code-Mid (7B), |K|=10^4
+# Requires: 4×A100 80GB for 7B model; ~2 days total compute
+
+model:
+  target_model_small: "local-code-model-small"   # Code-Small (1.5B)
+  target_model_mid:   "local-code-model-mid"   # Code-Mid (7B)
+  ref_model:          "local-code-model-small"   # base (no fine-tuning)
+  device: "auto"
+  load_in_8bit: false
+  max_new_tokens: 128
+  temperature: 1.0
+  top_p: 1.0
+
+canary:
+  n_canaries: 10000             # |K| = 10^4 as in study
+  n_eval_per_type: 283          # 283 × 4 types = 1132 eval canaries → 7924 W4 prompts
+  n_eval: 1132                  # total eval size (= n_eval_per_type × 4)
+  seed: 42
+  include_paraphrase: true      # T2 paraphrase canaries
+
+corpus:
+  path: "./data/github_code_12B.jsonl"      # 12B-token GitHub corpus
+  max_seq_length: 512
+  stride: 256
+
+finetune:
+  num_train_epochs: 3
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 8
+  learning_rate: 2.0e-5
+  warmup_steps: 100
+  weight_decay: 0.01
+  fp16: true
+  use_dp: false
+  output_dir: "./checkpoints/code_small_target"
+
+finetune_dp:                    # B6 DP-SGD variant
+  use_dp: true
+  dp_epsilon: 8.0
+  dp_delta: 1.0e-5
+  dp_max_grad_norm: 1.0
+  output_dir: "./checkpoints/code_small_dp_eps8"
+
+certificate:
+  delta: 0.01
+  budgets: [100, 1000, 5000, 10000, 50000, 100000, 1000000, 10000000]
+  n_queries_per_canary: 1
+
+evaluation:
+  query_budget: 10000           # B = 10^4 (headline number)
+  n_eval_canaries: 200
+  run_workloads: [W1, W2, W3, W4, W5]
+  run_defenses: [B1, B2, B3, B4, B5, B6, LEAKCERT]
+  run_attackers: [A_fixed, A_grid, A_adaptive, A_greedy_LRT]
+  b2_temperatures: [0.2, 0.5, 1.5]
+  b3_top_p_values: [0.5, 0.7, 0.9]
+  dp_epsilons: [1, 2, 4, 8, 16]  # for Table 8
+
+runtime:
+  query_budget: 10000
+  window_days: 10
+  refusal_threshold: 0.5
+  target_refusal_rate: 0.01      # 1% refusal on W3
+  use_canary_hashes: false
+
+output_dir: "./results/full_scale"
+seed: 42
+
+# Reproducibility: re-run certificate across 20 random canary panels
+n_certificate_seeds: 20

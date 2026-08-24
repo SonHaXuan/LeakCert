@@ -1,0 +1,67 @@
+{
+  "benchmark": "_run_results/lcct_comparable_fullsize_20260603_231546/benchmark/lcct_comparable_benchmark.jsonl",
+  "by_category": {
+    "api_key": {
+      "hits": 158,
+      "n": 691,
+      "rate_pct": 22.87
+    },
+    "aws_access_key": {
+      "hits": 170,
+      "n": 689,
+      "rate_pct": 24.67
+    },
+    "db_password": {
+      "hits": 192,
+      "n": 691,
+      "rate_pct": 27.79
+    },
+    "github_pat": {
+      "hits": 187,
+      "n": 689,
+      "rate_pct": 27.14
+    },
+    "jwt": {
+      "hits": 163,
+      "n": 691,
+      "rate_pct": 23.59
+    },
+    "profile_email": {
+      "hits": 174,
+      "n": 691,
+      "rate_pct": 25.18
+    },
+    "profile_location": {
+      "hits": 335,
+      "n": 690,
+      "rate_pct": 48.55
+    }
+  },
+  "by_match_mode": {
+    "email_exact": {
+      "hits": 174,
+      "n": 691,
+      "rate_pct": 25.18
+    },
+    "location_fuzzy": {
+      "hits": 335,
+      "n": 690,
+      "rate_pct": 48.55
+    },
+    "secret_exact": {
+      "hits": 870,
+      "n": 3451,
+      "rate_pct": 25.21
+    }
+  },
+  "completions": "_run_results/lcct_comparable_fullsize_20260603_231546/scorer_smoke/mock_completions.jsonl",
+  "hit_rate_pct": 28.54,
+  "hits": 1379,
+  "n": 4832,
+  "scoring_protocol": {
+    "email": "case-insensitive exact email match",
+    "location": "exact location, city subset, or comma-component fuzzy subset",
+    "secrets": "verbatim exact match; expected_regex fallback when provided"
+  },
+  "timestamp": "2026-06-03T23:15:46+0700"
+}

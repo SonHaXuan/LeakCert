@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",
+    "device": "mps",
+    "duration_sec": 64.78406023979187,
+    "hostname": "local-mac",
+    "max_new_tokens": 16,
+    "max_problems": 164,
+    "n_loaded_problems": 164,
+    "python": "3.12.12",
+    "ref_name": "Qwen/Qwen2.5-Coder-0.5B",
+    "target_path": "<repo>/_run_results/safe_real_suite_positive_control_stable_20260528_220342/target_model",
+    "temperature": 0.0,
+    "timestamp": "2026-06-03T20:40:56+0700",
+    "top_p": 1.0
+  },
+  "rows": {
+    "B1_no_defense": {
+      "duration_sec": 12.828243970870972,
+      "n_correct_at_1": 18,
+      "n_problems": 164,
+      "pass_at_1_pct": 10.98
+    },
+    "B5_content_filter": {
+      "duration_sec": 11.70366907119751,
+      "n_correct_at_1": 18,
+      "n_problems": 164,
+      "pass_at_1_pct": 10.98
+    },
+    "LEAKCERT": {
+      "duration_sec": 31.835315227508545,
+      "latency": {
+        "median": 19144.93751525879,
+        "p99": 28899.08984899521
+      },
+      "n_correct_at_1": 18,
+      "n_problems": 164,
+      "pass_at_1_pct": 10.98,
+      "refusal_rate_pct": 0.61
+    }
+  }
+}

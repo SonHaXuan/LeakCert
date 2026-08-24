@@ -1,0 +1,45 @@
+# W4/W5 attack-workload eval against the 7B Code-Mid target (target_mid_sub2).
+# Mirrors hpc_eval_attacks.yaml (1.5B) but points at the 7B checkpoint + 7B base
+# reference. Same canary panel (seed 42) so the eval panel is a deterministic
+# subset of the 11,566 canaries injected into the 7B (see its
+# canary_injection_manifest.json). Reduced scale (100-canary panel, B=100) so a
+# single L40S finishes in a few hours.
+#
+# Main open question this answers: does the 7B target verbatim-leak where the
+# 1.5B does not? (1.5B result: 0% across W4 static + A-adaptive + W5.)
+
+model:
+  # NOTE: run_w4/run_w5 use `target_model_small` as the REFERENCE model.
+  target_model_small: "models/qwen2.5-coder-7b"    # 7B base = reference
+  ref_model: "models/qwen2.5-coder-7b"
+  device: "cuda"
+  max_new_tokens: 128
+  temperature: 1.0
+  top_p: 1.0
+
+canary:
+  n_canaries: 10000
+  n_eval_per_type: 25      # 25/type x 4 = 100 eval canaries (subset of injected 11,566)
+  n_eval: 100
+  seed: 42
+  include_paraphrase: true
+
+finetune:
+  output_dir: "checkpoints/target_mid_sub2/checkpoint-20614"   # the trained 7B target
+
+evaluation:
+  query_budget: 10000
+  batch_size: 8            # 2x7B (target+ref) resident; smaller batch than 1.5B
+  run_defenses: [B1, B5, LEAKCERT]
+  adaptive_budgets: [100]  # B=1000/10000 intractable on one L40S and stay 0%
+  run_attackers_lrt: true
+
+runtime:
+  query_budget: 10000
+  window_days: 10
+  refusal_threshold: 0.5
+  target_refusal_rate: 0.01
+  use_canary_hashes: false
+
+output_dir: "./_run_results/hpc_eval_attacks_mid"
+seed: 42

@@ -1,0 +1,81 @@
+{
+  "description": "Edit this file on the local machine before creating a server payload. Source paths are local; server_path values are relative to LEAKCERT_RUN_ROOT on the server.",
+  "config_overrides": {
+    "model.target_model_small": "Qwen/Qwen2.5-Coder-0.5B",
+    "model.target_model_mid": "",
+    "model.ref_model": "Qwen/Qwen2.5-Coder-0.5B",
+    "model.device": "cuda",
+    "output_dir": "${LEAKCERT_RUN_ROOT}/results/server_real_inputs"
+  },
+  "items": [
+    {
+      "id": "training_corpus",
+      "source": "TODO_LOCAL_REAL_TRAINING_CORPUS.jsonl",
+      "server_path": "data/training_corpus.jsonl",
+      "kind": "file",
+      "required_for": ["W1", "DP_sweep", "multi_model"]
+    },
+    {
+      "id": "lcct_jsonl",
+      "source": "TODO_LOCAL_REAL_OR_COMPARABLE_LCCT.jsonl",
+      "server_path": "data/lcct.jsonl",
+      "kind": "file",
+      "required_for": ["W2"]
+    },
+    {
+      "id": "target_checkpoint",
+      "source": "TODO_LOCAL_TARGET_CHECKPOINT_DIR",
+      "server_path": "checkpoints/target_model",
+      "kind": "directory",
+      "required_for": ["W2", "W3", "W4", "W5", "certificate"]
+    },
+    {
+      "id": "mid_checkpoint",
+      "source": "",
+      "server_path": "checkpoints/target_model_mid",
+      "kind": "directory",
+      "optional": true,
+      "required_for": ["multi_model"]
+    },
+    {
+      "id": "dp_eps_1",
+      "source": "",
+      "server_path": "checkpoints/dp_eps_1",
+      "kind": "directory",
+      "optional": true,
+      "required_for": ["DP_sweep"]
+    },
+    {
+      "id": "dp_eps_2",
+      "source": "",
+      "server_path": "checkpoints/dp_eps_2",
+      "kind": "directory",
+      "optional": true,
+      "required_for": ["DP_sweep"]
+    },
+    {
+      "id": "dp_eps_4",
+      "source": "",
+      "server_path": "checkpoints/dp_eps_4",
+      "kind": "directory",
+      "optional": true,
+      "required_for": ["DP_sweep"]
+    },
+    {
+      "id": "dp_eps_8",
+      "source": "",
+      "server_path": "checkpoints/dp_eps_8",
+      "kind": "directory",
+      "optional": true,
+      "required_for": ["DP_sweep"]
+    },
+    {
+      "id": "dp_eps_16",
+      "source": "",
+      "server_path": "checkpoints/dp_eps_16",
+      "kind": "directory",
+      "optional": true,
+      "required_for": ["DP_sweep"]
+    }
+  ]
+}

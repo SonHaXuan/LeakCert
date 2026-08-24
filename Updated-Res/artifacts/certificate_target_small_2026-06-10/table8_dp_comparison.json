@@ -1,0 +1,7 @@
+[
+  {"dp_epsilon": 1, "leakcert_nats": 9.4, "raw_leakcert_nats": 242940.6, "dp_bound_nats": 9.4, "raw_dp_bound_nats": 5000.0, "entropy_H_K_nats": 9.356, "entropy_cap_applied": true, "entropy_cap_pass": true, "ratio_leakcert_dp": 1.0},
+  {"dp_epsilon": 2, "leakcert_nats": 9.4, "raw_leakcert_nats": 242940.6, "dp_bound_nats": 9.4, "raw_dp_bound_nats": 20000.0, "entropy_H_K_nats": 9.356, "entropy_cap_applied": true, "entropy_cap_pass": true, "ratio_leakcert_dp": 1.0},
+  {"dp_epsilon": 4, "leakcert_nats": 9.4, "raw_leakcert_nats": 242940.6, "dp_bound_nats": 9.4, "raw_dp_bound_nats": 80000.0, "entropy_H_K_nats": 9.356, "entropy_cap_applied": true, "entropy_cap_pass": true, "ratio_leakcert_dp": 1.0},
+  {"dp_epsilon": 8, "leakcert_nats": 9.4, "raw_leakcert_nats": 242940.6, "dp_bound_nats": 9.4, "raw_dp_bound_nats": 320000.0, "entropy_H_K_nats": 9.356, "entropy_cap_applied": true, "entropy_cap_pass": true, "ratio_leakcert_dp": 1.0},
+  {"dp_epsilon": 16, "leakcert_nats": 9.4, "raw_leakcert_nats": 242940.6, "dp_bound_nats": 9.4, "raw_dp_bound_nats": 1280000.0, "entropy_H_K_nats": 9.356, "entropy_cap_applied": true, "entropy_cap_pass": true, "ratio_leakcert_dp": 1.0}
+]

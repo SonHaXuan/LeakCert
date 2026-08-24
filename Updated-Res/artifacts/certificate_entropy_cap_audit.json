@@ -1,0 +1,217 @@
+{
+  "entropy_cap_pass": false,
+  "files": [
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/certificate_cpu_bounded_20260531_0344/certificate/table4_prior.json",
+      "n_checked_values": 21,
+      "n_raw_violations": 20,
+      "n_values_capped": 20,
+      "source": "_run_results/certificate_cpu_bounded_20260531_0344/certificate/table1_certificate.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/certificate_refresh_20260531_2349/certificate/table4_prior.json",
+      "n_checked_values": 12,
+      "n_raw_violations": 12,
+      "n_values_capped": 12,
+      "source": "_run_results/certificate_refresh_20260531_2349/certificate/table1_certificate.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": true,
+      "entropy_source": "_run_results/safe_real_suite_positive_control_20260528_120114/certificate/table4_prior.json",
+      "n_checked_values": 15,
+      "n_raw_violations": 0,
+      "n_values_capped": 0,
+      "source": "_run_results/safe_real_suite_positive_control_20260528_120114/certificate/table1_certificate.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": true,
+      "entropy_source": "_run_results/safe_real_suite_tiny_20260528_085312/certificate/table4_prior.json",
+      "n_checked_values": 12,
+      "n_raw_violations": 0,
+      "n_values_capped": 0,
+      "source": "_run_results/safe_real_suite_tiny_20260528_085312/certificate/table1_certificate.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/certificate_cpu_bounded_20260531_0344/certificate/table4_prior.json",
+      "n_checked_values": 12,
+      "n_raw_violations": 11,
+      "n_values_capped": 11,
+      "source": "_run_results/certificate_cpu_bounded_20260531_0344/certificate/table3_tightness.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/certificate_refresh_20260531_2349/certificate/table4_prior.json",
+      "n_checked_values": 8,
+      "n_raw_violations": 8,
+      "n_values_capped": 8,
+      "source": "_run_results/certificate_refresh_20260531_2349/certificate/table3_tightness.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/safe_real_suite_positive_control_20260528_120114/certificate/table4_prior.json",
+      "n_checked_values": 10,
+      "n_raw_violations": 5,
+      "n_values_capped": 5,
+      "source": "_run_results/safe_real_suite_positive_control_20260528_120114/certificate/table3_tightness.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/safe_real_suite_tiny_20260528_085312/certificate/table4_prior.json",
+      "n_checked_values": 8,
+      "n_raw_violations": 4,
+      "n_values_capped": 4,
+      "source": "_run_results/safe_real_suite_tiny_20260528_085312/certificate/table3_tightness.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/certificate_cpu_bounded_20260531_0344/certificate/table4_prior.json",
+      "n_checked_values": 2,
+      "n_raw_violations": 2,
+      "n_values_capped": 2,
+      "source": "_run_results/certificate_cpu_bounded_20260531_0344/certificate/table4_prior.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/certificate_refresh_20260531_2349/certificate/table4_prior.json",
+      "n_checked_values": 2,
+      "n_raw_violations": 2,
+      "n_values_capped": 2,
+      "source": "_run_results/certificate_refresh_20260531_2349/certificate/table4_prior.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/safe_real_suite_positive_control_20260528_120114/certificate/table4_prior.json",
+      "n_checked_values": 2,
+      "n_raw_violations": 2,
+      "n_values_capped": 2,
+      "source": "_run_results/safe_real_suite_positive_control_20260528_120114/certificate/table4_prior.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/safe_real_suite_tiny_20260528_085312/certificate/table4_prior.json",
+      "n_checked_values": 2,
+      "n_raw_violations": 2,
+      "n_values_capped": 2,
+      "source": "_run_results/safe_real_suite_tiny_20260528_085312/certificate/table4_prior.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/certificate_cpu_bounded_20260531_0344/certificate/table4_prior.json",
+      "n_checked_values": 10,
+      "n_raw_violations": 10,
+      "n_values_capped": 10,
+      "source": "_run_results/certificate_cpu_bounded_20260531_0344/certificate/table8_dp_comparison.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/certificate_refresh_20260531_2349/certificate/table4_prior.json",
+      "n_checked_values": 10,
+      "n_raw_violations": 10,
+      "n_values_capped": 10,
+      "source": "_run_results/certificate_refresh_20260531_2349/certificate/table8_dp_comparison.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/safe_real_suite_positive_control_20260528_120114/certificate/table4_prior.json",
+      "n_checked_values": 10,
+      "n_raw_violations": 10,
+      "n_values_capped": 10,
+      "source": "_run_results/safe_real_suite_positive_control_20260528_120114/certificate/table8_dp_comparison.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": false,
+      "entropy_source": "_run_results/safe_real_suite_tiny_20260528_085312/certificate/table4_prior.json",
+      "n_checked_values": 10,
+      "n_raw_violations": 10,
+      "n_values_capped": 10,
+      "source": "_run_results/safe_real_suite_tiny_20260528_085312/certificate/table8_dp_comparison.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": true,
+      "entropy_source": "_run_results/safe_real_suite_positive_control_20260528_120114/certificate/table4_prior.json",
+      "n_checked_values": 5,
+      "n_raw_violations": 0,
+      "n_values_capped": 0,
+      "source": "_run_results/safe_real_suite_positive_control_20260528_120114/table1_certificate_sweep.json"
+    },
+    {
+      "entropy_H_K_nats": null,
+      "entropy_cap_pass": null,
+      "entropy_source": "missing",
+      "n_checked_values": 0,
+      "n_raw_violations": 0,
+      "n_values_capped": 0,
+      "source": "_run_results/safe_real_suite_positive_control_20260528_204722/table1_certificate_sweep.json"
+    },
+    {
+      "entropy_H_K_nats": null,
+      "entropy_cap_pass": null,
+      "entropy_source": "missing",
+      "n_checked_values": 0,
+      "n_raw_violations": 0,
+      "n_values_capped": 0,
+      "source": "_run_results/safe_real_suite_positive_control_20260528_212720/table1_certificate_sweep.json"
+    },
+    {
+      "entropy_H_K_nats": null,
+      "entropy_cap_pass": null,
+      "entropy_source": "missing",
+      "n_checked_values": 0,
+      "n_raw_violations": 0,
+      "n_values_capped": 0,
+      "source": "_run_results/safe_real_suite_positive_control_stable_20260528_190051/table1_certificate_sweep.json"
+    },
+    {
+      "entropy_H_K_nats": null,
+      "entropy_cap_pass": null,
+      "entropy_source": "missing",
+      "n_checked_values": 0,
+      "n_raw_violations": 0,
+      "n_values_capped": 0,
+      "source": "_run_results/safe_real_suite_positive_control_stable_20260528_220342/table1_certificate_sweep.json"
+    },
+    {
+      "entropy_H_K_nats": null,
+      "entropy_cap_pass": null,
+      "entropy_source": "missing",
+      "n_checked_values": 0,
+      "n_raw_violations": 0,
+      "n_values_capped": 0,
+      "source": "_run_results/safe_real_suite_tiny_20260527_232346/table1_certificate_sweep.json"
+    },
+    {
+      "entropy_H_K_nats": 5.971,
+      "entropy_cap_pass": true,
+      "entropy_source": "_run_results/safe_real_suite_tiny_20260528_085312/certificate/table4_prior.json",
+      "n_checked_values": 4,
+      "n_raw_violations": 0,
+      "n_values_capped": 0,
+      "source": "_run_results/safe_real_suite_tiny_20260528_085312/table1_certificate_sweep.json"
+    }
+  ],
+  "n_checked_values": 155,
+  "n_files": 23,
+  "n_raw_violations": 108,
+  "n_values_capped": 108,
+  "timestamp": "2026-06-04T10:40:59+0700"
+}

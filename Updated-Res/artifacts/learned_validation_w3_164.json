@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",
+    "duration_sec": 50.71570301055908,
+    "hostname": "local-mac",
+    "max_problems": 164,
+    "python": "3.12.12",
+    "timestamp": "2026-06-03T19:03:57+0700"
+  },
+  "rows": {
+    "0.95": {
+      "duration_sec": 43.55593800544739,
+      "latency": {
+        "median": 32815.4011964798,
+        "p99": 39531.381475925446
+      },
+      "n_correct_at_1": 11,
+      "n_problems": 164,
+      "pass_at_1_pct": 6.71,
+      "refusal_rate_pct": 3.05
+    }
+  }
+}

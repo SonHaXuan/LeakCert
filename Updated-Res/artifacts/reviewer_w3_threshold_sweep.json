@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "config": "<repo>/_run_results/learnedonly_t095_validation_20260603_190245/configs/w3_164_t095.yaml",
+    "duration_sec": 89.82831120491028,
+    "hostname": "local-mac",
+    "max_problems": 80,
+    "python": "3.12.12",
+    "timestamp": "2026-06-04T19:43:32+0700"
+  },
+  "rows": {
+    "0.7": {
+      "duration_sec": 19.226472854614258,
+      "latency": {
+        "median": 15073.706030845642,
+        "p99": 17960.449492931366
+      },
+      "n_correct_at_1": 3,
+      "n_problems": 80,
+      "pass_at_1_pct": 3.75,
+      "refusal_rate_pct": 45.0
+    },
+    "0.8": {
+      "duration_sec": 15.64122200012207,
+      "latency": {
+        "median": 11872.775912284851,
+        "p99": 14313.271243572235
+      },
+      "n_correct_at_1": 15,
+      "n_problems": 80,
+      "pass_at_1_pct": 18.75,
+      "refusal_rate_pct": 18.75
+    },
+    "0.9": {
+      "duration_sec": 15.760762929916382,
+      "latency": {
+        "median": 11914.311408996582,
+        "p99": 14387.712140083313
+      },
+      "n_correct_at_1": 10,
+      "n_problems": 80,
+      "pass_at_1_pct": 12.5,
+      "refusal_rate_pct": 10.0
+    },
+    "0.95": {
+      "duration_sec": 15.834307193756104,
+      "latency": {
+        "median": 11970.24953365326,
+        "p99": 14478.393547534943
+      },
+      "n_correct_at_1": 11,
+      "n_problems": 80,
+      "pass_at_1_pct": 13.75,
+      "refusal_rate_pct": 2.5
+    },
+    "0.98": {
+      "duration_sec": 15.817508935928345,
+      "latency": {
+        "median": 11996.167063713074,
+        "p99": 14476.490466594696
+      },
+      "n_correct_at_1": 11,
+      "n_problems": 80,
+      "pass_at_1_pct": 13.75,
+      "refusal_rate_pct": 0.0
+    }
+  }
+}
