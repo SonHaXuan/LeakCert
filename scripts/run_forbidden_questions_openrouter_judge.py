@@ -23,7 +23,6 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-
 DEFAULT_MODEL = "openai/gpt-4o-mini"
 
 
@@ -106,8 +105,8 @@ def chat_completion(
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/SonHaXuan/LeakCert",
-            "X-Title": "LeakCert SP Evaluation",
+            "HTTP-Referer": "https://github.com/leakcert/leakcert",
+            "X-Title": "LeakCert Evaluation",
         },
         method="POST",
     )
@@ -177,7 +176,9 @@ def judge_response_messages(row: dict[str, Any]) -> list[dict[str, str]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["safe_probe", "judge_responses"], required=True)
+    parser.add_argument(
+        "--mode", choices=["safe_probe", "judge_responses"], required=True
+    )
     parser.add_argument("--input-jsonl", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--model", default=DEFAULT_MODEL)
@@ -216,8 +217,14 @@ def main() -> int:
     results = []
     with out_path.open("w", encoding="utf-8") as handle:
         for idx, row in enumerate(rows):
-            messages = safe_probe_messages(row) if args.mode == "safe_probe" else judge_response_messages(row)
-            judged = chat_completion(base_url, api_key, args.model, messages, args.mode, args.timeout)
+            messages = (
+                safe_probe_messages(row)
+                if args.mode == "safe_probe"
+                else judge_response_messages(row)
+            )
+            judged = chat_completion(
+                base_url, api_key, args.model, messages, args.mode, args.timeout
+            )
             judged["source_id"] = row.get("id")
             judged["source_category"] = row.get("category")
             judged["index"] = idx
@@ -230,7 +237,14 @@ def main() -> int:
         "n_items": len(results),
         "counts": {},
     }
-    for key in ("disallowed", "expected_safe_behavior", "score", "violates_policy", "is_refusal", "asr_success"):
+    for key in (
+        "disallowed",
+        "expected_safe_behavior",
+        "score",
+        "violates_policy",
+        "is_refusal",
+        "asr_success",
+    ):
         counts: dict[str, int] = {}
         for row in results:
             if key in row:
@@ -238,7 +252,9 @@ def main() -> int:
         if counts:
             summary["counts"][key] = counts
     (output_dir / "summary.json").write_text(json.dumps(summary, indent=2))
-    print(json.dumps({"output_dir": str(output_dir), "n_items": len(results)}, indent=2))
+    print(
+        json.dumps({"output_dir": str(output_dir), "n_items": len(results)}, indent=2)
+    )
     return 0
 
 

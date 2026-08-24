@@ -21,31 +21,30 @@ import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
+from ..attacks.a_adaptive import AAdaptive
+from ..attacks.a_carlini import ACarlini
+from ..attacks.a_fixed import AFixed
+from ..attacks.a_greedy_lrt import AGreedyLRT
+from ..attacks.a_grid import AGrid
 from ..canary.types import CanaryPanel
-from ..model.completion_service import CompletionService
 from ..certificate.certificate import LeakageCertificate
 from ..certificate.kl_estimator import KLEstimator
-from ..attacks.a_fixed import AFixed
-from ..attacks.a_grid import AGrid
-from ..attacks.a_adaptive import AAdaptive
-from ..attacks.a_greedy_lrt import AGreedyLRT
-from ..attacks.a_carlini import ACarlini
+from ..defenses.content_filter import ContentFilterDefense
 from ..defenses.no_defense import NoDefense
+from ..defenses.rate_limit import RateLimitDefense
 from ..defenses.temperature import TemperatureDefense
 from ..defenses.top_p import TopPDefense
-from ..defenses.content_filter import ContentFilterDefense
-from ..defenses.rate_limit import RateLimitDefense
-from .workloads import W4CodeSecret, W5Paraphrase
+from ..model.completion_service import CompletionService
 from .metrics import (
-    ExtractionMetrics,
     CertificateTightness,
+    ExtractionMetrics,
     compute_tightness_table,
     extraction_hit,
 )
+from .workloads import W4CodeSecret, W5Paraphrase
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +55,7 @@ class ExperimentConfig:
 
     output_dir: str = "./results"
     query_budget: int = 10_000
-    certificate_delta: float = 0.01            # δ for Theorem 10
+    certificate_delta: float = 0.01  # δ for Theorem 10
     certificate_budgets: list[int] = field(
         default_factory=lambda: [100, 1_000, 10_000, 100_000]
     )
@@ -66,13 +65,13 @@ class ExperimentConfig:
     run_a_grid: bool = True
     run_a_adaptive: bool = True
     run_a_greedy_lrt: bool = True
-    run_a_carlini: bool = True           # B7 Carlini-style attack
+    run_a_carlini: bool = True  # B7 Carlini-style attack
 
     # Which defences to run
     run_b1_no_defense: bool = True
     run_b2_temperature: bool = True
     run_b3_top_p: bool = True
-    run_b4_rate_limit: bool = True       # B4: rate limit only (1000 queries/day)
+    run_b4_rate_limit: bool = True  # B4: rate limit only (1000 queries/day)
     run_b5_content_filter: bool = True
     run_leakcert: bool = True
 
@@ -101,13 +100,11 @@ class ExperimentConfig:
     # 283 per type × 4 types = 1132 eval canaries → 1132 × 7 = 7924 ≈ 7900
     # unique W4 prompts, matching the study claim of "approximately 7,900".
     n_eval_per_type: int = 283
-    n_eval_canaries: int = 1132         # fallback when stratification not possible
+    n_eval_canaries: int = 1132  # fallback when stratification not possible
 
     # Multi-seed reproducibility (E1 certificate calibration)
     n_seeds: int = 5
-    seeds: list[int] = field(
-        default_factory=lambda: [42, 137, 271, 314, 999]
-    )
+    seeds: list[int] = field(default_factory=lambda: [42, 137, 271, 314, 999])
     seed: int = 42
 
     # Compute / carbon metadata (E8 reproducibility)
@@ -134,10 +131,10 @@ class ExperimentRunner:
     def __init__(
         self,
         target_service: CompletionService,
-        ref_service: Optional[CompletionService],
+        ref_service: CompletionService | None,
         panel: CanaryPanel,
         leakcert_runtime=None,
-        config: Optional[ExperimentConfig] = None,
+        config: ExperimentConfig | None = None,
     ):
         self.target = target_service
         self.ref = ref_service
@@ -165,14 +162,24 @@ class ExperimentRunner:
         kl_results, cert_table = self.run_certificate_evaluation()
         results["certificate"] = cert_table
         meta = self._result_metadata()
-        self._save("certificate/kl_estimates.json",
-                   [{"canary_id": r.canary_id, "kl": r.kl_estimate} for r in kl_results],
-                   metadata=meta)
-        self._save("certificate/tightness_table.json",
-                   [{"B": r.query_budget, "cert": r.certificate_nats,
-                     "emp_mi": r.empirical_mi_nats, "ratio": r.ratio}
-                    for r in cert_table],
-                   metadata=meta)
+        self._save(
+            "certificate/kl_estimates.json",
+            [{"canary_id": r.canary_id, "kl": r.kl_estimate} for r in kl_results],
+            metadata=meta,
+        )
+        self._save(
+            "certificate/tightness_table.json",
+            [
+                {
+                    "B": r.query_budget,
+                    "cert": r.certificate_nats,
+                    "emp_mi": r.empirical_mi_nats,
+                    "ratio": r.ratio,
+                }
+                for r in cert_table
+            ],
+            metadata=meta,
+        )
 
         # 2. Table 4: prior mis-specification sweep
         if self.cfg.run_prior_sweep:
@@ -331,8 +338,11 @@ class ExperimentRunner:
                 }
                 logger.info(f"      {metrics}")
 
-        self._save("extraction/table2.json", extraction_table,
-                   metadata=self._result_metadata(n_queries=len(w4_samples)))
+        self._save(
+            "extraction/table2.json",
+            extraction_table,
+            metadata=self._result_metadata(n_queries=len(w4_samples)),
+        )
         return extraction_table
 
     # ------------------------------------------------------------------
@@ -424,8 +434,11 @@ class ExperimentRunner:
                 f"ratio={ratio:.3f}×"
             )
 
-        self._save("paraphrase/table6.json", ratios,
-                   metadata=self._result_metadata(n_queries=n_w4 + n_w5))
+        self._save(
+            "paraphrase/table6.json",
+            ratios,
+            metadata=self._result_metadata(n_queries=n_w4 + n_w5),
+        )
         return ratios
 
     # ------------------------------------------------------------------
@@ -434,8 +447,8 @@ class ExperimentRunner:
 
     def run_utility_evaluation(self) -> dict:
         """Compute utility benchmark pass@1 for each defence (Table 5)."""
-        from .workloads import W3RealCompletion
         from .metrics import evaluate_pass_at_k
+        from .workloads import W3RealCompletion
 
         w3 = W3RealCompletion()
         defences = self._build_defences(kl_results=None)
@@ -480,14 +493,12 @@ class ExperimentRunner:
         rows = []
         for prior_type in self.cfg.prior_types:
             pi = self._build_prior(kl_results, prior_type)
-            cert_result = self.cert_computer.compute(
-                kl_results, B, K, delta, prior=pi
-            )
+            cert_result = self.cert_computer.compute(kl_results, B, K, delta, prior=pi)
             # KL penalty D_KL(π || Unif_K) from Remark 9
             pi_arr = np.array(pi)
-            kl_penalty = float(np.sum(
-                pi_arr * np.log(pi_arr * n + 1e-12)  # D_KL(π || Unif)
-            ))
+            kl_penalty = float(
+                np.sum(pi_arr * np.log(pi_arr * n + 1e-12))  # D_KL(π || Unif)
+            )
             row = {
                 "prior_type": prior_type,
                 "H_K": cert_result.prior_entropy,
@@ -500,8 +511,11 @@ class ExperimentRunner:
                 f"D_KL(π||Unif)={kl_penalty:.2f}, cert={row['cert_nats']:.1f}"
             )
 
-        self._save("certificate/table4_prior_sweep.json", rows,
-                   metadata=self._result_metadata())
+        self._save(
+            "certificate/table4_prior_sweep.json",
+            rows,
+            metadata=self._result_metadata(),
+        )
         return rows
 
     def _build_prior(self, kl_results: list, prior_type: str) -> list[float]:
@@ -518,19 +532,21 @@ class ExperimentRunner:
             type_counts[t] = type_counts.get(t, 0) + 1
 
         if prior_type == "type_empirical":
-            weights = [1.0 / type_counts.get(r.canary_type or "unknown", 1)
-                       for r in kl_results]
+            weights = [
+                1.0 / type_counts.get(r.canary_type or "unknown", 1) for r in kl_results
+            ]
         else:
             # type_prefix_empirical: also weight by inverse KL (higher KL → higher prior)
             # Reflects that attackers know which canaries are most extractable.
             kl_vals = np.array([r.kl_estimate for r in kl_results])
             kl_vals = kl_vals / (kl_vals.sum() + 1e-12)
-            type_w = np.array([
-                1.0 / type_counts.get(r.canary_type or "unknown", 1)
-                for r in kl_results
-            ])
-            weights = list(0.5 * type_w / (type_w.sum() + 1e-12)
-                           + 0.5 * kl_vals)
+            type_w = np.array(
+                [
+                    1.0 / type_counts.get(r.canary_type or "unknown", 1)
+                    for r in kl_results
+                ]
+            )
+            weights = list(0.5 * type_w / (type_w.sum() + 1e-12) + 0.5 * kl_vals)
 
         total = sum(weights)
         return [w / total for w in weights]
@@ -555,23 +571,26 @@ class ExperimentRunner:
 
         # Baseline (non-private)
         cert_result = self.cert_computer.compute(kl_results, B, K, delta)
-        rows.append({
-            "configuration": "no_DP",
-            "leakcert_cert": cert_result.hoeffding_certificate,
-            "dp_bound": None,
-            "ratio": None,
-        })
+        rows.append(
+            {
+                "configuration": "no_DP",
+                "leakcert_cert": cert_result.hoeffding_certificate,
+                "dp_bound": None,
+                "ratio": None,
+            }
+        )
         logger.info(f"  no_DP: cert={cert_result.hoeffding_certificate:.1f}")
 
         # DP sweep: for each ε, the per-query KL ≤ ε²/2
         # We simulate the KL estimates a DP-trained model would produce
         # by clamping observed KLs to ε²/2.  In a real run, kl_results
         # would come from an actual DP fine-tuned model for each ε.
-        from ..certificate.certificate import LeakageCertificate
+
         for eps in self.cfg.dp_epsilons:
-            dp_kl_cap = (eps ** 2) / 2.0
+            dp_kl_cap = (eps**2) / 2.0
             # Clamp per-canary KL to the DP upper bound
             from ..certificate.kl_estimator import PerCanaryKL
+
             clamped = [
                 PerCanaryKL(
                     canary_id=r.canary_id,
@@ -584,27 +603,30 @@ class ExperimentRunner:
                 for r in kl_results
             ]
             cert_result = self.cert_computer.compute(clamped, B, K, delta)
-            raw_dp_analytic = B * (eps ** 2) / 2.0
+            raw_dp_analytic = B * (eps**2) / 2.0
             dp_analytic = min(raw_dp_analytic, cert_result.prior_entropy)
             ratio = cert_result.hoeffding_certificate / dp_analytic
-            rows.append({
-                "configuration": f"DP_eps{eps}",
-                "epsilon": eps,
-                "leakcert_cert": cert_result.hoeffding_certificate,
-                "raw_leakcert_cert": cert_result.raw_hoeffding_certificate,
-                "dp_bound": dp_analytic,
-                "raw_dp_bound": raw_dp_analytic,
-                "entropy_H_K_nats": cert_result.prior_entropy,
-                "entropy_cap_applied": (
-                    cert_result.entropy_cap_applied
-                    or raw_dp_analytic > cert_result.prior_entropy
-                ),
-                "entropy_cap_pass": (
-                    cert_result.hoeffding_certificate <= cert_result.prior_entropy + 1e-12
-                    and dp_analytic <= cert_result.prior_entropy + 1e-12
-                ),
-                "ratio": ratio,
-            })
+            rows.append(
+                {
+                    "configuration": f"DP_eps{eps}",
+                    "epsilon": eps,
+                    "leakcert_cert": cert_result.hoeffding_certificate,
+                    "raw_leakcert_cert": cert_result.raw_hoeffding_certificate,
+                    "dp_bound": dp_analytic,
+                    "raw_dp_bound": raw_dp_analytic,
+                    "entropy_H_K_nats": cert_result.prior_entropy,
+                    "entropy_cap_applied": (
+                        cert_result.entropy_cap_applied
+                        or raw_dp_analytic > cert_result.prior_entropy
+                    ),
+                    "entropy_cap_pass": (
+                        cert_result.hoeffding_certificate
+                        <= cert_result.prior_entropy + 1e-12
+                        and dp_analytic <= cert_result.prior_entropy + 1e-12
+                    ),
+                    "ratio": ratio,
+                }
+            )
             logger.info(
                 f"  DP ε={eps}: cert={cert_result.hoeffding_certificate:.1f}, "
                 f"dp_analytic={dp_analytic:.1f}, ratio={ratio:.3f}"
@@ -616,8 +638,7 @@ class ExperimentRunner:
                 "KL clamped at eps^2/2 to simulate DP training. "
                 "Real Table 8 requires separate DP-SGD fine-tuned models."
             )
-        self._save("dp_comparison/table8.json", rows,
-                   metadata=self._result_metadata())
+        self._save("dp_comparison/table8.json", rows, metadata=self._result_metadata())
         return rows
 
     # ------------------------------------------------------------------
@@ -652,14 +673,15 @@ class ExperimentRunner:
                 # generate_panel(include_paraphrase=False) still appends 50 T3
                 # + 50 T4, so we filter by CanaryType.LITERAL explicitly.
                 from ..canary.types import CanaryType
+
                 gen = CanaryGenerator(n_canaries=n, n_eval=0, seed=seed)
                 raw_panel = gen.generate_panel(include_paraphrase=False)
-                t1_only = [c for c in raw_panel
-                           if c.canary_type == CanaryType.LITERAL]
+                t1_only = [c for c in raw_panel if c.canary_type == CanaryType.LITERAL]
                 if not t1_only:
                     logger.warning(f"E1 n={n} seed={seed}: no T1 canaries found")
                     continue
                 from ..canary.types import CanaryPanel as _CP
+
                 mini_panel = _CP(t1_only)
                 actual_n = len(t1_only)
                 kl_res = self.estimator.estimate_panel(mini_panel)
@@ -675,8 +697,10 @@ class ExperimentRunner:
                     # monotonically with KL magnitude.
                     # Fallback: analytic B*mean(KL) when torch is unavailable.
                     raw_emp_mi = KLEstimator.mine_estimate(
-                        kl_vals, query_budget=B, canary_set_size=actual_n,
-                        use_neural=True
+                        kl_vals,
+                        query_budget=B,
+                        canary_set_size=actual_n,
+                        use_neural=True,
                     )
                     emp_mi = min(raw_emp_mi, cert.prior_entropy)
                     tightness = (
@@ -684,26 +708,32 @@ class ExperimentRunner:
                         if emp_mi > 0 and raw_emp_mi <= cert.prior_entropy + 1e-12
                         else None
                     )
-                    rows.append({
-                        "B": B, "n": actual_n, "seed": seed,
-                        "hoeffding_cert": cert.hoeffding_certificate,
-                        "raw_hoeffding_cert": cert.raw_hoeffding_certificate,
-                        "bernstein_cert": cert.bernstein_certificate,
-                        "raw_bernstein_cert": cert.raw_bernstein_certificate,
-                        "empirical_mi": emp_mi,
-                        "raw_empirical_mi": raw_emp_mi,
-                        "entropy_H_K_nats": cert.prior_entropy,
-                        "entropy_cap_applied": cert.entropy_cap_applied or raw_emp_mi > cert.prior_entropy,
-                        "entropy_cap_pass": (
-                            cert.hoeffding_certificate <= cert.prior_entropy + 1e-12
-                            and cert.bernstein_certificate <= cert.prior_entropy + 1e-12
-                            and emp_mi <= cert.prior_entropy + 1e-12
-                        ),
-                        "empirical_mi_source": "neural_mine_fixed_noise",
-                        "tightness_ratio": tightness,
-                        "mean_kl": cert.mean_kl,
-                        "std_kl": cert.std_kl,
-                    })
+                    rows.append(
+                        {
+                            "B": B,
+                            "n": actual_n,
+                            "seed": seed,
+                            "hoeffding_cert": cert.hoeffding_certificate,
+                            "raw_hoeffding_cert": cert.raw_hoeffding_certificate,
+                            "bernstein_cert": cert.bernstein_certificate,
+                            "raw_bernstein_cert": cert.raw_bernstein_certificate,
+                            "empirical_mi": emp_mi,
+                            "raw_empirical_mi": raw_emp_mi,
+                            "entropy_H_K_nats": cert.prior_entropy,
+                            "entropy_cap_applied": cert.entropy_cap_applied
+                            or raw_emp_mi > cert.prior_entropy,
+                            "entropy_cap_pass": (
+                                cert.hoeffding_certificate <= cert.prior_entropy + 1e-12
+                                and cert.bernstein_certificate
+                                <= cert.prior_entropy + 1e-12
+                                and emp_mi <= cert.prior_entropy + 1e-12
+                            ),
+                            "empirical_mi_source": "neural_mine_fixed_noise",
+                            "tightness_ratio": tightness,
+                            "mean_kl": cert.mean_kl,
+                            "std_kl": cert.std_kl,
+                        }
+                    )
                     logger.debug(
                         f"E1 n={actual_n} B={B} seed={seed}: "
                         f"cert={cert.hoeffding_certificate:.2f} "
@@ -712,6 +742,7 @@ class ExperimentRunner:
 
         # Aggregate: mean ± 95% CI per (B, n) cell
         import statistics
+
         cell_data: dict[tuple, list] = {}
         for row in rows:
             key = (row["B"], row["n"])
@@ -719,33 +750,36 @@ class ExperimentRunner:
         ci_table = []
         for (B, n), cell_rows in cell_data.items():
             certs = [r["hoeffding_cert"] for r in cell_rows]
-            ratios = [r["tightness_ratio"] for r in cell_rows
-                      if r["tightness_ratio"] is not None]
+            ratios = [
+                r["tightness_ratio"]
+                for r in cell_rows
+                if r["tightness_ratio"] is not None
+            ]
             mean_cert = statistics.mean(certs)
             sd_cert = statistics.stdev(certs) if len(certs) > 1 else 0.0
             mean_ratio = statistics.mean(ratios) if ratios else None
-            ci_table.append({
-                "B": B, "n": n,
-                "mean_cert": mean_cert,
-                "ci95_cert": 1.96 * sd_cert / (len(certs) ** 0.5),
-                "mean_tightness": mean_ratio,
-                "target_met": mean_ratio <= 1.3 if ratios else None,
-                "n_seeds": len(certs),
-            })
-            tightness_msg = (
-                f"{mean_ratio:.2f}× "
-                f"({'≤1.3×' if mean_ratio <= 1.3 else '>1.3× FAIL'})"
-                if mean_ratio is not None
-                else "n/a (entropy-capped or unavailable)"
+            ci_table.append(
+                {
+                    "B": B,
+                    "n": n,
+                    "mean_cert": mean_cert,
+                    "ci95_cert": 1.96 * sd_cert / (len(certs) ** 0.5),
+                    "mean_tightness": mean_ratio,
+                    "target_met": mean_ratio <= 1.3 if ratios else None,
+                    "n_seeds": len(certs),
+                }
             )
             logger.info(
                 f"  E1 B={B} n={n}: cert={mean_cert:.2f} "
-                f"tightness={tightness_msg}"
+                f"tightness={mean_ratio:.2f}× "
+                f"({'≤1.3×' if mean_ratio <= 1.3 else '>1.3× FAIL'})"
             )
 
-        self._save("certificate/e1_calibration.json",
-                   {"raw": rows, "ci_table": ci_table},
-                   metadata=self._result_metadata())
+        self._save(
+            "certificate/e1_calibration.json",
+            {"raw": rows, "ci_table": ci_table},
+            metadata=self._result_metadata(),
+        )
         return ci_table
 
     # ------------------------------------------------------------------
@@ -762,15 +796,13 @@ class ExperimentRunner:
 
         Goal: no single mode or combined attacker exceeds the certificate.
         """
-        from ..attacks.a_adaptive import AAdaptive, PARAPHRASE_MODES
+        from ..attacks.a_adaptive import PARAPHRASE_MODES, AAdaptive
         from ..attacks.a_carlini import ACarlini
 
         _, eval_panel = self._stratified_eval_panel()
         all_defences = self._build_defences(kl_results)
         # E3 is run against LEAKCERT; fall back to last defence if not present
-        leakcert_service = all_defences.get(
-            "LEAKCERT", list(all_defences.values())[-1]
-        )
+        leakcert_service = all_defences.get("LEAKCERT", list(all_defences.values())[-1])
         defences = {"LEAKCERT": leakcert_service}
         B = self.cfg.query_budget
         stress_results = {}
@@ -779,12 +811,12 @@ class ExperimentRunner:
         # Each (mode, defence) gets an isolated api_key so per-mode budgets
         # are independent — crucial for locked_mode being a true isolation test.
         for mode in PARAPHRASE_MODES:
-            attacker = AAdaptive(
-                budget=B, locked_mode=mode, ref_service=self.ref
-            )
+            attacker = AAdaptive(budget=B, locked_mode=mode, ref_service=self.ref)
             attacker_name = f"A_mode_{mode}"
             for def_name, service in defences.items():
-                svc = self._measurement_service(service, f"e3_{attacker_name}_{def_name}")
+                svc = self._measurement_service(
+                    service, f"e3_{attacker_name}_{def_name}"
+                )
                 results = attacker.attack_panel(svc, eval_panel)
                 metrics = ExtractionMetrics.from_attack_results(
                     results, attack_name=attacker_name, defense_name=def_name
@@ -794,8 +826,10 @@ class ExperimentRunner:
                     "n_success": metrics.n_success_verbatim,
                     "n_total": metrics.n_total,
                 }
-                logger.info(f"  E3 {attacker_name} vs {def_name}: "
-                            f"{metrics.verbatim_rate:.2%}")
+                logger.info(
+                    f"  E3 {attacker_name} vs {def_name}: "
+                    f"{metrics.verbatim_rate:.2%}"
+                )
 
         # --- Full UCB-adaptive (9 modes, UCB allocation) ---
         ucb_attacker = AAdaptive(budget=B, use_ucb=True, ref_service=self.ref)
@@ -827,8 +861,11 @@ class ExperimentRunner:
                 "n_total": metrics.n_total,
             }
 
-        self._save("extraction/e3_stress_test.json", stress_results,
-                   metadata=self._result_metadata())
+        self._save(
+            "extraction/e3_stress_test.json",
+            stress_results,
+            metadata=self._result_metadata(),
+        )
         return stress_results
 
     # ------------------------------------------------------------------
@@ -854,23 +891,52 @@ class ExperimentRunner:
         from ..runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
 
         ablation_configs = {
-            "all":              dict(use_accounting=True,  use_rate_limit=True,
-                                    use_refusal=True,  use_suppression=True),
-            "no_accounting":    dict(use_accounting=False, use_rate_limit=True,
-                                    use_refusal=True,  use_suppression=True),
-            "no_rate_limit":    dict(use_accounting=True,  use_rate_limit=False,
-                                    use_refusal=True,  use_suppression=True),
-            "no_refusal":       dict(use_accounting=True,  use_rate_limit=True,
-                                    use_refusal=False, use_suppression=True),
-            "no_suppression":   dict(use_accounting=True,  use_rate_limit=True,
-                                    use_refusal=True,  use_suppression=False),
-            "only_rate_limit":  dict(use_accounting=False, use_rate_limit=True,
-                                    use_refusal=False, use_suppression=False),
-            "only_suppression": dict(use_accounting=False, use_rate_limit=False,
-                                    use_refusal=False, use_suppression=True),
+            "all": dict(
+                use_accounting=True,
+                use_rate_limit=True,
+                use_refusal=True,
+                use_suppression=True,
+            ),
+            "no_accounting": dict(
+                use_accounting=False,
+                use_rate_limit=True,
+                use_refusal=True,
+                use_suppression=True,
+            ),
+            "no_rate_limit": dict(
+                use_accounting=True,
+                use_rate_limit=False,
+                use_refusal=True,
+                use_suppression=True,
+            ),
+            "no_refusal": dict(
+                use_accounting=True,
+                use_rate_limit=True,
+                use_refusal=False,
+                use_suppression=True,
+            ),
+            "no_suppression": dict(
+                use_accounting=True,
+                use_rate_limit=True,
+                use_refusal=True,
+                use_suppression=False,
+            ),
+            "only_rate_limit": dict(
+                use_accounting=False,
+                use_rate_limit=True,
+                use_refusal=False,
+                use_suppression=False,
+            ),
+            "only_suppression": dict(
+                use_accounting=False,
+                use_rate_limit=False,
+                use_refusal=False,
+                use_suppression=True,
+            ),
         }
 
         import math as _math
+
         B = self.cfg.query_budget
         K = len(self.panel)
         delta = self.cfg.certificate_delta
@@ -903,28 +969,31 @@ class ExperimentRunner:
                 is_vacuous = LeakageCertificate.is_vacuous(cert_nats, K)
             else:
                 # Certificate is vacuous: no budget or no KL tracking
-                cert_nats = _math.log(K)   # trivial upper bound
+                cert_nats = _math.log(K)  # trivial upper bound
                 cert_advantage = None
                 is_vacuous = True
 
-            rows.append({
-                "config": config_name,
-                "flags": flags,
-                "verbatim_rate": metrics.verbatim_rate,
-                "n_success": metrics.n_success_verbatim,
-                "n_total": metrics.n_total,
-                "certificate_nats": cert_nats,
-                "is_vacuous": is_vacuous,
-                "certified_advantage": cert_advantage,
-            })
+            rows.append(
+                {
+                    "config": config_name,
+                    "flags": flags,
+                    "verbatim_rate": metrics.verbatim_rate,
+                    "n_success": metrics.n_success_verbatim,
+                    "n_total": metrics.n_total,
+                    "certificate_nats": cert_nats,
+                    "is_vacuous": is_vacuous,
+                    "certified_advantage": cert_advantage,
+                }
+            )
             vacuous_str = " [VACUOUS]" if is_vacuous else ""
             logger.info(
                 f"  E6 {config_name}: {metrics.verbatim_rate:.2%} "
                 f"(cert={cert_nats:.1f}{vacuous_str})"
             )
 
-        self._save("extraction/e6_ablation.json", rows,
-                   metadata=self._result_metadata())
+        self._save(
+            "extraction/e6_ablation.json", rows, metadata=self._result_metadata()
+        )
         return rows
 
     # ------------------------------------------------------------------
@@ -969,6 +1038,7 @@ class ExperimentRunner:
           This prevents T1-only-aws_key bias that occurs with [:n] slicing.
         """
         import math as _math
+
         from ..canary.types import CanaryPanel
 
         n_per_type = self.cfg.n_eval_per_type
@@ -977,8 +1047,11 @@ class ExperimentRunner:
         # Group by (type, subtype)
         by_type_subtype: dict[str, dict[str, list]] = {}
         for c in all_canaries:
-            t_key = (c.canary_type.value
-                     if hasattr(c.canary_type, "value") else str(c.canary_type))
+            t_key = (
+                c.canary_type.value
+                if hasattr(c.canary_type, "value")
+                else str(c.canary_type)
+            )
             s_key = getattr(c, "subtype", "default") or "default"
             by_type_subtype.setdefault(t_key, {}).setdefault(s_key, []).append(c)
 
@@ -1014,6 +1087,7 @@ class ExperimentRunner:
     def _result_metadata(self, n_queries: int = 0) -> dict:
         """Build E8-compliant metadata dict for embedding in every result."""
         from .e_scenarios import build_result_metadata
+
         return build_result_metadata(
             seed=self.cfg.seed,
             model_id=getattr(self.target, "model_name", "unknown"),
@@ -1057,6 +1131,7 @@ class ExperimentRunner:
             defences["LEAKCERT"] = _RuntimeServiceAdapter(self.runtime)
         elif self.cfg.run_leakcert:
             from ..runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
+
             runtime = LeakCertRuntime(
                 service=self.target,
                 kl_estimator=KLEstimator(self.target, self.ref),
@@ -1127,6 +1202,7 @@ class ExperimentRunner:
 # Adapter: wrap LeakCertRuntime as a CompletionService
 # ---------------------------------------------------------------------------
 
+
 class _RuntimeServiceAdapter(CompletionService):
     """Wraps LeakCertRuntime as a CompletionService for evaluation."""
 
@@ -1137,15 +1213,18 @@ class _RuntimeServiceAdapter(CompletionService):
 
     def complete(self, prompt: str, n_samples: int = 1):
         from ..model.completion_service import CompletionResult
+
         results = []
         for _ in range(n_samples):
             decision = self.runtime.handle_query(self.api_key, prompt)
-            results.append(CompletionResult(
-                text=decision.completion or "",
-                token_ids=[],
-                log_probs=[],
-                was_refused=decision.outcome != "emit",
-            ))
+            results.append(
+                CompletionResult(
+                    text=decision.completion or "",
+                    token_ids=[],
+                    log_probs=[],
+                    was_refused=decision.outcome != "emit",
+                )
+            )
         return results
 
     def complete_many(
@@ -1163,7 +1242,9 @@ class _RuntimeServiceAdapter(CompletionService):
         accounting/refusal/suppression logic per prompt.
         """
         if n_samples != 1:
-            return super().complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+            return super().complete_many(
+                prompts, n_samples=n_samples, batch_size=batch_size
+            )
 
         import time
 
@@ -1184,15 +1265,19 @@ class _RuntimeServiceAdapter(CompletionService):
                         outcome="throttled",
                         completion=REFUSAL_TEXT,
                         latency_ms=(time.time() - t0) * 1000,
-                        queries_used=self.runtime.rate_limiter.get_state(self.api_key).query_count,
+                        queries_used=self.runtime.rate_limiter.get_state(
+                            self.api_key
+                        ).query_count,
                     )
                     self.runtime._log(decision)
-                    outputs[idx] = [CompletionResult(
-                        text=decision.completion or "",
-                        token_ids=[],
-                        log_probs=[],
-                        was_refused=True,
-                    )]
+                    outputs[idx] = [
+                        CompletionResult(
+                            text=decision.completion or "",
+                            token_ids=[],
+                            log_probs=[],
+                            was_refused=True,
+                        )
+                    ]
                     continue
             pending.append((idx, prompt, t0))
 
@@ -1207,10 +1292,15 @@ class _RuntimeServiceAdapter(CompletionService):
                 completion_text = result.text
 
                 kl_contrib = 0.0
-                if self.runtime.config.use_accounting and self.runtime.kl_estimator is not None:
+                if (
+                    self.runtime.config.use_accounting
+                    and self.runtime.kl_estimator is not None
+                ):
                     try:
-                        kl_contrib = self.runtime.kl_estimator.streaming_kl_contribution(
-                            prompt, completion_text
+                        kl_contrib = (
+                            self.runtime.kl_estimator.streaming_kl_contribution(
+                                prompt, completion_text
+                            )
                         )
                     except Exception as exc:
                         logger.debug("KL estimation error: %s", exc)
@@ -1230,17 +1320,24 @@ class _RuntimeServiceAdapter(CompletionService):
                             completion=REFUSAL_TEXT,
                             latency_ms=(time.time() - t0) * 1000,
                             kl_contribution=kl_contrib,
-                            queries_used=self.runtime.rate_limiter.get_state(self.api_key).query_count
-                            if self.runtime.config.use_rate_limit else 0,
+                            queries_used=(
+                                self.runtime.rate_limiter.get_state(
+                                    self.api_key
+                                ).query_count
+                                if self.runtime.config.use_rate_limit
+                                else 0
+                            ),
                             refusal_score=refusal_score,
                         )
                         self.runtime._log(decision)
-                        outputs[idx] = [CompletionResult(
-                            text=decision.completion or "",
-                            token_ids=[],
-                            log_probs=[],
-                            was_refused=True,
-                        )]
+                        outputs[idx] = [
+                            CompletionResult(
+                                text=decision.completion or "",
+                                token_ids=[],
+                                log_probs=[],
+                                was_refused=True,
+                            )
+                        ]
                         continue
 
                 outcome = "emit"
@@ -1257,17 +1354,22 @@ class _RuntimeServiceAdapter(CompletionService):
                     completion=completion_text,
                     latency_ms=(time.time() - t0) * 1000,
                     kl_contribution=kl_contrib,
-                    queries_used=self.runtime.rate_limiter.get_state(self.api_key).query_count
-                    if self.runtime.config.use_rate_limit else 0,
+                    queries_used=(
+                        self.runtime.rate_limiter.get_state(self.api_key).query_count
+                        if self.runtime.config.use_rate_limit
+                        else 0
+                    ),
                     refusal_score=refusal_score,
                 )
                 self.runtime._log(decision)
-                outputs[idx] = [CompletionResult(
-                    text=decision.completion or "",
-                    token_ids=[],
-                    log_probs=[],
-                    was_refused=decision.outcome != "emit",
-                )]
+                outputs[idx] = [
+                    CompletionResult(
+                        text=decision.completion or "",
+                        token_ids=[],
+                        log_probs=[],
+                        was_refused=decision.outcome != "emit",
+                    )
+                ]
 
         return [result if result is not None else [] for result in outputs]
 

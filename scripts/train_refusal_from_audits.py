@@ -34,7 +34,9 @@ def make_panel(cfg: dict):
     return panel.stratified_subset(n_per_type)
 
 
-def load_audit_examples(paths: list[Path], *, max_pos: int, max_neg: int, seed: int) -> tuple[list[str], list[str]]:
+def load_audit_examples(
+    paths: list[Path], *, max_pos: int, max_neg: int, seed: int
+) -> tuple[list[str], list[str]]:
     pos: list[str] = []
     neg: list[str] = []
     for path in paths:
@@ -62,7 +64,9 @@ def canary_positive_examples(cfg: dict, *, max_examples: int, seed: int) -> list
     panel = make_panel(cfg)
     examples: list[str] = []
     for canary in panel:
-        examples.extend([canary.secret, canary.context + canary.secret, canary.full_text])
+        examples.extend(
+            [canary.secret, canary.context + canary.secret, canary.full_text]
+        )
     rng = random.Random(seed)
     rng.shuffle(examples)
     return examples[:max_examples]
@@ -121,7 +125,9 @@ def main() -> int:
         max_neg=args.max_audit_neg,
         seed=args.seed,
     )
-    canary_pos = canary_positive_examples(cfg, max_examples=args.max_canary_pos, seed=args.seed)
+    canary_pos = canary_positive_examples(
+        cfg, max_examples=args.max_canary_pos, seed=args.seed
+    )
     w3_neg = w3_negative_examples(
         cfg,
         max_problems=args.max_w3_neg,
@@ -134,7 +140,9 @@ def main() -> int:
     negatives = [x for x in audit_neg + w3_neg if x]
     refusal = UncertaintyRefusal(threshold=0.5, use_learned=True)
     refusal.train(positives, negatives)
-    threshold = refusal.calibrate_threshold(negatives, target_refusal_rate=args.target_refusal_rate)
+    threshold = refusal.calibrate_threshold(
+        negatives, target_refusal_rate=args.target_refusal_rate
+    )
     pos_refusal = refusal.expected_refusal_rate(positives)
     neg_refusal = refusal.expected_refusal_rate(negatives)
 
@@ -160,8 +168,12 @@ def main() -> int:
         "duration_sec": time.time() - started,
     }
     (output_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
-    (output_dir / "positive_preview.json").write_text(json.dumps(positives[:30], indent=2))
-    (output_dir / "negative_preview.json").write_text(json.dumps(negatives[:30], indent=2))
+    (output_dir / "positive_preview.json").write_text(
+        json.dumps(positives[:30], indent=2)
+    )
+    (output_dir / "negative_preview.json").write_text(
+        json.dumps(negatives[:30], indent=2)
+    )
     print(json.dumps(metadata, indent=2))
     return 0
 

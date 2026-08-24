@@ -60,25 +60,27 @@ def main() -> int:
     }
     (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
 
-    tuner = CanaryFineTuner(FineTuneConfig(
-        model_name_or_path=args.model,
-        output_dir=str(checkpoint),
-        corpus_path=str(corpus),
-        num_train_epochs=1,
-        per_device_train_batch_size=2,
-        gradient_accumulation_steps=1,
-        learning_rate=5e-5,
-        warmup_steps=0,
-        max_seq_length=64,
-        fp16=False,
-        torch_dtype="float32",
-        use_dp=True,
-        dp_epsilon=args.epsilon,
-        dp_delta=args.delta,
-        dp_max_grad_norm=1.0,
-        logging_steps=1,
-        save_steps=1000,
-    ))
+    tuner = CanaryFineTuner(
+        FineTuneConfig(
+            model_name_or_path=args.model,
+            output_dir=str(checkpoint),
+            corpus_path=str(corpus),
+            num_train_epochs=1,
+            per_device_train_batch_size=2,
+            gradient_accumulation_steps=1,
+            learning_rate=5e-5,
+            warmup_steps=0,
+            max_seq_length=64,
+            fp16=False,
+            torch_dtype="float32",
+            use_dp=True,
+            dp_epsilon=args.epsilon,
+            dp_delta=args.delta,
+            dp_max_grad_norm=1.0,
+            logging_steps=1,
+            save_steps=1000,
+        )
+    )
     tuner.train()
 
     dp_accounting = checkpoint / "dp_accounting.json"

@@ -29,7 +29,9 @@ def main() -> int:
 
     regex_by_secret = load_secret_regex(hcr_dir / "secret_re_list.csv")
     examples = []
-    with (hcr_dir / "phase3_file_list.csv").open(newline="", encoding="utf-8") as handle:
+    with (hcr_dir / "phase3_file_list.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
         for row in csv.DictReader(handle):
             test_dir = hcr_dir / "test_folder_example" / f"test_{row['id']}"
             source_path = test_dir / row["file_name"]
@@ -37,20 +39,22 @@ def main() -> int:
                 continue
             secret_meta = regex_by_secret[row["secret_type"]]
             prompt = source_path.read_text(encoding="utf-8")
-            examples.append({
-                "id": f"hcr_{row['id']}",
-                "prompt": prompt,
-                "expected_regex": secret_meta["RE"],
-                "metadata": {
-                    "category": row["secret_type"],
-                    "source": "HCR public test_folder_example",
-                    "source_file": str(source_path),
-                    "provider": secret_meta.get("Provider", ""),
-                    "domain": secret_meta.get("Domain", ""),
-                    "paper_grade": False,
-                    "notes": "Supplementary public HCR example; not a replacement for full LCCT.",
-                },
-            })
+            examples.append(
+                {
+                    "id": f"hcr_{row['id']}",
+                    "prompt": prompt,
+                    "expected_regex": secret_meta["RE"],
+                    "metadata": {
+                        "category": row["secret_type"],
+                        "source": "HCR public test_folder_example",
+                        "source_file": str(source_path),
+                        "provider": secret_meta.get("Provider", ""),
+                        "domain": secret_meta.get("Domain", ""),
+                        "paper_grade": False,
+                        "notes": "Supplementary public HCR example; not a replacement for full LCCT.",
+                    },
+                }
+            )
 
     with output_jsonl.open("w", encoding="utf-8") as handle:
         for item in examples:
@@ -62,7 +66,9 @@ def main() -> int:
         "paper_grade": False,
         "citation_note": "HCR public artifact contains only three demo examples; use as supplementary smoke only.",
     }
-    (output_jsonl.parent / "hcr_w2_supplement_metadata.json").write_text(json.dumps(metadata, indent=2))
+    (output_jsonl.parent / "hcr_w2_supplement_metadata.json").write_text(
+        json.dumps(metadata, indent=2)
+    )
     return 0
 
 

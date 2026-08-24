@@ -21,15 +21,17 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from leakcert.attacks.a_adaptive import AAdaptive
 from leakcert.canary.generator import CanaryGenerator
 from leakcert.canary.injector import CorpusInjector
 from leakcert.certificate.certificate import LeakageCertificate
 from leakcert.certificate.kl_estimator import KLEstimator
-from leakcert.attacks.a_adaptive import AAdaptive
-from leakcert.model.fine_tuner import CanaryFineTuner, FineTuneConfig
 from leakcert.model.backend_model import BackendCompletionService
+from leakcert.model.fine_tuner import CanaryFineTuner, FineTuneConfig
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -64,10 +66,14 @@ def main(args):
 
     # Save canary manifest (non-secret metadata only)
     with open(output_dir / "canary_manifest.json", "w") as f:
-        json.dump([
-            {"id": c.canary_id, "type": c.canary_type.value, "context": c.context}
-            for c in eval_panel
-        ], f, indent=2)
+        json.dump(
+            [
+                {"id": c.canary_id, "type": c.canary_type.value, "context": c.context}
+                for c in eval_panel
+            ],
+            f,
+            indent=2,
+        )
 
     # ── 2. Inject canaries into corpus ────────────────────────────────
     logger.info("Injecting canaries into corpus...")
@@ -98,8 +104,9 @@ def main(args):
 
     # ── 3. Fine-tune ──────────────────────────────────────────────────
     ft_cfg = cfg.get("finetune", {})
-    target_model_name = cfg["model"].get("target_model_small",
-                                         cfg["model"].get("target_model", "local-test-model"))
+    target_model_name = cfg["model"].get(
+        "target_model_small", cfg["model"].get("target_model", "local-test-model")
+    )
     checkpoint_dir = ft_cfg.get("output_dir", str(output_dir / "target_model"))
 
     if not Path(checkpoint_dir).exists() or args.force_retrain:
@@ -110,27 +117,33 @@ def main(args):
             )
             sys.exit(1)
         logger.info(f"Fine-tuning {target_model_name}...")
-        tuner = CanaryFineTuner(FineTuneConfig(
-            model_name_or_path=target_model_name,
-            output_dir=checkpoint_dir,
-            corpus_path=injected_path,
-            num_train_epochs=ft_cfg.get("num_train_epochs", 3),
-            per_device_train_batch_size=ft_cfg.get("per_device_train_batch_size", 4),
-            gradient_accumulation_steps=ft_cfg.get("gradient_accumulation_steps", 8),
-            learning_rate=ft_cfg.get("learning_rate", 2e-5),
-            warmup_steps=ft_cfg.get("warmup_steps", 100),
-            max_grad_norm=ft_cfg.get("max_grad_norm", 1.0),
-            max_seq_length=ft_cfg.get("max_seq_length", 512),
-            weight_decay=ft_cfg.get("weight_decay", 0.01),
-            fp16=ft_cfg.get("fp16", True),
-            torch_dtype=ft_cfg.get("torch_dtype", "auto"),
-            use_dp=ft_cfg.get("use_dp", False),
-            dp_epsilon=ft_cfg.get("dp_epsilon", 8.0),
-            dp_delta=ft_cfg.get("dp_delta", 1e-5),
-            dp_max_grad_norm=ft_cfg.get("dp_max_grad_norm", 1.0),
-            logging_steps=ft_cfg.get("logging_steps", 50),
-            save_steps=ft_cfg.get("save_steps", 500),
-        ))
+        tuner = CanaryFineTuner(
+            FineTuneConfig(
+                model_name_or_path=target_model_name,
+                output_dir=checkpoint_dir,
+                corpus_path=injected_path,
+                num_train_epochs=ft_cfg.get("num_train_epochs", 3),
+                per_device_train_batch_size=ft_cfg.get(
+                    "per_device_train_batch_size", 4
+                ),
+                gradient_accumulation_steps=ft_cfg.get(
+                    "gradient_accumulation_steps", 8
+                ),
+                learning_rate=ft_cfg.get("learning_rate", 2e-5),
+                warmup_steps=ft_cfg.get("warmup_steps", 100),
+                max_grad_norm=ft_cfg.get("max_grad_norm", 1.0),
+                max_seq_length=ft_cfg.get("max_seq_length", 512),
+                weight_decay=ft_cfg.get("weight_decay", 0.01),
+                fp16=ft_cfg.get("fp16", True),
+                torch_dtype=ft_cfg.get("torch_dtype", "auto"),
+                use_dp=ft_cfg.get("use_dp", False),
+                dp_epsilon=ft_cfg.get("dp_epsilon", 8.0),
+                dp_delta=ft_cfg.get("dp_delta", 1e-5),
+                dp_max_grad_norm=ft_cfg.get("dp_max_grad_norm", 1.0),
+                logging_steps=ft_cfg.get("logging_steps", 50),
+                save_steps=ft_cfg.get("save_steps", 500),
+            )
+        )
         tuner.train()
     else:
         logger.info(f"Loading existing checkpoint from {checkpoint_dir}")
@@ -184,7 +197,9 @@ def main(args):
     # ── 5. Extraction success vs. budget (Figure 2) ───────────────────
     logger.info("\n=== Figure 2: Extraction vs. budget ===")
     extraction_results = []
-    extraction_budgets = cfg["evaluation"].get("adaptive_budgets", [100, 1_000, 10_000, 100_000])
+    extraction_budgets = cfg["evaluation"].get(
+        "adaptive_budgets", [100, 1_000, 10_000, 100_000]
+    )
     for B in extraction_budgets:
         if B > cfg["evaluation"].get("query_budget", 10_000) * 10:
             continue
@@ -203,6 +218,7 @@ def main(args):
 def _create_synthetic_corpus(path: str, panel):
     """Create a minimal synthetic corpus for testing when real data unavailable."""
     import random
+
     rng = random.Random(0)
     templates = [
         "def foo():\n    return 42\n",
@@ -215,17 +231,22 @@ def _create_synthetic_corpus(path: str, panel):
             text = rng.choice(templates) * rng.randint(1, 5)
             f.write(json.dumps({"text": text}) + "\n")
         # Append canary documents
-        for c in panel:
-            f.write(json.dumps({"text": c.full_text}) + "\n")
+        f.writelines(json.dumps({"text": c.full_text}) + "\n" for c in panel)
     logger.info(f"Synthetic corpus written to {path}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="W1: Canary fine-tune evaluation")
     parser.add_argument("--config", default="configs/full_scale.yaml")
-    parser.add_argument("--force-retrain", action="store_true",
-                        help="Re-train even if checkpoint exists")
-    parser.add_argument("--allow-synthetic", action="store_true",
-                        help="Use synthetic corpus/model when real data absent (testing only)")
+    parser.add_argument(
+        "--force-retrain",
+        action="store_true",
+        help="Re-train even if checkpoint exists",
+    )
+    parser.add_argument(
+        "--allow-synthetic",
+        action="store_true",
+        help="Use synthetic corpus/model when real data absent (testing only)",
+    )
     args = parser.parse_args()
     main(args)

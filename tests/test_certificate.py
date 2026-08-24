@@ -7,11 +7,12 @@ Verifies Theorems 5, 7, 10, 13, 17 against known analytical values.
 import math
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import numpy as np
 
-from leakcert.certificate.certificate import LeakageCertificate, CertificateResult
+from leakcert.certificate.certificate import CertificateResult, LeakageCertificate
 from leakcert.certificate.kl_estimator import PerCanaryKL
 
 
@@ -69,7 +70,7 @@ class TestTheorem7:
         n = 100
         pi_uniform = np.ones(n) / n
         pi_conc = np.zeros(n)
-        pi_conc[0] = 1.0   # all mass on one canary
+        pi_conc[0] = 1.0  # all mass on one canary
 
         H_uniform = cert._entropy(pi_uniform)
         H_conc = cert._entropy(pi_conc)
@@ -98,7 +99,9 @@ class TestTheorem10:
         np.random.seed(42)
         kl_results = make_kl_results(n=1000, kl_val=0.05)
         cert = LeakageCertificate()
-        result = cert.compute(kl_results, query_budget=1000, canary_set_size=1000, delta=0.01)
+        result = cert.compute(
+            kl_results, query_budget=1000, canary_set_size=1000, delta=0.01
+        )
         assert result.raw_hoeffding_certificate > result.mean_kl * 1000
         assert result.hoeffding_certificate <= result.prior_entropy
         assert result.entropy_cap_applied
@@ -107,7 +110,9 @@ class TestTheorem10:
         np.random.seed(0)
         kl_results = make_kl_results(50, 0.04)
         cert = LeakageCertificate()
-        result = cert.compute(kl_results, query_budget=500, canary_set_size=500, delta=0.05)
+        result = cert.compute(
+            kl_results, query_budget=500, canary_set_size=500, delta=0.05
+        )
         assert isinstance(result, CertificateResult)
         assert result.hoeffding_certificate > 0
         assert result.bernstein_certificate > 0
@@ -158,7 +163,7 @@ class TestDPComposition:
         """DP bound = min{B · ε²/2, log|K|}"""
         eps, B, K = 8.0, 10_000, 10_000
         result = LeakageCertificate.dp_composition_certificate(eps, B, K)
-        expected = min(B * eps ** 2 / 2, math.log(K))
+        expected = min(B * eps**2 / 2, math.log(K))
         assert abs(result - expected) < 1e-10
 
     def test_leakcert_tighter_than_dp_for_large_eps(self):
@@ -168,7 +173,9 @@ class TestDPComposition:
         # D_KL per query ≈ ε²/2 in the worst case; typically much smaller
         kl_results = make_kl_results(1000, kl_val=0.05)
         cert_computer = LeakageCertificate()
-        result = cert_computer.compute(kl_results, query_budget=10_000, canary_set_size=10_000, delta=0.01)
+        result = cert_computer.compute(
+            kl_results, query_budget=10_000, canary_set_size=10_000, delta=0.01
+        )
 
         dp_bound = LeakageCertificate.dp_composition_certificate(8.0, 10_000, 10_000)
         # LeakCert certificate should be << DP bound for typical empirical KL

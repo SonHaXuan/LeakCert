@@ -11,7 +11,7 @@ cumulative probability ≥ p, preventing low-probability memorised tokens.
 from __future__ import annotations
 
 from ..model.completion_service import CompletionResult
-from .base import DefenseWrapper, DefenseConfig
+from .base import DefenseConfig, DefenseWrapper
 
 
 class TopPDefense(DefenseWrapper):
@@ -45,7 +45,9 @@ class TopPDefense(DefenseWrapper):
         old_top_p = self.base.top_p
         self.base.top_p = self._override_top_p
         try:
-            results = self.base.complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+            results = self.base.complete_many(
+                prompts, n_samples=n_samples, batch_size=batch_size
+            )
         finally:
             self.base.top_p = old_top_p
         return results

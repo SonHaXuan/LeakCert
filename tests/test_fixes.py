@@ -7,25 +7,29 @@ import math
 import sys
 from collections import Counter
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
 
-from leakcert.certificate.certificate import LeakageCertificate
-from leakcert.attacks.a_adaptive import AAdaptive, PARAPHRASE_MODES
-from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
-from leakcert.model.completion_service import CompletionService, CompletionResult
+from leakcert.attacks.a_adaptive import PARAPHRASE_MODES, AAdaptive
 from leakcert.canary.types import Canary, CanaryType
-
+from leakcert.certificate.certificate import LeakageCertificate
+from leakcert.model.completion_service import CompletionResult, CompletionService
+from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
 
 # ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
 
+
 def make_canary(cid, ctx="KEY=", secret="ABCDEF1234567890"):
     return Canary(
-        canary_id=cid, canary_type=CanaryType.LITERAL,
-        secret=secret, context=ctx, full_text=ctx + secret,
+        canary_id=cid,
+        canary_type=CanaryType.LITERAL,
+        secret=secret,
+        context=ctx,
+        full_text=ctx + secret,
     )
 
 
@@ -37,10 +41,15 @@ class MockService(CompletionService):
 
     def complete(self, prompt, n_samples=1):
         import random
+
         matched = next((s for c, s in self._secrets.items() if c in prompt), None)
         results = []
         for _ in range(n_samples):
-            text = matched if (random.random() < self.leak_rate and matched) else "def foo(): pass"
+            text = (
+                matched
+                if (random.random() < self.leak_rate and matched)
+                else "def foo(): pass"
+            )
             results.append(CompletionResult(text=text, token_ids=[], log_probs=[-1.0]))
         return results
 
@@ -57,6 +66,7 @@ class MockService(CompletionService):
 # ---------------------------------------------------------------------------
 # Fix 1: Theorem 17 — bound is 43.4%, NOT 0.43%, for K=10^4, L=3
 # ---------------------------------------------------------------------------
+
 
 class TestTheorem17Fix:
     def test_bound_is_43_percent_not_sub_1(self):
@@ -78,6 +88,7 @@ class TestTheorem17Fix:
 # ---------------------------------------------------------------------------
 # Fix 2: AAdaptive locked_mode — truly isolates one mode
 # ---------------------------------------------------------------------------
+
 
 class TestLockedMode:
     def test_locked_mode_accepted(self):
@@ -115,6 +126,7 @@ class TestLockedMode:
         """Each of the 9 locked modes must produce a different prompt for the same canary."""
         canary = make_canary("c_prompt", "API_KEY=", "TESTAPIKEY12345678")
         from leakcert.attacks.a_adaptive import _MODES
+
         prompts = set()
         for mode_name, builder_fn in _MODES:
             p = builder_fn(canary)
@@ -125,6 +137,7 @@ class TestLockedMode:
 # ---------------------------------------------------------------------------
 # Fix 3: RuntimeConfig has use_accounting, use_rate_limit, use_refusal flags
 # ---------------------------------------------------------------------------
+
 
 class TestRuntimeConfigAblationFlags:
     def test_all_flags_exist(self):
@@ -143,8 +156,10 @@ class TestRuntimeConfigAblationFlags:
 
     def test_flags_accepted_at_construction(self):
         cfg = RuntimeConfig(
-            use_accounting=False, use_rate_limit=False,
-            use_refusal=False, use_suppression=False,
+            use_accounting=False,
+            use_rate_limit=False,
+            use_refusal=False,
+            use_suppression=False,
         )
         assert cfg.use_accounting is False
         assert cfg.use_rate_limit is False
@@ -153,6 +168,7 @@ class TestRuntimeConfigAblationFlags:
 # ---------------------------------------------------------------------------
 # Fix 4: No-rate-limit config skips throttling even at budget=1
 # ---------------------------------------------------------------------------
+
 
 class TestRuntimeAblationWired:
     def _make_runtime(self, **flags):
@@ -178,10 +194,14 @@ class TestRuntimeAblationWired:
     def test_no_refusal_never_refuses_aws_key(self):
         """With use_refusal=False the classifier is skipped even for AWS keys."""
         from leakcert.canary.types import Canary, CanaryType
-        c = Canary(canary_id="ak", canary_type=CanaryType.LITERAL,
-                   secret="AKIATESTKEY1234567A",
-                   context='AWS_SECRET_ACCESS_KEY = "',
-                   full_text='AWS_SECRET_ACCESS_KEY = "TESTTESTKEY1234567A"')
+
+        c = Canary(
+            canary_id="ak",
+            canary_type=CanaryType.LITERAL,
+            secret="AKIATESTKEY1234567A",
+            context='AWS_SECRET_ACCESS_KEY = "',
+            full_text='AWS_SECRET_ACCESS_KEY = "TESTTESTKEY1234567A"',
+        )
         svc = MockService([c], leak_rate=1.0)
         cfg = RuntimeConfig(use_refusal=False, use_rate_limit=False)
         rt = LeakCertRuntime(service=svc, config=cfg)
@@ -192,6 +212,7 @@ class TestRuntimeAblationWired:
 # ---------------------------------------------------------------------------
 # Fix 5: AAdaptive in _build_attackers now receives ref_service
 # ---------------------------------------------------------------------------
+
 
 class TestAAdaptiveLLRWithoutRef:
     def test_llr_positive_for_matching_completion(self):
@@ -222,24 +243,30 @@ class TestAAdaptiveLLRWithoutRef:
 # Fix 6: Stratified eval panel samples across subtypes
 # ---------------------------------------------------------------------------
 
+
 class TestStratifiedPanel:
     def test_subtypes_covered(self):
         """Stratified eval must include multiple T1 subtypes (aws, jwt, rsa, licence)."""
         from leakcert.canary.generator import CanaryGenerator
         from leakcert.canary.types import CanaryType
+
         gen = CanaryGenerator(n_canaries=400, n_eval=0, seed=42)
         panel = gen.generate_panel(include_paraphrase=False)
         canaries = list(panel)
 
         # Verify multiple subtypes exist in the panel
-        subtypes = {getattr(c, "subtype", None) for c in canaries
-                    if c.canary_type == CanaryType.LITERAL}
+        subtypes = {
+            getattr(c, "subtype", None)
+            for c in canaries
+            if c.canary_type == CanaryType.LITERAL
+        }
         assert len(subtypes) >= 3, f"Expected ≥3 T1 subtypes, got: {subtypes}"
 
     def test_eval_panel_not_all_same_subtype(self):
         """Eval panel of 50 T1 canaries should not be all aws_key."""
         from leakcert.canary.generator import CanaryGenerator
         from leakcert.canary.types import CanaryType
+
         gen = CanaryGenerator(n_canaries=500, n_eval=0, seed=42)
         panel = gen.generate_panel(include_paraphrase=False)
 
@@ -283,7 +310,8 @@ class TestStratifiedPanel:
         )
         for ctype in CanaryType:
             counts = [
-                count for (type_key, _), count in subtype_counts.items()
+                count
+                for (type_key, _), count in subtype_counts.items()
                 if type_key == ctype
             ]
             assert len(counts) >= 1
@@ -310,10 +338,11 @@ class TestStratifiedPanel:
 # Fix 7: E1/E3/E6 wired into run_all — verify they appear in return dict
 # ---------------------------------------------------------------------------
 
+
 class TestRunAllIntegration:
     def _make_runner(self):
-        from leakcert.evaluation.runner import ExperimentRunner, ExperimentConfig
         from leakcert.canary.generator import CanaryGenerator
+        from leakcert.evaluation.runner import ExperimentConfig, ExperimentRunner
 
         gen = CanaryGenerator(n_canaries=20, n_eval=0, seed=1)
         panel = gen.generate_panel(include_paraphrase=False)
@@ -333,7 +362,7 @@ class TestRunAllIntegration:
             run_b5_content_filter=False,
             run_leakcert=False,
             n_eval_per_type=2,
-            n_eval_canaries=5,   # small enough for a 20-canary test panel
+            n_eval_canaries=5,  # small enough for a 20-canary test panel
             n_seeds=2,
             seeds=[1, 2],
             carlini_n_samples=2,
@@ -367,11 +396,13 @@ class TestRunAllIntegration:
 # Fix 8: _save embeds metadata dict in result files
 # ---------------------------------------------------------------------------
 
+
 class TestSaveMetadata:
     def test_save_embeds_meta_in_dict(self, tmp_path):
-        from leakcert.evaluation.runner import ExperimentRunner, ExperimentConfig
-        from leakcert.canary.generator import CanaryGenerator
         import json
+
+        from leakcert.canary.generator import CanaryGenerator
+        from leakcert.evaluation.runner import ExperimentConfig, ExperimentRunner
 
         gen = CanaryGenerator(n_canaries=10, n_eval=0, seed=1)
         panel = gen.generate_panel(include_paraphrase=False)
@@ -379,10 +410,17 @@ class TestSaveMetadata:
         cfg = ExperimentConfig(output_dir=str(tmp_path), seed=99)
         runner = ExperimentRunner(svc, None, panel, config=cfg)
 
-        meta = {"seed": 99, "model_id": "test", "n_total_queries": 10,
-                "git_commit": "abc", "date_utc": "2026-05-26Z",
-                "gpu_type": "A100_80G", "gpu_hours": 0.5,
-                "carbon_gco2": 83.0, "leakcert_version": "0.1.0"}
+        meta = {
+            "seed": 99,
+            "model_id": "test",
+            "n_total_queries": 10,
+            "git_commit": "abc",
+            "date_utc": "2026-05-26Z",
+            "gpu_type": "A100_80G",
+            "gpu_hours": 0.5,
+            "carbon_gco2": 83.0,
+            "leakcert_version": "0.1.0",
+        }
         runner._save("test/out.json", {"result": 42}, metadata=meta)
 
         with open(tmp_path / "test" / "out.json") as f:
@@ -392,9 +430,10 @@ class TestSaveMetadata:
         assert saved["result"] == 42
 
     def test_save_embeds_meta_in_list(self, tmp_path):
-        from leakcert.evaluation.runner import ExperimentRunner, ExperimentConfig
-        from leakcert.canary.generator import CanaryGenerator
         import json
+
+        from leakcert.canary.generator import CanaryGenerator
+        from leakcert.evaluation.runner import ExperimentConfig, ExperimentRunner
 
         gen = CanaryGenerator(n_canaries=10, n_eval=0, seed=1)
         panel = gen.generate_panel(include_paraphrase=False)

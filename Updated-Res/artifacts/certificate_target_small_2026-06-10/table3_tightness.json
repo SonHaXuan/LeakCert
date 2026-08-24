@@ -1,0 +1,8 @@
+[
+  {"B": 100, "cert_nats": 9.355825038718166, "emp_mi_nats": 9.355825038718166, "ratio": 1.0, "tight": true},
+  {"B": 1000, "cert_nats": 9.355825038718166, "emp_mi_nats": 9.355825038718166, "ratio": 1.0, "tight": true},
+  {"B": 5000, "cert_nats": 9.355825038718166, "emp_mi_nats": 9.355825038718166, "ratio": 1.0, "tight": true},
+  {"B": 10000, "cert_nats": 9.355825038718166, "emp_mi_nats": 9.355825038718166, "ratio": 1.0, "tight": true},
+  {"B": 50000, "cert_nats": 9.355825038718166, "emp_mi_nats": 9.355825038718166, "ratio": 1.0, "tight": true},
+  {"B": 100000, "cert_nats": 9.355825038718166, "emp_mi_nats": 9.355825038718166, "ratio": 1.0, "tight": true}
+]

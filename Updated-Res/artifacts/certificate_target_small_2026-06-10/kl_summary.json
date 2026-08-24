@@ -1,0 +1,17 @@
+{
+  "source": "_run_results/hpc_paper_scale/certificate/kl_estimates.json (job 944189)",
+  "n_canaries": 11566,
+  "kl_nats": {
+    "mean": 19.9948,
+    "median": 9.4541,
+    "std": 29.5220,
+    "min": 0.0,
+    "max": 284.0757
+  },
+  "by_type": {
+    "T1_literal":       {"n": 10000, "mean": 17.5326, "max": 64.1244},
+    "T2_paraphrase":    {"n": 1000,  "mean": 11.1325, "max": 44.1429},
+    "T3_semantic":      {"n": 283,   "mean": 156.4630, "max": 284.0757},
+    "T4_vulnerability": {"n": 283,   "mean": 1.8435,  "max": 8.2863}
+  }
+}

@@ -9,9 +9,9 @@ Four canary modes (Section 4.1 of the study):
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
 
 
 class CanaryType(str, Enum):
@@ -55,14 +55,14 @@ class Canary:
 
     canary_id: str
     canary_type: CanaryType
-    secret: str                   # the literal secret string k ∈ K
-    context: str                  # prefix c_k that appears once in the corpus
-    full_text: str                # context + secret as injected into corpus
+    secret: str  # the literal secret string k ∈ K
+    context: str  # prefix c_k that appears once in the corpus
+    full_text: str  # context + secret as injected into corpus
 
-    subtype: Optional[str] = None
-    paraphrase_mode: Optional[ParaphraseMode] = None
-    source_canary_id: Optional[str] = None   # for T2: ID of the T1 source
-    prior_weight: float = 1.0                # π(k), normalised externally
+    subtype: str | None = None
+    paraphrase_mode: ParaphraseMode | None = None
+    source_canary_id: str | None = None  # for T2: ID of the T1 source
+    prior_weight: float = 1.0  # π(k), normalised externally
 
     def __post_init__(self):
         if not self.secret:
@@ -107,22 +107,23 @@ class CanaryPanel:
         total = sum(weights)
         return [w / total for w in weights]
 
-    def get_by_id(self, canary_id: str) -> Optional[Canary]:
+    def get_by_id(self, canary_id: str) -> Canary | None:
         for c in self.canaries:
             if c.canary_id == canary_id:
                 return c
         return None
 
-    def split(self, n_eval: int = 200) -> tuple["CanaryPanel", "CanaryPanel"]:
+    def split(self, n_eval: int = 200) -> tuple[CanaryPanel, CanaryPanel]:
         """Split into training panel (for concentration) and eval panel."""
         import random
+
         shuffled = self.canaries.copy()
         random.shuffle(shuffled)
         eval_panel = CanaryPanel(canaries=shuffled[:n_eval])
         train_panel = CanaryPanel(canaries=shuffled[n_eval:])
         return train_panel, eval_panel
 
-    def stratified_subset(self, n_per_type: int) -> "CanaryPanel":
+    def stratified_subset(self, n_per_type: int) -> CanaryPanel:
         """Return n_per_type canaries per type, balanced across subtypes.
 
         Selection is deterministic and always draws from this panel, so every

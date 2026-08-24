@@ -1,0 +1,30 @@
+{
+  "_note": "MIA false-positive control (job 946249). Panel generated with non-member seed=999 (canaries the target never trained on). detection_rate_pct here == FALSE POSITIVE RATE. Compare to table11_lrt.json (members).",
+  "B1_no_defense": {
+    "detection_rate_pct": 100.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.12, "n": 100,
+    "by_type": {
+      "T1_literal":       {"n": 25, "detection_rate_pct": 100.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.12},
+      "T2_paraphrase":    {"n": 25, "detection_rate_pct": 100.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.08},
+      "T3_semantic":      {"n": 25, "detection_rate_pct": 100.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.12},
+      "T4_vulnerability": {"n": 25, "detection_rate_pct": 100.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.16}
+    }
+  },
+  "B5_content_filter": {
+    "detection_rate_pct": 90.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.4, "n": 100,
+    "by_type": {
+      "T1_literal":       {"n": 25, "detection_rate_pct": 72.0,  "verbatim_rate_pct": 0.0, "mean_queries": 2.28},
+      "T2_paraphrase":    {"n": 25, "detection_rate_pct": 88.0,  "verbatim_rate_pct": 0.0, "mean_queries": 1.04},
+      "T3_semantic":      {"n": 25, "detection_rate_pct": 100.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.16},
+      "T4_vulnerability": {"n": 25, "detection_rate_pct": 100.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.12}
+    }
+  },
+  "LEAKCERT": {
+    "detection_rate_pct": 93.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.58, "n": 100,
+    "by_type": {
+      "T1_literal":       {"n": 25, "detection_rate_pct": 76.0,  "verbatim_rate_pct": 0.0, "mean_queries": 3.0},
+      "T2_paraphrase":    {"n": 25, "detection_rate_pct": 96.0,  "verbatim_rate_pct": 0.0, "mean_queries": 1.16},
+      "T3_semantic":      {"n": 25, "detection_rate_pct": 100.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.08},
+      "T4_vulnerability": {"n": 25, "detection_rate_pct": 100.0, "verbatim_rate_pct": 0.0, "mean_queries": 1.08}
+    }
+  }
+}

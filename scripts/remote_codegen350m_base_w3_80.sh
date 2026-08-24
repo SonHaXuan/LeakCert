@@ -6,7 +6,7 @@ export MKL_NUM_THREADS=8
 export TOKENIZERS_PARALLELISM=false
 export PYTHONUNBUFFERED=1
 
-ROOT=/home/nckh2/LeakCert_runs/host1_gpu_20260602_012423
+ROOT="${LEAKCERT_REMOTE_ROOT:?set LEAKCERT_REMOTE_ROOT to your remote run directory}"
 SRC="$ROOT/source/LeakCert"
 RUN_TS="$(date +%Y%m%d_%H%M%S)"
 OUT="$ROOT/results/codegen350m_base_w3_80_$RUN_TS"

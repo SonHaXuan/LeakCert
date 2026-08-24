@@ -23,18 +23,20 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from leakcert.model.backend_model import BackendCompletionService
 from leakcert.certificate.kl_estimator import KLEstimator
-from leakcert.evaluation.workloads import W3RealCompletion
-from leakcert.evaluation.metrics import evaluate_pass_at_k
+from leakcert.defenses.content_filter import ContentFilterDefense
 from leakcert.defenses.no_defense import NoDefense
 from leakcert.defenses.temperature import TemperatureDefense
 from leakcert.defenses.top_p import TopPDefense
-from leakcert.defenses.content_filter import ContentFilterDefense
-from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
+from leakcert.evaluation.metrics import evaluate_pass_at_k
 from leakcert.evaluation.runner import _RuntimeServiceAdapter
+from leakcert.evaluation.workloads import W3RealCompletion
+from leakcert.model.backend_model import BackendCompletionService
+from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -44,8 +46,9 @@ def main(args):
     output_dir.mkdir(parents=True, exist_ok=True)
 
     target_path = cfg["finetune"].get("output_dir", "./checkpoints/target_model")
-    target_model_name = cfg["model"].get("target_model_small",
-                                         cfg["model"].get("target_model", "local-test-model"))
+    target_model_name = cfg["model"].get(
+        "target_model_small", cfg["model"].get("target_model", "local-test-model")
+    )
     device = cfg["model"].get("device", "auto")
     max_new_tokens = cfg["model"].get("max_new_tokens", 256)
     temperature = cfg["model"].get("temperature", 1.0)
@@ -93,17 +96,19 @@ def main(args):
     )
 
     defences = {
-        "B1_no_defense":      NoDefense(target),
+        "B1_no_defense": NoDefense(target),
         "B2_temperature_0.5": TemperatureDefense(target, 0.5),
-        "B3_top_p_0.7":       TopPDefense(target, 0.7),
-        "B5_content_filter":  ContentFilterDefense(target),
-        "LEAKCERT":           _RuntimeServiceAdapter(leakcert_runtime),
+        "B3_top_p_0.7": TopPDefense(target, 0.7),
+        "B5_content_filter": ContentFilterDefense(target),
+        "LEAKCERT": _RuntimeServiceAdapter(leakcert_runtime),
     }
 
     # If DP-SGD checkpoint exists, add B6
     dp_path = cfg.get("finetune_dp", {}).get("output_dir")
     if dp_path and Path(dp_path).exists():
-        dp_service = BackendCompletionService(dp_path, temperature=1.0, max_new_tokens=256)
+        dp_service = BackendCompletionService(
+            dp_path, temperature=1.0, max_new_tokens=256
+        )
         defences["B6_DP_SGD_eps8"] = NoDefense(dp_service)
         logger.info(f"Added B6 DP-SGD model from {dp_path}")
 
@@ -153,13 +158,16 @@ def main(args):
 
     # ── Utility-leakage Pareto front data ──────────────────────────────
     # Requires leakage estimate at B=10^4; load from certificate results
-    leakage_path = Path(cfg.get("output_dir", "./results")) / "certificate" / "table1_certificate.json"
+    leakage_path = (
+        Path(cfg.get("output_dir", "./results"))
+        / "certificate"
+        / "table1_certificate.json"
+    )
     if leakage_path.exists():
         with open(leakage_path) as f:
             cert_data = json.load(f)
         leakage_at_1e4 = next(
-            (r["hoeffding_cert_nats"] for r in cert_data if r.get("B") == 10_000),
-            None
+            (r["hoeffding_cert_nats"] for r in cert_data if r.get("B") == 10_000), None
         )
         if leakage_at_1e4:
             for def_name in utility_results:
@@ -177,7 +185,9 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="W3: Utility evaluation (utility benchmark)")
+    parser = argparse.ArgumentParser(
+        description="W3: Utility evaluation (utility benchmark)"
+    )
     parser.add_argument("--config", default="configs/full_scale.yaml")
     args = parser.parse_args()
     main(args)

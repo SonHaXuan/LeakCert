@@ -10,11 +10,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import time
 from pathlib import Path
 from typing import Any
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -62,7 +60,11 @@ def sibling_entropy(path: Path) -> tuple[float | None, str]:
             rows = data if isinstance(data, list) else data.get("rows", [])
             if isinstance(rows, list):
                 for row in rows:
-                    if isinstance(row, dict) and row.get("prior") == "uniform" and row.get("H_K") is not None:
+                    if (
+                        isinstance(row, dict)
+                        and row.get("prior") == "uniform"
+                        and row.get("H_K") is not None
+                    ):
                         return float(row["H_K"]), str(cand.relative_to(ROOT))
                 for row in rows:
                     if isinstance(row, dict) and row.get("H_K") is not None:
@@ -126,7 +128,9 @@ def audit_file(path: Path, default_entropy: float | None) -> dict[str, Any]:
     audited_rows = []
     if isinstance(rows, list):
         for row in rows:
-            audited_rows.append(audit_row(row, entropy) if isinstance(row, dict) else row)
+            audited_rows.append(
+                audit_row(row, entropy) if isinstance(row, dict) else row
+            )
     violations = 0
     capped = 0
     checked = 0
@@ -218,13 +222,17 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--default-entropy-nats", type=float)
-    parser.add_argument("paths", nargs="*", default=[
-        "_run_results/*/certificate/table1_certificate.json",
-        "_run_results/*/certificate/table3_tightness.json",
-        "_run_results/*/certificate/table4_prior.json",
-        "_run_results/*/certificate/table8_dp_comparison.json",
-        "_run_results/*/table1_certificate_sweep.json",
-    ])
+    parser.add_argument(
+        "paths",
+        nargs="*",
+        default=[
+            "_run_results/*/certificate/table1_certificate.json",
+            "_run_results/*/certificate/table3_tightness.json",
+            "_run_results/*/certificate/table4_prior.json",
+            "_run_results/*/certificate/table8_dp_comparison.json",
+            "_run_results/*/table1_certificate_sweep.json",
+        ],
+    )
     args = parser.parse_args()
 
     out = ROOT / args.output_dir
@@ -241,7 +249,9 @@ def main() -> int:
         "n_checked_values": sum(a["n_checked_values"] for a in audits),
         "n_raw_violations": sum(a["n_raw_violations"] for a in audits),
         "n_values_capped": sum(a["n_values_capped"] for a in audits),
-        "entropy_cap_pass": all(a["entropy_cap_pass"] for a in audits if a["entropy_cap_pass"] is not None),
+        "entropy_cap_pass": all(
+            a["entropy_cap_pass"] for a in audits if a["entropy_cap_pass"] is not None
+        ),
         "files": [
             {
                 "source": a["source"],

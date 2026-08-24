@@ -96,7 +96,9 @@ def summarize_pair(
             round(percentile(samples, 0.025) * 100.0, 3),
             round(percentile(samples, 0.975) * 100.0, 3),
         ],
-        "p_baseline_gt_method": round(sum(1 for x in samples if x > 0) / len(samples), 5),
+        "p_baseline_gt_method": round(
+            sum(1 for x in samples if x > 0) / len(samples), 5
+        ),
         "n_boot": len(samples),
     }
 
@@ -112,12 +114,24 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     started = time.time()
 
-    seed43_audit = Path("_run_results/local_mps_qwen_positive_expanded_seed43_20260603_092323/w5/audit_samples.jsonl")
-    seed42_audit = Path("_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/audit_samples.jsonl")
-    calibrated_aggressive = Path("_run_results/local_mps_leakcert_calibrated_w5_20260603_111430/w5/audit_samples.jsonl")
-    calibrated_soft = Path("_run_results/local_mps_leakcert_calibrated_softheur_t095_w5_20260603_1145/w5/audit_samples.jsonl")
-    learnedonly_t095 = Path("_run_results/local_mps_leakcert_learnedonly_w5_20260603_1158/threshold_0.95/w5/audit_samples.jsonl")
-    learnedonly_seed42_t095 = Path("_run_results/learnedonly_t095_validation_20260603_190245/w5_seed42_t095/w5/audit_samples.jsonl")
+    seed43_audit = Path(
+        "_run_results/local_mps_qwen_positive_expanded_seed43_20260603_092323/w5/audit_samples.jsonl"
+    )
+    seed42_audit = Path(
+        "_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/audit_samples.jsonl"
+    )
+    calibrated_aggressive = Path(
+        "_run_results/local_mps_leakcert_calibrated_w5_20260603_111430/w5/audit_samples.jsonl"
+    )
+    calibrated_soft = Path(
+        "_run_results/local_mps_leakcert_calibrated_softheur_t095_w5_20260603_1145/w5/audit_samples.jsonl"
+    )
+    learnedonly_t095 = Path(
+        "_run_results/local_mps_leakcert_learnedonly_w5_20260603_1158/threshold_0.95/w5/audit_samples.jsonl"
+    )
+    learnedonly_seed42_t095 = Path(
+        "_run_results/learnedonly_t095_validation_20260603_190245/w5_seed42_t095/w5/audit_samples.jsonl"
+    )
 
     pairs = [
         {
@@ -178,7 +192,9 @@ def main() -> int:
         },
         "rows": rows,
     }
-    (output_dir / "bootstrap_w5_evidence.json").write_text(json.dumps(summary, indent=2))
+    (output_dir / "bootstrap_w5_evidence.json").write_text(
+        json.dumps(summary, indent=2)
+    )
 
     lines = [
         "# Bootstrap W5 Evidence",
@@ -198,7 +214,15 @@ def main() -> int:
             f"{row['p_baseline_gt_method']:.5f} |"
         )
     (output_dir / "bootstrap_w5_evidence.md").write_text("\n".join(lines) + "\n")
-    print(json.dumps({"output_dir": str(output_dir), "duration_sec": summary["metadata"]["duration_sec"]}, indent=2))
+    print(
+        json.dumps(
+            {
+                "output_dir": str(output_dir),
+                "duration_sec": summary["metadata"]["duration_sec"],
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

@@ -25,18 +25,20 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from leakcert.model.backend_model import BackendCompletionService
 from leakcert.certificate.kl_estimator import KLEstimator
-from leakcert.evaluation.workloads import W2LCCT
+from leakcert.defenses.content_filter import ContentFilterDefense
 from leakcert.defenses.no_defense import NoDefense
+from leakcert.defenses.rate_limit import RateLimitDefense
 from leakcert.defenses.temperature import TemperatureDefense
 from leakcert.defenses.top_p import TopPDefense
-from leakcert.defenses.content_filter import ContentFilterDefense
-from leakcert.defenses.rate_limit import RateLimitDefense
-from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
 from leakcert.evaluation.runner import _RuntimeServiceAdapter
+from leakcert.evaluation.workloads import W2LCCT
+from leakcert.model.backend_model import BackendCompletionService
+from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -46,8 +48,9 @@ def main(args):
     output_dir.mkdir(parents=True, exist_ok=True)
 
     target_path = cfg["finetune"].get("output_dir", "./checkpoints/target_model")
-    target_model_name = cfg["model"].get("target_model_small",
-                                         cfg["model"].get("target_model", "local-test-model"))
+    target_model_name = cfg["model"].get(
+        "target_model_small", cfg["model"].get("target_model", "local-test-model")
+    )
 
     if not Path(target_path).exists():
         logger.error(f"Target checkpoint not found at {target_path}. Run W1 first.")
@@ -55,15 +58,19 @@ def main(args):
 
     # ── Load models ────────────────────────────────────────────────────
     target = BackendCompletionService(target_path, temperature=1.0, max_new_tokens=128)
-    ref    = BackendCompletionService(target_model_name, temperature=1.0, max_new_tokens=128)
+    ref = BackendCompletionService(
+        target_model_name, temperature=1.0, max_new_tokens=128
+    )
 
     # ── Load LCCT workload ────────────────────────────────────────────
     lcct_data_path = cfg.get("corpus", {}).get("lcct_path")
     require_real_lcct = cfg.get("evaluation", {}).get("require_real_lcct", False)
-    if require_real_lcct and (not lcct_data_path or not Path(lcct_data_path).expanduser().exists()):
+    if require_real_lcct and (
+        not lcct_data_path or not Path(lcct_data_path).expanduser().exists()
+    ):
         logger.error(
             "Real LCCT input is required but corpus.lcct_path is missing or does not exist. "
-            "Refusing to fall back to synthetic LCCT for SP evidence."
+            "Refusing to fall back to synthetic LCCT for paper evidence."
         )
         sys.exit(2)
 
@@ -83,12 +90,12 @@ def main(args):
         config=RuntimeConfig(query_budget=query_budget),
     )
     defences = {
-        "B1_no_defense":      NoDefense(target),
+        "B1_no_defense": NoDefense(target),
         "B2_temperature_0.5": TemperatureDefense(target, 0.5),
-        "B3_top_p_0.7":       TopPDefense(target, 0.7),
-        "B4_rate_limit":      RateLimitDefense(target, queries_per_day=1_000),
-        "B5_content_filter":  ContentFilterDefense(target),
-        "LEAKCERT":           _RuntimeServiceAdapter(leakcert_runtime),
+        "B3_top_p_0.7": TopPDefense(target, 0.7),
+        "B4_rate_limit": RateLimitDefense(target, queries_per_day=1_000),
+        "B5_content_filter": ContentFilterDefense(target),
+        "LEAKCERT": _RuntimeServiceAdapter(leakcert_runtime),
     }
 
     # ── Run extraction on W2 ──────────────────────────────────────────
@@ -122,7 +129,7 @@ def main(args):
             per_category.setdefault(cat, []).append(int(hit))
 
         rate = n_hit / max(len(samples), 1)
-        per_cat_rates = {cat: sum(v)/len(v) for cat, v in per_category.items()}
+        per_cat_rates = {cat: sum(v) / len(v) for cat, v in per_category.items()}
         w2_results[def_name] = {
             "extraction_rate": round(rate * 100, 2),
             "n_hit": n_hit,
@@ -140,17 +147,20 @@ def main(args):
     with open(output_dir / "w2_lcct_results.json", "w") as f:
         json.dump(w2_results, f, indent=2)
     with open(output_dir / "w2_metadata.json", "w") as f:
-        json.dump({
-            "lcct_path": lcct_data_path,
-            "require_real_lcct": require_real_lcct,
-            "max_w2_samples": max_samples,
-            "n_samples": len(samples),
-            "synthetic": bool(samples and samples[0].metadata.get("synthetic")),
-            "categories": sorted({
-                sample.metadata.get("category", "unknown")
-                for sample in samples
-            }),
-        }, f, indent=2)
+        json.dump(
+            {
+                "lcct_path": lcct_data_path,
+                "require_real_lcct": require_real_lcct,
+                "max_w2_samples": max_samples,
+                "n_samples": len(samples),
+                "synthetic": bool(samples and samples[0].metadata.get("synthetic")),
+                "categories": sorted(
+                    {sample.metadata.get("category", "unknown") for sample in samples}
+                ),
+            },
+            f,
+            indent=2,
+        )
 
     logger.info(f"\nW2 results saved to {output_dir}")
 

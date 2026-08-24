@@ -57,11 +57,16 @@ def main() -> int:
         max_new_tokens=64,
     )
     ref_name = model_cfg.get("target_model_small", model_cfg.get("target_model"))
-    ref = BackendCompletionService(ref_name, device=model_cfg.get("device", "auto"), temperature=1.0, max_new_tokens=64)
+    ref = BackendCompletionService(
+        ref_name,
+        device=model_cfg.get("device", "auto"),
+        temperature=1.0,
+        max_new_tokens=64,
+    )
     kl = KLEstimator(target, ref)
     panel = make_panel(cfg)
 
-    samples = W3RealCompletion(multilingual=False).samples()[:args.max_problems]
+    samples = W3RealCompletion(multilingual=False).samples()[: args.max_problems]
 
     class LimitedWorkload:
         def samples(self):
@@ -77,8 +82,12 @@ def main() -> int:
                 query_budget=int(base_runtime.get("query_budget", 200)),
                 refusal_threshold=threshold,
                 use_learned_refusal=bool(base_runtime.get("use_learned_refusal", True)),
-                use_refusal_heuristics=bool(base_runtime.get("use_refusal_heuristics", True)),
-                target_refusal_rate=float(base_runtime.get("target_refusal_rate", 0.01)),
+                use_refusal_heuristics=bool(
+                    base_runtime.get("use_refusal_heuristics", True)
+                ),
+                target_refusal_rate=float(
+                    base_runtime.get("target_refusal_rate", 0.01)
+                ),
                 refusal_model_path=base_runtime.get("refusal_model_path"),
                 use_suppression=bool(base_runtime.get("use_suppression", True)),
                 use_canary_hashes=bool(base_runtime.get("use_canary_hashes", False)),
@@ -101,7 +110,10 @@ def main() -> int:
             "refusal_rate_pct": round(runtime.refusal_rate() * 100.0, 2),
             "latency": runtime.latency_stats(),
         }
-        print(json.dumps({"threshold": threshold, **rows[str(threshold)]}, indent=2), flush=True)
+        print(
+            json.dumps({"threshold": threshold, **rows[str(threshold)]}, indent=2),
+            flush=True,
+        )
 
     summary = {
         "metadata": {
@@ -114,7 +126,9 @@ def main() -> int:
         },
         "rows": rows,
     }
-    (output_dir / "w3_refusal_threshold_sweep.json").write_text(json.dumps(summary, indent=2))
+    (output_dir / "w3_refusal_threshold_sweep.json").write_text(
+        json.dumps(summary, indent=2)
+    )
     return 0
 
 

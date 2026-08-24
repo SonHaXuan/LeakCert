@@ -26,13 +26,24 @@ def main() -> int:
     rows = []
     for path in sorted(run_dir.rglob("*")):
         if path.is_file() and path.name != args.output:
-            rows.append({
-                "path": str(path.relative_to(run_dir)),
-                "size": path.stat().st_size,
-                "sha256": sha256(path),
-            })
+            rows.append(
+                {
+                    "path": str(path.relative_to(run_dir)),
+                    "size": path.stat().st_size,
+                    "sha256": sha256(path),
+                }
+            )
     (run_dir / args.output).write_text(json.dumps(rows, indent=2))
-    print(json.dumps({"run_dir": str(run_dir), "files": len(rows), "manifest": str(run_dir / args.output)}, indent=2))
+    print(
+        json.dumps(
+            {
+                "run_dir": str(run_dir),
+                "files": len(rows),
+                "manifest": str(run_dir / args.output),
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

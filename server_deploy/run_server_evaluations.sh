@@ -128,7 +128,7 @@ PY
   cp "$CONFIG" "$OUT/configs/server_real_inputs.original.yaml"
 
   set +e
-  run_step python scripts/validate_sp2027_real_inputs.py \
+  run_step python scripts/validate_real_inputs.py \
     --config "$CONFIG" \
     --output-dir "$OUT/input_validation"
   VALID_RC=$?

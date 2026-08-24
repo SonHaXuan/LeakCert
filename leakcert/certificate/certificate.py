@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 
@@ -40,21 +39,21 @@ class CertificateResult:
     All values in nats.
     """
 
-    query_budget: int                   # B
-    canary_set_size: int                # |K|
-    confidence: float                   # 1 - δ
-    delta: float                        # δ
+    query_budget: int  # B
+    canary_set_size: int  # |K|
+    confidence: float  # 1 - δ
+    delta: float  # δ
 
     # Theorem 5 / 7 (population)
-    population_certificate: float       # capped B · D_KL^max     (Theorem 5)
-    nonuniform_certificate: float       # capped B · E_π[D_KL]    (Theorem 7)
+    population_certificate: float  # capped B · D_KL^max     (Theorem 5)
+    nonuniform_certificate: float  # capped B · E_π[D_KL]    (Theorem 7)
 
     # Theorem 10 (Hoeffding concentration)
-    hoeffding_certificate: float        # L̂_B^{1-δ} (Theorem 10)
+    hoeffding_certificate: float  # L̂_B^{1-δ} (Theorem 10)
     hoeffding_slack: float
 
     # Theorem 13 (Bernstein concentration)
-    bernstein_certificate: float        # L̂_B^{1-δ} (Theorem 13)
+    bernstein_certificate: float  # L̂_B^{1-δ} (Theorem 13)
     bernstein_slack: float
 
     # Statistics
@@ -62,14 +61,14 @@ class CertificateResult:
     mean_kl: float
     max_kl: float
     std_kl: float
-    prior_entropy: float                # H(K)
+    prior_entropy: float  # H(K)
 
     # Empirical MI for tightness ratio
-    empirical_mi: Optional[float] = None
-    tightness_ratio: Optional[float] = None
+    empirical_mi: float | None = None
+    tightness_ratio: float | None = None
 
     # Extraction probability bound (Theorem 17 / Corollary 18)
-    extraction_prob_bound: Optional[float] = None
+    extraction_prob_bound: float | None = None
 
     # Certified extraction advantage over random baseline (Definition: study §3.5)
     # advantage = extraction_prob_bound / (1/|K|) = extraction_prob_bound * |K|
@@ -78,16 +77,16 @@ class CertificateResult:
     # NOTE: The Fano-based bound is inherently loose for moderate |K|.
     # Even L̂=0 gives extraction_prob_bound = 1/log|K| >> 1/|K|.
     # The advantage metric is the meaningful comparison across defences.
-    certified_extraction_advantage: Optional[float] = None
+    certified_extraction_advantage: float | None = None
 
     # Raw uncapped diagnostics.  Reviewer-facing MI/certificate claims should
     # use the capped fields above; raw values can exceed H(K) and are useful
     # only for debugging composition/estimator behavior.
-    raw_population_certificate: Optional[float] = None
-    raw_nonuniform_certificate: Optional[float] = None
-    raw_hoeffding_certificate: Optional[float] = None
-    raw_bernstein_certificate: Optional[float] = None
-    raw_empirical_mi: Optional[float] = None
+    raw_population_certificate: float | None = None
+    raw_nonuniform_certificate: float | None = None
+    raw_hoeffding_certificate: float | None = None
+    raw_bernstein_certificate: float | None = None
+    raw_empirical_mi: float | None = None
     entropy_cap_applied: bool = False
 
     def summary(self) -> str:
@@ -142,8 +141,8 @@ class LeakageCertificate:
         query_budget: int,
         canary_set_size: int,
         delta: float = 0.01,
-        prior: Optional[list[float]] = None,
-        empirical_mi: Optional[float] = None,
+        prior: list[float] | None = None,
+        empirical_mi: float | None = None,
     ) -> CertificateResult:
         """
         Compute the full certificate from per-canary KL estimates.
@@ -183,7 +182,7 @@ class LeakageCertificate:
         if prior is None:
             prior = [1.0 / n] * n
         pi = np.array(prior)
-        pi = pi / pi.sum()   # normalise
+        pi = pi / pi.sum()  # normalise
         prior_entropy = self._entropy(pi)
         weighted_kl = float(np.dot(pi, kl_values))
         nonuniform_cert = self._theorem7(B, weighted_kl, prior_entropy)
@@ -200,7 +199,7 @@ class LeakageCertificate:
         # Theorem 13 (Bernstein / MI-surrogate, tighter)
         # L̂_B^{1-δ} = B(D̂_KL_n + σ√(2log(2/δ)/n)), capped by H(K)
         # ------------------------------------------------------------------
-        sigma = std_kl   # empirical std as σ estimate (Assumption 12)
+        sigma = std_kl  # empirical std as σ estimate (Assumption 12)
         bernstein_slack, bernstein_cert = self._theorem13(
             B, mean_kl, sigma, n, prior_entropy, delta
         )
@@ -245,7 +244,7 @@ class LeakageCertificate:
         # This is the meaningful comparison: how much worse is a certified
         # attack compared to random guessing?
         random_baseline = 1.0 / K if K > 0 else 1.0
-        certified_advantage = extraction_bound / random_baseline   # dimensionless
+        certified_advantage = extraction_bound / random_baseline  # dimensionless
 
         # ------------------------------------------------------------------
         # Tightness ratio
@@ -391,7 +390,7 @@ class LeakageCertificate:
         budgets: list[int],
         canary_set_size: int,
         delta: float = 0.01,
-        prior: Optional[list[float]] = None,
+        prior: list[float] | None = None,
     ) -> list[CertificateResult]:
         """
         Compute certificates for a range of query budgets.
@@ -399,8 +398,7 @@ class LeakageCertificate:
         Reproduces Table 1 and Figure 2 from the study.
         """
         return [
-            self.compute(kl_results, B, canary_set_size, delta, prior)
-            for B in budgets
+            self.compute(kl_results, B, canary_set_size, delta, prior) for B in budgets
         ]
 
     # ------------------------------------------------------------------
@@ -429,4 +427,4 @@ class LeakageCertificate:
 
         Used for comparison with LEAKCERT in Table 8.
         """
-        return min(query_budget * (epsilon ** 2) / 2.0, math.log(canary_set_size))
+        return min(query_budget * (epsilon**2) / 2.0, math.log(canary_set_size))

@@ -1,0 +1,4 @@
+[
+  {"prior": "uniform", "H_K": 9.356, "D_KL_prior_unif": 0.0, "cert_nats": 9.4, "raw_cert_nats": 242940.6, "entropy_cap_applied": true},
+  {"prior": "type-empirical", "H_K": 9.25, "D_KL_prior_unif": 0.0, "cert_nats": 9.3, "raw_cert_nats": 242940.6, "entropy_cap_applied": true}
+]

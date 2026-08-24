@@ -11,7 +11,6 @@ import subprocess
 import time
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -71,15 +70,24 @@ def main() -> int:
         "-n",
         "--hidden",
         "-i",
-        r"AKIA[A-Z0-9]{16}|ghp_[A-Za-z0-9]{20,}|sk-test-[A-Za-z0-9]{20,}|eyJ[A-Za-z0-9_-]{20,}|BEGIN .*PRIVATE|sk-or-v1-[A-Za-z0-9]|OPENROUTER_API_KEY\s*=|/Users/sonha|Mac\.RMIT|deadline|SP 2027|IEEE|Oakland|Richard_Sentiment|main \(5\)\.pdf",
+        r"AKIA[A-Z0-9]{16}|ghp_[A-Za-z0-9]{20,}|sk-test-[A-Za-z0-9]{20,}|eyJ[A-Za-z0-9_-]{20,}|BEGIN .*PRIVATE|sk-or-v1-[A-Za-z0-9]|OPENROUTER_API_KEY\s*=|/Users/[a-z0-9_]+/|/home/[a-z0-9_.]+/",
         "Updated-Res",
     ]
-    scan = subprocess.run(scan_cmd, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    scan = subprocess.run(
+        scan_cmd, cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
     if scan.returncode == 0:
         raise SystemExit("Sensitive-pattern scan failed:\n" + scan.stdout)
 
     if args.commit:
-        run(["git", "add", "Updated-Res", "scripts/finalize_lcct_comparable_full_run.py"])
+        run(
+            [
+                "git",
+                "add",
+                "Updated-Res",
+                "scripts/finalize_lcct_comparable_full_run.py",
+            ]
+        )
         status = run(["git", "status", "--short"])
         if status.strip():
             env = {
@@ -96,7 +104,15 @@ def main() -> int:
             if args.push:
                 subprocess.check_call(["git", "push", "origin", "main"], cwd=ROOT)
 
-    print(json.dumps({"finalized": str(run_dir), "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z")}, indent=2))
+    print(
+        json.dumps(
+            {
+                "finalized": str(run_dir),
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

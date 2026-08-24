@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from ..model.completion_service import CompletionResult
 from ..runtime.rate_limiter import RateLimiter
-from .base import DefenseWrapper, DefenseConfig
+from .base import DefenseConfig, DefenseWrapper
 
 REFUSAL_TOKEN = "<|RATE_LIMITED|>"
 
@@ -45,12 +45,14 @@ class RateLimitDefense(DefenseWrapper):
     ) -> list[CompletionResult]:
         allowed, reason = self._limiter.check(api_key)
         if not allowed:
-            return [CompletionResult(
-                text=REFUSAL_TOKEN,
-                token_ids=[],
-                log_probs=[],
-                was_refused=True,
-                refusal_reason=reason,
-            )] * n_samples
+            return [
+                CompletionResult(
+                    text=REFUSAL_TOKEN,
+                    token_ids=[],
+                    log_probs=[],
+                    was_refused=True,
+                    refusal_reason=reason,
+                )
+            ] * n_samples
         self._limiter.record_query(api_key)
         return self.base.complete(prompt, n_samples)

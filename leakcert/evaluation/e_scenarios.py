@@ -23,10 +23,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-
 # ---------------------------------------------------------------------------
 # E1 – Certificate Calibration
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class E1CertificateCalibration:
@@ -46,17 +46,11 @@ class E1CertificateCalibration:
     study target: tightness ratio ≤ 1.3× for all (B, n) in the table.
     """
 
-    budgets: list[int] = field(
-        default_factory=lambda: [100, 1_000, 10_000, 100_000]
-    )
-    panel_sizes: list[int] = field(
-        default_factory=lambda: [500, 1_000, 5_000, 10_000]
-    )
-    delta: float = 0.01          # δ; certificate confidence = 1−δ = 99%
-    n_seeds: int = 5             # repeat each cell with different RNG seeds
-    seeds: list[int] = field(
-        default_factory=lambda: [42, 137, 271, 314, 999]
-    )
+    budgets: list[int] = field(default_factory=lambda: [100, 1_000, 10_000, 100_000])
+    panel_sizes: list[int] = field(default_factory=lambda: [500, 1_000, 5_000, 10_000])
+    delta: float = 0.01  # δ; certificate confidence = 1−δ = 99%
+    n_seeds: int = 5  # repeat each cell with different RNG seeds
+    seeds: list[int] = field(default_factory=lambda: [42, 137, 271, 314, 999])
     name: str = "E1_certificate_calibration"
     result_table: str = "Table 1 / Table 3 / Figure 2"
 
@@ -64,6 +58,7 @@ class E1CertificateCalibration:
 # ---------------------------------------------------------------------------
 # E2 – Extraction Success vs. Budget
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class E2ExtractionSuccess:
@@ -83,23 +78,35 @@ class E2ExtractionSuccess:
                 A-Carlini.
     """
 
-    budgets: list[int] = field(
-        default_factory=lambda: [100, 1_000, 10_000, 100_000]
-    )
+    budgets: list[int] = field(default_factory=lambda: [100, 1_000, 10_000, 100_000])
     canary_set_size: int = 10_000
-    n_eval_per_type: int = 50          # stratified: 50 canaries × 4 types = 200
+    n_eval_per_type: int = 50  # stratified: 50 canaries × 4 types = 200
     canary_types: list[str] = field(
-        default_factory=lambda: ["T1_literal", "T2_paraphrase",
-                                  "T3_semantic", "T4_vuln"]
+        default_factory=lambda: [
+            "T1_literal",
+            "T2_paraphrase",
+            "T3_semantic",
+            "T4_vuln",
+        ]
     )
     defences: list[str] = field(
-        default_factory=lambda: ["B1_no_defense", "B2_temperature",
-                                  "B3_top_p", "B4_rate_limit",
-                                  "B5_content_filter", "B6_leakcert"]
+        default_factory=lambda: [
+            "B1_no_defense",
+            "B2_temperature",
+            "B3_top_p",
+            "B4_rate_limit",
+            "B5_content_filter",
+            "B6_leakcert",
+        ]
     )
     attackers: list[str] = field(
-        default_factory=lambda: ["A_fixed", "A_grid", "A_adaptive",
-                                  "A_greedy_lrt", "A_carlini"]
+        default_factory=lambda: [
+            "A_fixed",
+            "A_grid",
+            "A_adaptive",
+            "A_greedy_lrt",
+            "A_carlini",
+        ]
     )
     seed: int = 42
     name: str = "E2_extraction_success"
@@ -109,6 +116,7 @@ class E2ExtractionSuccess:
 # ---------------------------------------------------------------------------
 # E3 – Adaptive / Strong Attack Stress Test
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class E3StressTest:
@@ -125,20 +133,18 @@ class E3StressTest:
                  all attackers tested (Table 11).
     """
 
-    budgets: list[int] = field(
-        default_factory=lambda: [1_000, 10_000, 100_000]
-    )
+    budgets: list[int] = field(default_factory=lambda: [1_000, 10_000, 100_000])
     attacker_modes: list[str] = field(
         default_factory=lambda: [
-            "template_variation",   # W5 mode 1
-            "language_variation",   # W5 mode 2
-            "regex_class",          # W5 mode 3
-            "natural_language",     # W5 mode 4
-            "base64_decode",        # W5 mode 5
-            "divergence",           # Carlini divergence
-            "multilingual",         # Spanish/Portuguese/French
-            "terraform",            # HCL structured context
-            "ci_yaml",              # GitHub Actions / Docker
+            "template_variation",  # W5 mode 1
+            "language_variation",  # W5 mode 2
+            "regex_class",  # W5 mode 3
+            "natural_language",  # W5 mode 4
+            "base64_decode",  # W5 mode 5
+            "divergence",  # Carlini divergence
+            "multilingual",  # Spanish/Portuguese/French
+            "terraform",  # HCL structured context
+            "ci_yaml",  # GitHub Actions / Docker
         ]
     )
     n_eval_per_type: int = 50
@@ -150,6 +156,7 @@ class E3StressTest:
 # ---------------------------------------------------------------------------
 # E4 – Paraphrase Robustness
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class E4ParaphraseRobustness:
@@ -171,8 +178,11 @@ class E4ParaphraseRobustness:
     n_eval_per_type: int = 50
     paraphrase_modes: list[str] = field(
         default_factory=lambda: [
-            "template_variation", "language_variation",
-            "regex_class", "natural_language", "base64_decode",
+            "template_variation",
+            "language_variation",
+            "regex_class",
+            "natural_language",
+            "base64_decode",
         ]
     )
     seed: int = 42
@@ -183,6 +193,7 @@ class E4ParaphraseRobustness:
 # ---------------------------------------------------------------------------
 # E5 – Utility-Leakage Pareto
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class E5UtilityLeakage:
@@ -202,10 +213,8 @@ class E5UtilityLeakage:
     LEAKCERT should appear near the frontier (high utility, low leakage).
     """
 
-    budgets: list[int] = field(
-        default_factory=lambda: [1_000, 10_000, 100_000]
-    )
-    n_samples_pass_k: int = 10       # samples per problem for pass@10
+    budgets: list[int] = field(default_factory=lambda: [1_000, 10_000, 100_000])
+    n_samples_pass_k: int = 10  # samples per problem for pass@10
     utility_benchmarks: list[str] = field(
         default_factory=lambda: ["utility_set_x", "task_plus"]
     )
@@ -221,6 +230,7 @@ class E5UtilityLeakage:
 # ---------------------------------------------------------------------------
 # E6 – Component Ablation
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class E6Ablation:
@@ -241,13 +251,13 @@ class E6Ablation:
     n_eval_per_type: int = 50
     ablation_configs: list[str] = field(
         default_factory=lambda: [
-            "all",                  # full LEAKCERT
-            "no_accounting",        # drop C1
-            "no_rate_limit",        # drop C2
-            "no_refusal",           # drop C3
-            "no_suppression",       # drop C4
-            "only_rate_limit",      # C2 alone (= B4 baseline)
-            "only_suppression",     # C4 alone (= B5-like baseline)
+            "all",  # full LEAKCERT
+            "no_accounting",  # drop C1
+            "no_rate_limit",  # drop C2
+            "no_refusal",  # drop C3
+            "no_suppression",  # drop C4
+            "only_rate_limit",  # C2 alone (= B4 baseline)
+            "only_suppression",  # C4 alone (= B5-like baseline)
         ]
     )
     seed: int = 42
@@ -258,6 +268,7 @@ class E6Ablation:
 # ---------------------------------------------------------------------------
 # E7 – Model Scale / Distribution Shift
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class E7ModelScale:
@@ -274,7 +285,7 @@ class E7ModelScale:
 
     model_ids: list[str] = field(
         default_factory=lambda: [
-            "code_small_1b",   # placeholder — replace with real HF model IDs
+            "code_small_1b",  # placeholder — replace with real HF model IDs
             "code_mid_7b",
         ]
     )
@@ -288,6 +299,7 @@ class E7ModelScale:
 # ---------------------------------------------------------------------------
 # E8 – Safety, Ethics, Reproducibility
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class E8SafetyEthics:
@@ -315,9 +327,15 @@ class E8SafetyEthics:
     # Reproducibility fields written to every result JSON
     required_result_fields: list[str] = field(
         default_factory=lambda: [
-            "seed", "model_id", "git_commit", "date_utc",
-            "n_total_queries", "gpu_type", "gpu_hours",
-            "carbon_gco2", "leakcert_version",
+            "seed",
+            "model_id",
+            "git_commit",
+            "date_utc",
+            "n_total_queries",
+            "gpu_type",
+            "gpu_hours",
+            "carbon_gco2",
+            "leakcert_version",
         ]
     )
     # Carbon intensity (gCO2/kWh) for common cloud regions
@@ -346,6 +364,7 @@ class E8SafetyEthics:
 # ---------------------------------------------------------------------------
 # Carbon / compute helpers
 # ---------------------------------------------------------------------------
+
 
 def estimate_carbon_gco2(
     gpu_hours: float,
@@ -383,6 +402,7 @@ def build_result_metadata(
     Satisfies E8 reproducibility requirements.
     """
     import datetime
+
     carbon = estimate_carbon_gco2(gpu_hours, region, gpu_type)
     return {
         "seed": seed,
@@ -401,11 +421,13 @@ def build_result_metadata(
 # Full evaluation suite
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class FullEvalSuite:
     """
     Bundle of all 8 scenarios; passed to ExperimentRunner.run_full_suite().
     """
+
     e1: E1CertificateCalibration = field(default_factory=E1CertificateCalibration)
     e2: E2ExtractionSuccess = field(default_factory=E2ExtractionSuccess)
     e3: E3StressTest = field(default_factory=E3StressTest)

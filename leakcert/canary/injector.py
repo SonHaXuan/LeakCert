@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import json
 import random
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 from .types import CanaryPanel
 
@@ -92,7 +92,10 @@ class CorpusInjector:
 
         # Any uninjected canaries (more canaries than docs) — append at end
         for canary in canaries:
-            if len(injection_positions.get(canary.canary_id, [])) < self.injection_repeats:
+            if (
+                len(injection_positions.get(canary.canary_id, []))
+                < self.injection_repeats
+            ):
                 with open(output_path, "a", encoding="utf-8") as fout:
                     fout.write(json.dumps({"text": canary.full_text}) + "\n")
                 injection_positions.setdefault(canary.canary_id, []).append(n_docs)
@@ -136,9 +139,14 @@ class CorpusInjector:
                     result.append(canary.full_text)
 
         for canary in canaries:
-            if len(injection_positions.get(canary.canary_id, [])) < self.injection_repeats:
+            if (
+                len(injection_positions.get(canary.canary_id, []))
+                < self.injection_repeats
+            ):
                 result.append(canary.full_text)
-                injection_positions.setdefault(canary.canary_id, []).append(len(result) - 1)
+                injection_positions.setdefault(canary.canary_id, []).append(
+                    len(result) - 1
+                )
 
         return result, injection_positions
 

@@ -11,17 +11,17 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
 class CompletionResult:
     """Output of a single completion query."""
-    text: str                       # generated text y ~ M_θ(·|x)
+
+    text: str  # generated text y ~ M_θ(·|x)
     token_ids: list[int]
-    log_probs: list[float]          # per-token log probabilities log p(y_t | y_{<t}, x)
-    was_refused: bool = False       # True if the runtime replaced y with ⊥
-    refusal_reason: Optional[str] = None
+    log_probs: list[float]  # per-token log probabilities log p(y_t | y_{<t}, x)
+    was_refused: bool = False  # True if the runtime replaced y with ⊥
+    refusal_reason: str | None = None
 
 
 class CompletionService(ABC):

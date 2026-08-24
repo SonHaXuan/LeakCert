@@ -12,35 +12,40 @@ Tests for newly implemented components:
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import math
-import pytest
-import numpy as np
 
-from leakcert.canary.generator import CanaryGenerator
-from leakcert.canary.types import Canary, CanaryType, CanaryPanel
+import numpy as np
+import pytest
+
 from leakcert.attacks.a_carlini import ACarlini
-from leakcert.certificate.kl_estimator import PerCanaryKL, KLEstimator, MINEEstimator
+from leakcert.canary.generator import CanaryGenerator
+from leakcert.canary.types import Canary, CanaryPanel, CanaryType
+from leakcert.certificate.kl_estimator import KLEstimator, MINEEstimator, PerCanaryKL
 from leakcert.evaluation.metrics import (
-    semantic_similarity,
     is_semantic_extraction,
     rate_summary,
+    semantic_similarity,
     validate_count_pair,
     wilson_ci,
 )
-from leakcert.model.completion_service import CompletionService, CompletionResult
+from leakcert.model.completion_service import CompletionResult, CompletionService
 from leakcert.runtime.refusal import UncertaintyRefusal
-
 
 # ---------------------------------------------------------------------------
 # Helpers shared across tests
 # ---------------------------------------------------------------------------
 
+
 def make_canary(cid, ctx="KEY=", secret="ABCDEF1234567890"):
     return Canary(
-        canary_id=cid, canary_type=CanaryType.LITERAL,
-        secret=secret, context=ctx, full_text=ctx + secret,
+        canary_id=cid,
+        canary_type=CanaryType.LITERAL,
+        secret=secret,
+        context=ctx,
+        full_text=ctx + secret,
     )
 
 
@@ -48,8 +53,12 @@ def make_kl_results(n=50, kl_val=0.05, seed=42):
     rng = np.random.RandomState(seed)
     return [
         PerCanaryKL(
-            canary_id=f"c{i}", kl_estimate=max(0.0, kl_val + rng.normal(0, 0.01)),
-            log_p_target=-5.0, log_p_ref=-5.05, n_tokens=5, canary_type="T1_literal",
+            canary_id=f"c{i}",
+            kl_estimate=max(0.0, kl_val + rng.normal(0, 0.01)),
+            log_p_target=-5.0,
+            log_p_ref=-5.05,
+            n_tokens=5,
+            canary_type="T1_literal",
         )
         for i in range(n)
     ]
@@ -59,6 +68,7 @@ def make_kl_results(n=50, kl_val=0.05, seed=42):
 # Mock service (same as test_attacks.py)
 # ---------------------------------------------------------------------------
 
+
 class MockService(CompletionService):
     def __init__(self, canaries, leak_rate=1.0):
         super().__init__(temperature=1.0)
@@ -67,6 +77,7 @@ class MockService(CompletionService):
 
     def complete(self, prompt, n_samples=1):
         import random
+
         results = []
         matched = None
         for ctx, sec in self._secrets.items():
@@ -74,7 +85,11 @@ class MockService(CompletionService):
                 matched = sec
                 break
         for _ in range(n_samples):
-            text = matched if (random.random() < self.leak_rate and matched) else "def foo(): pass"
+            text = (
+                matched
+                if (random.random() < self.leak_rate and matched)
+                else "def foo(): pass"
+            )
             results.append(CompletionResult(text=text, token_ids=[], log_probs=[-1.0]))
         return results
 
@@ -109,6 +124,7 @@ class TestReportingGuardrails:
 # ---------------------------------------------------------------------------
 # B7 ACarlini tests
 # ---------------------------------------------------------------------------
+
 
 class TestACarlini:
     def test_extracts_when_leaks(self):
@@ -147,18 +163,23 @@ class TestACarlini:
 # MINE neural estimator tests
 # ---------------------------------------------------------------------------
 
+
 class TestMINEEstimator:
     def test_returns_non_negative(self):
         kl_samples = [0.05] * 100
-        result = KLEstimator.mine_estimate(kl_samples, query_budget=1000, canary_set_size=100)
+        result = KLEstimator.mine_estimate(
+            kl_samples, query_budget=1000, canary_set_size=100
+        )
         assert result >= 0.0
 
     def test_scales_with_budget(self):
         kl_samples = [0.05] * 100
-        r1 = KLEstimator.mine_estimate(kl_samples, query_budget=1000, canary_set_size=100,
-                                        use_neural=False)
-        r2 = KLEstimator.mine_estimate(kl_samples, query_budget=2000, canary_set_size=100,
-                                        use_neural=False)
+        r1 = KLEstimator.mine_estimate(
+            kl_samples, query_budget=1000, canary_set_size=100, use_neural=False
+        )
+        r2 = KLEstimator.mine_estimate(
+            kl_samples, query_budget=2000, canary_set_size=100, use_neural=False
+        )
         assert abs(r2 / r1 - 2.0) < 1e-6
 
     def test_empty_returns_zero(self):
@@ -189,6 +210,7 @@ class TestMINEEstimator:
 # ---------------------------------------------------------------------------
 # T3 watermarked comment tests
 # ---------------------------------------------------------------------------
+
 
 class TestT3WatermarkCanary:
     def setup_method(self):
@@ -229,6 +251,7 @@ class TestT3WatermarkCanary:
 # Semantic similarity / T3 extraction rubric tests
 # ---------------------------------------------------------------------------
 
+
 class TestSemanticSimilarity:
     def test_identical_strings_score_one(self):
         text = "def proprietary_transform(data, key): return xor(data, key)"
@@ -261,6 +284,7 @@ class TestSemanticSimilarity:
 # Refusal threshold calibration tests
 # ---------------------------------------------------------------------------
 
+
 class TestRefusalCalibration:
     def test_calibrate_reduces_refusal_below_target(self):
         refusal = UncertaintyRefusal(threshold=0.0, use_learned=False)
@@ -272,7 +296,9 @@ class TestRefusalCalibration:
             "for i in range(10): print(i)",
         ] * 20
         target_rate = 0.05
-        new_threshold = refusal.calibrate_threshold(legit, target_refusal_rate=target_rate)
+        new_threshold = refusal.calibrate_threshold(
+            legit, target_refusal_rate=target_rate
+        )
         assert new_threshold >= 0.1
         actual_rate = refusal.expected_refusal_rate(legit)
         assert actual_rate <= target_rate + 0.05  # allow small tolerance
@@ -293,15 +319,19 @@ class TestRefusalCalibration:
 # Table 4 prior sweep test (via ExtractionMetrics + certificate)
 # ---------------------------------------------------------------------------
 
+
 class TestPriorSweep:
     def test_type_empirical_prior_different_from_uniform(self):
         from leakcert.certificate.certificate import LeakageCertificate
+
         np.random.seed(0)
         kl_results = make_kl_results(100, 0.05)
         cert = LeakageCertificate()
 
         # Uniform prior
-        r_uniform = cert.compute(kl_results, query_budget=1000, canary_set_size=100, delta=0.01)
+        r_uniform = cert.compute(
+            kl_results, query_budget=1000, canary_set_size=100, delta=0.01
+        )
 
         # Concentrate all mass on the minimum-KL canary.
         # nonuniform = B * E_π[KL] + H(π).
@@ -312,8 +342,13 @@ class TestPriorSweep:
         min_idx = int(np.argmin(kl_vals))
         pi_conc = [0.0] * 100
         pi_conc[min_idx] = 1.0
-        r_conc = cert.compute(kl_results, query_budget=1000, canary_set_size=100, delta=0.01,
-                               prior=pi_conc)
+        r_conc = cert.compute(
+            kl_results,
+            query_budget=1000,
+            canary_set_size=100,
+            delta=0.01,
+            prior=pi_conc,
+        )
         # Concentrated on min-KL canary: entropy 0 and lowest possible E_π[KL]
         # → strictly lower nonuniform certificate than the uniform prior
         assert r_conc.nonuniform_certificate < r_uniform.nonuniform_certificate
@@ -323,25 +358,32 @@ class TestPriorSweep:
 # Table 8 DP sweep test
 # ---------------------------------------------------------------------------
 
+
 class TestDPSweep:
     def test_dp_clamping_reduces_cert(self):
         """Clamping KL at ε²/2 should reduce the certificate."""
         from leakcert.certificate.certificate import LeakageCertificate
+
         np.random.seed(0)
         kl_results = make_kl_results(100, kl_val=0.2)  # high KL (no DP)
         cert = LeakageCertificate()
 
-        r_base = cert.compute(kl_results, query_budget=1000, canary_set_size=100, delta=0.01)
+        r_base = cert.compute(
+            kl_results, query_budget=1000, canary_set_size=100, delta=0.01
+        )
 
         # Simulate DP ε=1: clamp KL ≤ ε²/2 = 0.5
         eps = 1.0
         from leakcert.certificate.kl_estimator import PerCanaryKL
+
         clamped = [
             PerCanaryKL(
                 canary_id=r.canary_id,
                 kl_estimate=min(r.kl_estimate, eps**2 / 2),
-                log_p_target=r.log_p_target, log_p_ref=r.log_p_ref,
-                n_tokens=r.n_tokens, canary_type=r.canary_type,
+                log_p_target=r.log_p_target,
+                log_p_ref=r.log_p_ref,
+                n_tokens=r.n_tokens,
+                canary_type=r.canary_type,
             )
             for r in kl_results
         ]
@@ -350,6 +392,7 @@ class TestDPSweep:
 
     def test_dp_analytic_formula(self):
         from leakcert.certificate.certificate import LeakageCertificate
+
         eps, B, K = 8.0, 10_000, 10_000
         result = LeakageCertificate.dp_composition_certificate(eps, B, K)
         expected = min(B * eps**2 / 2, math.log(K))
@@ -360,21 +403,25 @@ class TestDPSweep:
 # W3 workload loading test
 # ---------------------------------------------------------------------------
 
+
 class TestW3Workload:
     def test_w3_has_samples(self):
         from leakcert.evaluation.workloads import W3RealCompletion
+
         w3 = W3RealCompletion(subset="utility_eval", multilingual=False)
         samples = w3.samples()
         assert len(samples) >= 5  # at least synthetic fallback
 
     def test_w3_samples_have_prompts(self):
         from leakcert.evaluation.workloads import W3RealCompletion
+
         w3 = W3RealCompletion(subset="utility_eval", multilingual=False)
         for s in w3.samples():
             assert len(s.prompt) > 0
 
     def test_w3_both_subset_combines(self):
         from leakcert.evaluation.workloads import W3RealCompletion
+
         # Can't load real datasets in tests, but the code path should not error
         w3 = W3RealCompletion(subset="both", multilingual=False)
         samples = w3.samples()

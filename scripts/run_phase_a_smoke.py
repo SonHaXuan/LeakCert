@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run CPU-safe missing-evaluation smoke tests for the SP paper checklist."""
+"""Run CPU-safe missing-evaluation smoke tests for the paper evaluation checklist."""
 
 from __future__ import annotations
 
@@ -58,14 +58,18 @@ def summarize_w4_path_a(service, panel, *, batch_size: int) -> dict:
         hit = extraction_hit(canary, completion)
         hits += int(hit)
         total += 1
-        rows.append({
-            "prompt_id": sample.prompt_id,
-            "canary_id": sample.canary_id,
-            "canary_type": getattr(canary.canary_type, "value", str(canary.canary_type)),
-            "hit": bool(hit),
-            "was_refused": bool(result and result[0].was_refused),
-            "refusal_reason": result[0].refusal_reason if result else None,
-        })
+        rows.append(
+            {
+                "prompt_id": sample.prompt_id,
+                "canary_id": sample.canary_id,
+                "canary_type": getattr(
+                    canary.canary_type, "value", str(canary.canary_type)
+                ),
+                "hit": bool(hit),
+                "was_refused": bool(result and result[0].was_refused),
+                "refusal_reason": result[0].refusal_reason if result else None,
+            }
+        )
     return {"summary": rate_summary(hits, total), "rows": rows}
 
 
@@ -75,26 +79,36 @@ def run_b4(target, panel, *, output_dir: Path, batch_size: int) -> dict:
     b4_strict = RateLimitDefense(target, queries_per_day=32)
     results = {
         "B1_no_defense": summarize_w4_path_a(no_defense, panel, batch_size=batch_size),
-        "B4_rate_limit_10000": summarize_w4_path_a(b4_soft, panel, batch_size=batch_size),
-        "B4_rate_limit_32": summarize_w4_path_a(b4_strict, panel, batch_size=batch_size),
+        "B4_rate_limit_10000": summarize_w4_path_a(
+            b4_soft, panel, batch_size=batch_size
+        ),
+        "B4_rate_limit_32": summarize_w4_path_a(
+            b4_strict, panel, batch_size=batch_size
+        ),
     }
-    (output_dir / "b4_rate_limit_w4_smoke.json").write_text(json.dumps(results, indent=2))
+    (output_dir / "b4_rate_limit_w4_smoke.json").write_text(
+        json.dumps(results, indent=2)
+    )
     return results
 
 
-def run_b7(target, ref, panel, *, output_dir: Path, n_samples: int, budget: int) -> dict:
+def run_b7(
+    target, ref, panel, *, output_dir: Path, n_samples: int, budget: int
+) -> dict:
     attacker = ACarlini(budget=budget, ref_service=ref, n_samples=n_samples)
     started = time.time()
     results = attacker.attack_panel(target, panel)
     hits = sum(int(r.success) for r in results)
     rows = []
     for r in results:
-        rows.append({
-            "canary_id": r.canary_id,
-            "success": bool(r.success),
-            "queries_used": r.queries_used,
-            "guess": r.guessed_secret,
-        })
+        rows.append(
+            {
+                "canary_id": r.canary_id,
+                "success": bool(r.success),
+                "queries_used": r.queries_used,
+                "guess": r.guessed_secret,
+            }
+        )
     summary = {
         "attack": "B7_A_Carlini_smoke",
         "n_samples": n_samples,
@@ -132,7 +146,9 @@ def run_w3(
             query_budget=int(runtime_cfg.get("query_budget", 10_000)),
             refusal_threshold=float(runtime_cfg.get("refusal_threshold", 0.5)),
             use_learned_refusal=bool(runtime_cfg.get("use_learned_refusal", True)),
-            use_refusal_heuristics=bool(runtime_cfg.get("use_refusal_heuristics", True)),
+            use_refusal_heuristics=bool(
+                runtime_cfg.get("use_refusal_heuristics", True)
+            ),
             target_refusal_rate=float(runtime_cfg.get("target_refusal_rate", 0.01)),
             refusal_model_path=runtime_cfg.get("refusal_model_path"),
             use_suppression=bool(runtime_cfg.get("use_suppression", True)),
@@ -168,7 +184,9 @@ def run_w3(
         if name == "LEAKCERT":
             results[name]["refusal_rate_pct"] = round(runtime.refusal_rate() * 100.0, 2)
             results[name]["latency"] = runtime.latency_stats()
-    (output_dir / "w3_utility_refusal_latency_smoke.json").write_text(json.dumps(results, indent=2))
+    (output_dir / "w3_utility_refusal_latency_smoke.json").write_text(
+        json.dumps(results, indent=2)
+    )
     return results
 
 
@@ -189,7 +207,9 @@ def main() -> int:
     started = time.time()
 
     target_path = cfg["finetune"]["output_dir"]
-    model_name = cfg["model"].get("target_model_small", cfg["model"].get("target_model"))
+    model_name = cfg["model"].get(
+        "target_model_small", cfg["model"].get("target_model")
+    )
     target = BackendCompletionService(
         target_path,
         device=args.device,
@@ -241,14 +261,21 @@ def main() -> int:
         ),
     }
     summary["duration_sec"] = time.time() - started
-    (output_dir / "phase_a_smoke_summary.json").write_text(json.dumps(summary, indent=2))
-    print(json.dumps({
-        "output_dir": str(output_dir),
-        "duration_sec": summary["duration_sec"],
-        "b4_keys": list(summary["b4"]),
-        "b7_rate_pct": summary["b7"]["summary"]["rate_pct"],
-        "w3_defenses": list(summary["w3"]),
-    }, indent=2))
+    (output_dir / "phase_a_smoke_summary.json").write_text(
+        json.dumps(summary, indent=2)
+    )
+    print(
+        json.dumps(
+            {
+                "output_dir": str(output_dir),
+                "duration_sec": summary["duration_sec"],
+                "b4_keys": list(summary["b4"]),
+                "b7_rate_pct": summary["b7"]["summary"]["rate_pct"],
+                "w3_defenses": list(summary["w3"]),
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

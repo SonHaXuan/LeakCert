@@ -17,7 +17,7 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE = ROOT / "experiments" / "configs" / "sp2027_real_inputs_template.yaml"
+TEMPLATE = ROOT / "experiments" / "configs" / "real_inputs_template.yaml"
 
 
 def sha256(path: Path) -> str:

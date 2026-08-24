@@ -16,9 +16,9 @@ from __future__ import annotations
 import json
 import logging
 import os
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -26,8 +26,8 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     DataCollatorForLanguageModeling,
-    TrainingArguments,
     Trainer,
+    TrainingArguments,
     get_cosine_schedule_with_warmup,
 )
 
@@ -52,22 +52,44 @@ class FineTuneConfig:
     max_seq_length: int = 512
     weight_decay: float = 0.01
     fp16: bool = True
+    bf16: bool = False
     torch_dtype: str = "auto"
+    gradient_checkpointing: bool = False
+    # FSDP sharding for large models that don't fit under plain DDP (e.g. 7B on
+    # 44GB GPUs). Empty string = off. Typical: "full_shard auto_wrap".
+    fsdp: str = ""
+    fsdp_transformer_layer_cls_to_wrap: str = ""  # e.g. "Qwen2DecoderLayer"
+    # Under FSDP, prefer activation checkpointing via fsdp_config over the
+    # TrainingArguments gradient_checkpointing path: the latter adds a redundant
+    # AllGather in the backward pass (HF issue #30404), which roughly doubles
+    # step time for 7B full-shard. When this is True we disable the TA path.
+    fsdp_activation_checkpointing: bool = False
+    # Worker count for corpus tokenization (.map). Each worker forks while the
+    # model is already resident in CPU RAM, so for large models (7B) a high count
+    # multiplies host-RAM use via copy-on-write and OOM-kills the job. Keep low
+    # for 7B (e.g. 2); 8 is fine for 1.5B.
+    tokenize_num_proc: int = 8
 
     # DP-SGD parameters (B6)
     use_dp: bool = False
     dp_epsilon: float = 8.0
     dp_delta: float = 1e-5
     dp_max_grad_norm: float = 1.0
-    dp_noise_multiplier: Optional[float] = None   # auto-computed if None
+    dp_noise_multiplier: float | None = None  # auto-computed if None
     dp_grad_sample_mode: str = "functorch"
     dp_freeze_position_embeddings: bool = True
 
     # Logging
     logging_steps: int = 50
-    save_steps: int = 500
+    save_steps: int = 3000
+    save_total_limit: int = 2  # keep only the latest N checkpoints (bounds disk usage)
     eval_steps: int = 500
     seed: int = 42
+
+    # Resume a standard (non-DP) run from a prior checkpoint directory
+    # (model + optimizer + scheduler + rng + trainer_state), e.g. after a job
+    # was killed mid-run. Not supported on the DP-SGD path (no checkpointing there).
+    resume_from_checkpoint: str | None = None
 
 
 class TextDataset(Dataset):
@@ -98,7 +120,7 @@ class TextDataset(Dataset):
                 )
                 for i in range(len(enc["input_ids"])):
                     ids = enc["input_ids"][i]
-                    if len(ids) > 10:   # skip very short chunks
+                    if len(ids) > 10:  # skip very short chunks
                         self.examples.append({"input_ids": ids})
 
     def __len__(self) -> int:
@@ -145,18 +167,102 @@ class CanaryFineTuner:
             torch_dtype=torch.float32 if cfg.use_dp else dtype,
         )
 
-        dataset = TextDataset(cfg.corpus_path, self.tokenizer, cfg.max_seq_length)
-        collator = DataCollatorForLanguageModeling(
-            tokenizer=self.tokenizer, mlm=False
-        )
+        collator = DataCollatorForLanguageModeling(tokenizer=self.tokenizer, mlm=False)
 
         if cfg.use_dp:
+            # DP path runs a manual single-GPU loop on small corpora; the eager
+            # in-memory dataset is fine there -- PROVIDED stride is a fraction of
+            # max_seq_length. TextDataset's default stride=256 was tuned for the
+            # 512-length non-DP path (50% overlap); at max_seq_length=256 (this DP
+            # config) `min(stride, max_length-1)` degenerates to 255, i.e. a
+            # 1-token sliding-window step. On a ~1.7k-token doc that turns ~7
+            # intended windows into ~1445, and across 51k docs balloons the
+            # in-memory example list past 200GB host RAM before training even
+            # starts (jobs 1005225, 1005981: OOM ~1h in, no training step ever
+            # logged). Pass an explicit 50%-overlap stride to avoid this.
+            dataset = TextDataset(
+                cfg.corpus_path,
+                self.tokenizer,
+                cfg.max_seq_length,
+                stride=max(1, cfg.max_seq_length // 2),
+            )
             self._train_with_dp(model, dataset, collator)
         else:
-            self._train_standard(model, dataset, collator)
+            self._train_standard(model, collator)
 
-    def _train_standard(self, model, dataset, collator) -> None:
+    def _build_tokenized_dataset(self, args):
+        """Tokenize the corpus once into a memory-mapped Arrow dataset.
+
+        Unlike the eager in-memory TextDataset, this:
+          - tokenizes in batches with multiple processes (fast), and
+          - is memory-mapped from disk, so all DDP ranks share one copy
+            (low host RAM) instead of each rank holding the whole corpus.
+        Under torchrun the rank-0 process builds the cache inside
+        ``main_process_first`` while other ranks wait, then reuse the cache.
+        """
+        from datasets import load_dataset
+
         cfg = self.config
+        max_len = cfg.max_seq_length
+        stride = min(256, max(0, max_len - 1))
+        tokenizer = self.tokenizer
+
+        def tokenize_fn(batch):
+            enc = tokenizer(
+                batch["text"],
+                truncation=True,
+                max_length=max_len,
+                return_overflowing_tokens=True,
+                stride=stride,
+            )
+            return {"input_ids": enc["input_ids"]}
+
+        with args.main_process_first(desc="corpus tokenization"):
+            raw = load_dataset("json", data_files=cfg.corpus_path, split="train")
+            tokenized = raw.map(
+                tokenize_fn,
+                batched=True,
+                remove_columns=raw.column_names,
+                num_proc=cfg.tokenize_num_proc,
+                desc="Tokenizing corpus",
+            )
+        logger.info("Tokenized dataset: %d sequences", len(tokenized))
+        return tokenized
+
+    def _train_standard(self, model, collator) -> None:
+        cfg = self.config
+        extra_args = {}
+        # Route activation checkpointing through fsdp_config when requested, and
+        # in that case turn OFF the TrainingArguments gradient_checkpointing path
+        # (the two together produce a redundant backward AllGather).
+        use_ta_grad_ckpt = cfg.gradient_checkpointing and not (
+            cfg.fsdp and cfg.fsdp_activation_checkpointing
+        )
+        if cfg.fsdp:
+            extra_args["fsdp"] = cfg.fsdp
+            fsdp_config: dict = {}
+            if cfg.fsdp_transformer_layer_cls_to_wrap:
+                fsdp_config["transformer_layer_cls_to_wrap"] = (
+                    cfg.fsdp_transformer_layer_cls_to_wrap
+                )
+            if cfg.fsdp_activation_checkpointing:
+                fsdp_config["activation_checkpointing"] = True
+            # Use sharded optimizer state dict so each rank saves only its own
+            # shard instead of consolidating the full optimizer state on rank 0.
+            # Consolidation requires ~56 GB VRAM for 7B Adam states, which
+            # exceeds 48 GB L40S capacity and OOM-kills the checkpoint save.
+            fsdp_config["state_dict_type"] = "SHARDED_STATE_DICT"
+            extra_args["fsdp_config"] = fsdp_config
+        if use_ta_grad_ckpt:
+            # non-reentrant checkpointing is required for FSDP compatibility
+            extra_args["gradient_checkpointing_kwargs"] = {"use_reentrant": False}
+        # FSDP checkpoint saves consolidate the full optimizer state on rank 0
+        # (~56 GB for 7B Adam at FP32), exceeding 48 GB L40S VRAM and also
+        # writing ~50 GB of checkpoint files that hit disk quota. Skip
+        # intermediate saves entirely; the final model is written via
+        # trainer.save_model() below, which only saves model weights.
+        effective_save_steps = 10_000_000 if cfg.fsdp else cfg.save_steps
+        effective_save_limit = 0 if cfg.fsdp else cfg.save_total_limit
         args = TrainingArguments(
             output_dir=cfg.output_dir,
             num_train_epochs=cfg.num_train_epochs,
@@ -167,19 +273,24 @@ class CanaryFineTuner:
             weight_decay=cfg.weight_decay,
             max_grad_norm=cfg.max_grad_norm,
             fp16=cfg.fp16,
+            bf16=cfg.bf16,
+            gradient_checkpointing=use_ta_grad_ckpt,
             logging_steps=cfg.logging_steps,
-            save_steps=cfg.save_steps,
+            save_steps=effective_save_steps,
+            save_total_limit=effective_save_limit,
             seed=cfg.seed,
-            dataloader_num_workers=4,
+            dataloader_num_workers=2,
             remove_unused_columns=False,
+            **extra_args,
         )
+        dataset = self._build_tokenized_dataset(args)
         trainer = Trainer(
             model=model,
             args=args,
             train_dataset=dataset,
             data_collator=collator,
         )
-        trainer.train()
+        trainer.train(resume_from_checkpoint=cfg.resume_from_checkpoint)
         trainer.save_model(cfg.output_dir)
         self.tokenizer.save_pretrained(cfg.output_dir)
         logger.info(f"Model saved to {cfg.output_dir}")
@@ -224,10 +335,18 @@ class CanaryFineTuner:
         model.train()
 
         # Opacus requires standard (non-HF Trainer) training loop
+        # foreach=False: the foreach/multi-tensor Adam path stacks every
+        # parameter's exp_avg_sq into one big buffer to call torch._foreach_sqrt
+        # on, which is an extra ~6GB spike for a 1.5B model in fp32 -- enough to
+        # OOM a 44GB L40S that's already at its ceiling from Opacus per-sample
+        # grads (job 1006649: OOM inside exactly that call, 57MB free at the
+        # time). The per-tensor loop foreach=False uses is slower but never
+        # allocates more than one parameter's worth of temp buffer at a time.
         optimizer = torch.optim.AdamW(
             model.parameters(),
             lr=cfg.learning_rate,
             weight_decay=cfg.weight_decay,
+            foreach=False,
         )
         dataloader = DataLoader(
             dataset,
@@ -273,30 +392,63 @@ class CanaryFineTuner:
                     scheduler.step()
                     optimizer.zero_grad()
 
-                if global_step % cfg.logging_steps == 0:
+                if global_step > 0 and global_step % cfg.logging_steps == 0:
                     eps = privacy_engine.get_epsilon(cfg.dp_delta)
                     logger.info(
                         f"Step {global_step} | loss={loss.item():.4f} | ε={eps:.4f}"
                     )
+
+                # The DP loop used to save only once, after the full epoch loop
+                # finished -- fine for a run that completes, but a run that
+                # exceeds the Slurm wall-time limit gets killed mid-loop with no
+                # save at all (D4 jobs run ~48h at batch=1; hitting the limit
+                # partway through would lose everything). Save periodically like
+                # the non-DP Trainer path does via save_steps.
+                if global_step > 0 and global_step % cfg.save_steps == 0:
+                    self._save_dp_checkpoint(
+                        privacy_engine,
+                        model,
+                        os.path.join(cfg.output_dir, f"checkpoint-{global_step}"),
+                    )
+                    self._prune_dp_checkpoints(cfg.output_dir, cfg.save_total_limit)
+
                 global_step += 1
 
         # Save
-        Path(cfg.output_dir).mkdir(parents=True, exist_ok=True)
-        unwrapped = privacy_engine.module if hasattr(privacy_engine, "module") else model
-        # Opacus wraps the model; get original
-        if hasattr(unwrapped, "_module"):
-            unwrapped = unwrapped._module
-        unwrapped.save_pretrained(cfg.output_dir)
-        self.tokenizer.save_pretrained(cfg.output_dir)
+        self._save_dp_checkpoint(privacy_engine, model, cfg.output_dir)
 
         final_eps = privacy_engine.get_epsilon(cfg.dp_delta)
         logger.info(f"DP training done. Final ε={final_eps:.4f}, δ={cfg.dp_delta}")
 
         # Save DP accounting metadata
-        dp_meta = {"epsilon": final_eps, "delta": cfg.dp_delta,
-                   "max_grad_norm": cfg.dp_max_grad_norm}
+        dp_meta = {
+            "epsilon": final_eps,
+            "delta": cfg.dp_delta,
+            "max_grad_norm": cfg.dp_max_grad_norm,
+        }
         with open(os.path.join(cfg.output_dir, "dp_accounting.json"), "w") as f:
             json.dump(dp_meta, f, indent=2)
+
+    def _save_dp_checkpoint(self, privacy_engine, model, output_dir: str) -> None:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        unwrapped = (
+            privacy_engine.module if hasattr(privacy_engine, "module") else model
+        )
+        # Opacus wraps the model; get original
+        if hasattr(unwrapped, "_module"):
+            unwrapped = unwrapped._module
+        unwrapped.save_pretrained(output_dir)
+        self.tokenizer.save_pretrained(output_dir)
+
+    def _prune_dp_checkpoints(self, output_dir: str, save_total_limit: int) -> None:
+        """Keep only the newest `save_total_limit` checkpoint-N dirs (disk quota)."""
+        base = Path(output_dir)
+        checkpoints = sorted(
+            (p for p in base.glob("checkpoint-*") if p.is_dir()),
+            key=lambda p: int(p.name.split("-")[-1]),
+        )
+        for stale in checkpoints[:-save_total_limit] if save_total_limit > 0 else []:
+            shutil.rmtree(stale, ignore_errors=True)
 
     def _untie_shared_lm_head_for_dp(self, model) -> None:
         """Opacus per-sample gradients do not handle tied LM head weights reliably."""
@@ -334,7 +486,9 @@ class CanaryFineTuner:
         elif hasattr(model, "model") and hasattr(model.model, "embed_positions"):
             position_embeddings = model.model.embed_positions
 
-        if position_embeddings is None or not hasattr(position_embeddings, "parameters"):
+        if position_embeddings is None or not hasattr(
+            position_embeddings, "parameters"
+        ):
             return
 
         frozen = 0
@@ -355,9 +509,11 @@ class CanaryFineTuner:
     def get_service(self, **kwargs):
         """Return a BackendCompletionService for the fine-tuned model."""
         from .backend_model import BackendCompletionService
+
         return BackendCompletionService(self.config.output_dir, **kwargs)
 
     def get_base_service(self, **kwargs):
         """Return a BackendCompletionService for the base (pre-fine-tuning) model."""
         from .backend_model import BackendCompletionService
+
         return BackendCompletionService(self.config.model_name_or_path, **kwargs)

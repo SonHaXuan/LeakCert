@@ -95,7 +95,9 @@ def main() -> int:
         "B5": "B5_content_filter",
         "LEAKCERT": "LEAKCERT",
     }
-    defense_names = [requested[x.strip()] for x in args.defenses.split(",") if x.strip() in requested]
+    defense_names = [
+        requested[x.strip()] for x in args.defenses.split(",") if x.strip() in requested
+    ]
 
     summary = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -116,7 +118,7 @@ def main() -> int:
         t0 = time.time()
         batch_size = max(1, args.batch_size)
         for start in range(0, len(benchmark), batch_size):
-            batch = benchmark[start:start + batch_size]
+            batch = benchmark[start : start + batch_size]
             results = service.complete_many(
                 [row["prompt"] for row in batch],
                 n_samples=1,
@@ -128,7 +130,16 @@ def main() -> int:
                 scored.append(score_row(row, text))
             completed = min(start + len(batch), len(benchmark))
             if completed % 25 == 0 or completed == len(benchmark):
-                print(json.dumps({"defense": name, "completed": completed, "total": len(benchmark)}), flush=True)
+                print(
+                    json.dumps(
+                        {
+                            "defense": name,
+                            "completed": completed,
+                            "total": len(benchmark),
+                        }
+                    ),
+                    flush=True,
+                )
         ddir = out / name
         ddir.mkdir(exist_ok=True)
         write_jsonl(ddir / "completions.jsonl", completions)
@@ -139,11 +150,15 @@ def main() -> int:
             ds["refusal_rate_pct"] = round(runtime.refusal_rate() * 100.0, 2)
             ds["latency"] = runtime.latency_stats()
         summary["defenses"][name] = ds
-        (ddir / "summary.json").write_text(json.dumps(ds, indent=2, sort_keys=True) + "\n")
+        (ddir / "summary.json").write_text(
+            json.dumps(ds, indent=2, sort_keys=True) + "\n"
+        )
         print(json.dumps({"defense": name, **ds}, indent=2, sort_keys=True), flush=True)
 
     summary["duration_sec"] = time.time() - started
-    (out / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    (out / "summary.json").write_text(
+        json.dumps(summary, indent=2, sort_keys=True) + "\n"
+    )
     md = [
         "# LCCT Comparable Model Smoke",
         "",

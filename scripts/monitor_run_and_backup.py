@@ -18,7 +18,6 @@ import tarfile
 import time
 from pathlib import Path
 
-
 REPO = Path(__file__).resolve().parents[1]
 LOG_DIR = REPO / "_run_logs"
 BACKUP_DIR = REPO / "_run_backups"
@@ -76,7 +75,12 @@ def process_lines() -> list[str]:
 def current_stage(run_dir: Path) -> str:
     if (run_dir / "suite_summary.json").exists():
         return "suite_finished"
-    for name in ("w5_paraphrase", "w4_code_secret", "certificate", "w1_canary_finetune"):
+    for name in (
+        "w5_paraphrase",
+        "w4_code_secret",
+        "certificate",
+        "w1_canary_finetune",
+    ):
         log_path = run_dir / f"{name}.log"
         if log_path.exists():
             return name
@@ -102,11 +106,13 @@ def write_manifest(run_dir: Path) -> Path:
     files = []
     for path in sorted(run_dir.rglob("*")):
         if path.is_file() and path.name != "manifest.json":
-            files.append({
-                "path": str(path.relative_to(run_dir)),
-                "size_bytes": path.stat().st_size,
-                "sha256": sha256(path),
-            })
+            files.append(
+                {
+                    "path": str(path.relative_to(run_dir)),
+                    "size_bytes": path.stat().st_size,
+                    "sha256": sha256(path),
+                }
+            )
     manifest = run_dir / "manifest.json"
     manifest.write_text(json.dumps(files, indent=2))
     return manifest
@@ -137,7 +143,12 @@ def write_report(run_dir: Path, status: dict, backup_path: Path | None) -> Path:
         lines.append("No suite_summary.json yet.")
 
     lines.extend(["", "## Recent Logs", ""])
-    for name in ("w1_canary_finetune", "certificate", "w4_code_secret", "w5_paraphrase"):
+    for name in (
+        "w1_canary_finetune",
+        "certificate",
+        "w4_code_secret",
+        "w5_paraphrase",
+    ):
         lines.append(f"### {name}")
         lines.append("```text")
         lines.extend(tail_lines(run_dir / f"{name}.log", 30))
@@ -160,7 +171,9 @@ def backup_run(run_dir: Path) -> Path:
 
 def status_snapshot(run_dir: Path) -> dict:
     lines = process_lines()
-    leakcert = [line for line in lines if any(marker in line for marker in LEAKCERT_MARKERS)]
+    leakcert = [
+        line for line in lines if any(marker in line for marker in LEAKCERT_MARKERS)
+    ]
     mps = [line for line in lines if any(marker in line for marker in MPS_MARKERS)]
     external_mps = [line for line in mps if "LeakCert" not in line]
     summary_path = run_dir / "suite_summary.json"
@@ -179,14 +192,18 @@ def status_snapshot(run_dir: Path) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Monitor a LeakCert run and backup successful result.")
+    parser = argparse.ArgumentParser(
+        description="Monitor a LeakCert run and backup successful result."
+    )
     parser.add_argument("--run-dir", required=True)
     parser.add_argument("--poll-sec", type=int, default=60)
     args = parser.parse_args()
 
     run_dir = Path(args.run_dir).resolve()
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-    status_log = LOG_DIR / f"monitor_{run_dir.name}_{time.strftime('%Y%m%d_%H%M%S')}.jsonl"
+    status_log = (
+        LOG_DIR / f"monitor_{run_dir.name}_{time.strftime('%Y%m%d_%H%M%S')}.jsonl"
+    )
     marker = run_dir / ".backup_complete"
 
     while True:
@@ -203,7 +220,12 @@ def main() -> int:
             elif marker.exists():
                 backup_path = Path(marker.read_text().strip())
             write_report(run_dir, status, backup_path)
-            print(json.dumps({"status": status["status"], "status_log": str(status_log)}, indent=2))
+            print(
+                json.dumps(
+                    {"status": status["status"], "status_log": str(status_log)},
+                    indent=2,
+                )
+            )
             return 0 if status["status"] == "completed" else 1
 
         time.sleep(args.poll_sec)

@@ -2,14 +2,15 @@
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-from leakcert.attacks.a_fixed import AFixed
 from leakcert.attacks.a_adaptive import AAdaptive
+from leakcert.attacks.a_fixed import AFixed
 from leakcert.attacks.a_greedy_lrt import AGreedyLRT
-from leakcert.canary.types import Canary, CanaryType, CanaryPanel
-from leakcert.model.completion_service import CompletionService, CompletionResult
+from leakcert.canary.types import Canary, CanaryPanel, CanaryType
+from leakcert.model.completion_service import CompletionResult, CompletionService
 
 
 class MockService(CompletionService):
@@ -23,6 +24,7 @@ class MockService(CompletionService):
 
     def complete(self, prompt: str, n_samples: int = 1) -> list[CompletionResult]:
         import random
+
         self.query_count += n_samples
         results = []
         # Match if prompt contains any registered context (handles paraphrase prompts)
@@ -41,8 +43,8 @@ class MockService(CompletionService):
 
     def log_probability(self, prompt: str, completion: str) -> float:
         if prompt in self._secrets and self._secrets[prompt] in completion:
-            return -0.5   # high probability for the canary
-        return -5.0       # low probability otherwise
+            return -0.5  # high probability for the canary
+        return -5.0  # low probability otherwise
 
     def per_token_log_probs(self, prompt: str, completion: str) -> list[float]:
         return [-1.0] * len(completion.split())
@@ -68,7 +70,7 @@ class TestAFixed:
 
     def test_fails_when_model_does_not_leak(self):
         canary = make_canary("c2", "SECRET=", "MYSECRETVALUE12345")
-        service = MockService([], leak_rate=0.0)   # never leaks
+        service = MockService([], leak_rate=0.0)  # never leaks
         attacker = AFixed(budget=5)
         result = attacker.attack_canary(service, canary)
         assert not result.success
@@ -87,7 +89,7 @@ class TestAFixed:
         attacker = AFixed(budget=5)
         results = attacker.attack_panel(service, panel)
         rate = attacker.extraction_success_rate(results)
-        assert rate == 1.0   # all canaries extracted
+        assert rate == 1.0  # all canaries extracted
 
 
 class TestAAdaptive:
@@ -115,7 +117,7 @@ class TestAGreedyLRT:
 
         class HighLRTRef(MockService):
             def log_probability(self, prompt, completion):
-                return -10.0   # very low ref prob → high LLR
+                return -10.0  # very low ref prob → high LLR
 
         ref = HighLRTRef([], leak_rate=0.0)
         attacker = AGreedyLRT(budget=100, ref_service=ref, alpha=0.05, beta=0.05)
@@ -135,14 +137,17 @@ class TestAGreedyLRT:
 class TestVerbatimMatch:
     def test_exact_match(self):
         from leakcert.attacks.base import Attacker
+
         assert Attacker.verbatim_match("ABCD", "ABCD")
         assert not Attacker.verbatim_match("ABCD", "ABCE")
 
     def test_contains_secret(self):
         from leakcert.attacks.base import Attacker
+
         assert Attacker.contains_secret("the key is ABCD1234 here", "ABCD1234")
         assert not Attacker.contains_secret("nothing here", "ABCD1234")
 
     def test_whitespace_normalised(self):
         from leakcert.attacks.base import Attacker
+
         assert Attacker.verbatim_match("  ABCD  ", "ABCD")

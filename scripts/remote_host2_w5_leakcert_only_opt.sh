@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RDIR="/home/nckh/LeakCert_runs/gpu_smoke_20260602_004545"
+RDIR="${LEAKCERT_REMOTE_ROOT:?set LEAKCERT_REMOTE_ROOT to your remote run directory}"
 SRC="$RDIR/source/LeakCert"
 RUN_TS="$(date +%Y%m%d_%H%M%S)"
 OUT="$RDIR/results/codegen350m_w5_leakcert_only_opt_$RUN_TS"

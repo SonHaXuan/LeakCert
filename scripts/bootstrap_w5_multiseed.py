@@ -12,7 +12,6 @@ import time
 from pathlib import Path
 from typing import Any
 
-
 DEFAULT_SEEDS = [
     {
         "seed": 42,
@@ -74,19 +73,28 @@ def boot_worker(args: tuple[int, list[int], list[int], int]) -> list[float]:
     return out
 
 
-def bootstrap_diff(baseline: list[int], method: list[int], n_boot: int, workers: int) -> dict[str, Any]:
+def bootstrap_diff(
+    baseline: list[int], method: list[int], n_boot: int, workers: int
+) -> dict[str, Any]:
     chunks = [n_boot // workers] * workers
     for i in range(n_boot % workers):
         chunks[i] += 1
-    tasks = [(30_000 + i, baseline, method, chunks[i]) for i in range(workers) if chunks[i]]
+    tasks = [
+        (30_000 + i, baseline, method, chunks[i]) for i in range(workers) if chunks[i]
+    ]
     with mp.Pool(processes=workers) as pool:
         samples = [x for chunk in pool.map(boot_worker, tasks) for x in chunk]
     samples.sort()
     diff = sum(baseline) / len(baseline) - sum(method) / len(method)
     return {
         "baseline_minus_method_pct": round(diff * 100.0, 3),
-        "ci95_pct": [round(percentile(samples, 0.025) * 100.0, 3), round(percentile(samples, 0.975) * 100.0, 3)],
-        "p_baseline_gt_method": round(sum(1 for x in samples if x > 0) / len(samples), 5),
+        "ci95_pct": [
+            round(percentile(samples, 0.025) * 100.0, 3),
+            round(percentile(samples, 0.975) * 100.0, 3),
+        ],
+        "p_baseline_gt_method": round(
+            sum(1 for x in samples if x > 0) / len(samples), 5
+        ),
         "n_boot": len(samples),
     }
 
@@ -127,14 +135,20 @@ def main() -> int:
     aggregate = bootstrap_diff(all_baseline, all_method, args.n_boot, args.workers)
     aggregate.update(
         {
-            "baseline_rate_pct": round(sum(all_baseline) / len(all_baseline) * 100.0, 3),
+            "baseline_rate_pct": round(
+                sum(all_baseline) / len(all_baseline) * 100.0, 3
+            ),
             "method_rate_pct": round(sum(all_method) / len(all_method) * 100.0, 3),
             "baseline_hits": sum(all_baseline),
             "method_hits": sum(all_method),
             "n_baseline": len(all_baseline),
             "n_method": len(all_method),
-            "seed_diff_mean_pct": round(statistics.mean(row["baseline_minus_method_pct"] for row in rows), 3),
-            "seed_diff_median_pct": round(statistics.median(row["baseline_minus_method_pct"] for row in rows), 3),
+            "seed_diff_mean_pct": round(
+                statistics.mean(row["baseline_minus_method_pct"] for row in rows), 3
+            ),
+            "seed_diff_median_pct": round(
+                statistics.median(row["baseline_minus_method_pct"] for row in rows), 3
+            ),
         }
     )
     summary = {

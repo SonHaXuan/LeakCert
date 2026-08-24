@@ -13,7 +13,7 @@ from pathlib import Path
 import yaml
 
 from leakcert.canary.generator import CanaryGenerator
-from leakcert.evaluation.metrics import rate_summary, extraction_hit
+from leakcert.evaluation.metrics import extraction_hit, rate_summary
 from leakcert.model.backend_model import BackendCompletionService
 
 
@@ -47,11 +47,15 @@ def prompts_for(canary) -> list[dict]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Probe direct canary extraction on a checkpoint.")
+    parser = argparse.ArgumentParser(
+        description="Probe direct canary extraction on a checkpoint."
+    )
     parser.add_argument("--config", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--batch-size", type=int, default=16)
-    parser.add_argument("--device", default=None, help="Override model device, e.g. cpu/mps/cuda/auto.")
+    parser.add_argument(
+        "--device", default=None, help="Override model device, e.g. cpu/mps/cuda/auto."
+    )
     args = parser.parse_args()
 
     started = time.time()
@@ -92,14 +96,16 @@ def main() -> int:
         ctype = canary.canary_type.value
         by_type.setdefault(ctype, []).append(hit)
         by_mode.setdefault(mode, []).append(hit)
-        rows.append({
-            "canary_id": canary.canary_id,
-            "type": ctype,
-            "mode": mode,
-            "hit": hit,
-            "prompt": prompt,
-            "completion_preview": text[:240],
-        })
+        rows.append(
+            {
+                "canary_id": canary.canary_id,
+                "type": ctype,
+                "mode": mode,
+                "hit": hit,
+                "prompt": prompt,
+                "completion_preview": text[:240],
+            }
+        )
 
     payload = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -123,12 +129,17 @@ def main() -> int:
         "rows": rows,
     }
     output_path.write_text(json.dumps(payload, indent=2))
-    print(json.dumps({
-        "output": str(output_path),
-        "duration_sec": payload["duration_sec"],
-        "overall": payload["overall"],
-        "nonempty": payload["nonempty_summary"],
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "output": str(output_path),
+                "duration_sec": payload["duration_sec"],
+                "overall": payload["overall"],
+                "nonempty": payload["nonempty_summary"],
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

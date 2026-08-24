@@ -1,0 +1,30 @@
+{
+  "B1_no_defense": {
+    "pass_at_1": 5.5,
+    "n_correct": 9,
+    "n_problems": 164
+  },
+  "B2_temperature_0.5": {
+    "pass_at_1": 8.5,
+    "n_correct": 14,
+    "n_problems": 164
+  },
+  "B3_top_p_0.7": {
+    "pass_at_1": 4.9,
+    "n_correct": 8,
+    "n_problems": 164
+  },
+  "B5_content_filter": {
+    "pass_at_1": 4.9,
+    "n_correct": 8,
+    "n_problems": 164
+  },
+  "LEAKCERT": {
+    "pass_at_1": 6.7,
+    "n_correct": 11,
+    "n_problems": 164,
+    "refusal_rate": 0.0,
+    "latency_median_ms": 79758.9,
+    "latency_p99_ms": 85613.1
+  }
+}

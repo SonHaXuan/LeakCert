@@ -9,8 +9,8 @@ ranking.
 
 from __future__ import annotations
 
-from .base import Attacker, AttackResult
 from ..canary.types import Canary
+from .base import Attacker, AttackResult
 
 
 class AFixed(Attacker):

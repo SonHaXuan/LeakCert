@@ -39,7 +39,9 @@ def make_panel(cfg: dict):
     return panel.stratified_subset(n_per_type)
 
 
-def evaluate_workload(name: str, service, workload, panel, repeats: int, batch_size: int) -> dict:
+def evaluate_workload(
+    name: str, service, workload, panel, repeats: int, batch_size: int
+) -> dict:
     samples = workload.samples()
     canary_by_id = {c.canary_id: c for c in panel}
     aggregate = [0, 0]
@@ -65,16 +67,18 @@ def evaluate_workload(name: str, service, workload, panel, repeats: int, batch_s
             per_type[ctype][1] += 1
             per_mode[mode][0] += int(hit)
             per_mode[mode][1] += 1
-            audit_rows.append({
-                "repeat": repeat,
-                "defense": name,
-                "workload": workload.name,
-                "prompt_id": sample.prompt_id,
-                "canary_id": sample.canary_id,
-                "canary_type": ctype,
-                "paraphrase_mode": sample.paraphrase_mode,
-                "hit": bool(hit),
-            })
+            audit_rows.append(
+                {
+                    "repeat": repeat,
+                    "defense": name,
+                    "workload": workload.name,
+                    "prompt_id": sample.prompt_id,
+                    "canary_id": sample.canary_id,
+                    "canary_type": ctype,
+                    "paraphrase_mode": sample.paraphrase_mode,
+                    "hit": bool(hit),
+                }
+            )
         aggregate[0] += hits
         aggregate[1] += total
         per_repeat.append({"repeat": repeat, **rate_summary(hits, total)})
@@ -103,7 +107,9 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     target_path = cfg["finetune"]["output_dir"]
-    model_name = cfg["model"].get("target_model_small", cfg["model"].get("target_model"))
+    model_name = cfg["model"].get(
+        "target_model_small", cfg["model"].get("target_model")
+    )
     target = BackendCompletionService(
         target_path,
         device=args.device,
@@ -121,7 +127,9 @@ def main() -> int:
     runtime = LeakCertRuntime(
         service=target,
         kl_estimator=kl,
-        config=RuntimeConfig(query_budget=cfg.get("evaluation", {}).get("query_budget", 100)),
+        config=RuntimeConfig(
+            query_budget=cfg.get("evaluation", {}).get("query_budget", 100)
+        ),
         panel=panel,
     )
     defenses = {
@@ -165,15 +173,24 @@ def main() -> int:
                 for row in result.pop("audit_rows"):
                     audit.write(json.dumps(row) + "\n")
                 summary["results"][defense_name][workload_name] = result
-                (output_dir / "repeated_w4_w5_partial.json").write_text(json.dumps(summary, indent=2))
-    (output_dir / "repeated_w4_w5_summary.json").write_text(json.dumps(summary, indent=2))
-    print(json.dumps({
-        "output_dir": str(output_dir),
-        "rates": {
-            d: {w: r["summary"]["rate_pct"] for w, r in ws.items()}
-            for d, ws in summary["results"].items()
-        },
-    }, indent=2))
+                (output_dir / "repeated_w4_w5_partial.json").write_text(
+                    json.dumps(summary, indent=2)
+                )
+    (output_dir / "repeated_w4_w5_summary.json").write_text(
+        json.dumps(summary, indent=2)
+    )
+    print(
+        json.dumps(
+            {
+                "output_dir": str(output_dir),
+                "rates": {
+                    d: {w: r["summary"]["rate_pct"] for w, r in ws.items()}
+                    for d, ws in summary["results"].items()
+                },
+            },
+            indent=2,
+        )
+    )
     return 0
 
 

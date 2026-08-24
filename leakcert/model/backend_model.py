@@ -12,7 +12,6 @@ study models:
 
 from __future__ import annotations
 
-
 import os
 
 os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
@@ -115,7 +114,9 @@ class BackendCompletionService(CompletionService):
                 with torch.no_grad():
                     output = self.model.generate(**inputs, **gen_kwargs)
             except RuntimeError as exc:
-                if gen_kwargs.get("do_sample") and "probability tensor contains" in str(exc):
+                if gen_kwargs.get("do_sample") and "probability tensor contains" in str(
+                    exc
+                ):
                     retry_kwargs = dict(gen_kwargs)
                     retry_kwargs["do_sample"] = False
                     retry_kwargs.pop("temperature", None)
@@ -180,11 +181,13 @@ class BackendCompletionService(CompletionService):
         if not prompts:
             return []
         if n_samples != 1:
-            return super().complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+            return super().complete_many(
+                prompts, n_samples=n_samples, batch_size=batch_size
+            )
 
         grouped: list[list[CompletionResult]] = []
         for start in range(0, len(prompts), max(1, batch_size)):
-            batch_prompts = prompts[start:start + max(1, batch_size)]
+            batch_prompts = prompts[start : start + max(1, batch_size)]
             inputs = self.tokenizer(
                 batch_prompts,
                 return_tensors="pt",
@@ -257,17 +260,19 @@ class BackendCompletionService(CompletionService):
         inputs = self.tokenizer(
             full_text, return_tensors="pt", truncation=True, max_length=4096
         ).to(self._device)
-        prompt_ids = self.tokenizer(
-            prompt, return_tensors="pt", truncation=True
-        )["input_ids"]
+        prompt_ids = self.tokenizer(prompt, return_tensors="pt", truncation=True)[
+            "input_ids"
+        ]
         n_prompt = prompt_ids.shape[1]
 
         with torch.no_grad():
             logits = self.model(**inputs).logits  # (1, seq_len, vocab)
 
         # The logit at position t predicts token t+1
-        completion_logits = logits[0, n_prompt - 1: -1, :]   # shape: (n_completion, vocab)
-        completion_ids = inputs["input_ids"][0, n_prompt:]     # shape: (n_completion,)
+        completion_logits = logits[
+            0, n_prompt - 1 : -1, :
+        ]  # shape: (n_completion, vocab)
+        completion_ids = inputs["input_ids"][0, n_prompt:]  # shape: (n_completion,)
 
         log_probs_tensor = F.log_softmax(completion_logits, dim=-1)
         per_token = log_probs_tensor[

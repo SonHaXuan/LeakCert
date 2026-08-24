@@ -2,13 +2,14 @@
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import re
 
 from leakcert.canary.generator import CanaryGenerator, _gen_aws_key, _gen_licence_key
 from leakcert.canary.injector import CorpusInjector
-from leakcert.canary.types import CanaryType, CanaryPanel
+from leakcert.canary.types import CanaryPanel, CanaryType
 
 
 class TestCanaryTypes:
@@ -17,18 +18,20 @@ class TestCanaryTypes:
 
     def test_t1_aws_key_format(self):
         import random
+
         rng = random.Random(0)
         key = _gen_aws_key(rng)
         # AWS key: 20 chars, starts with AKIA
         assert key.startswith("AKIA")
         assert len(key) == 20
-        assert re.match(r'^AKIA[0-9A-Z]{16}$', key)
+        assert re.match(r"^AKIA[0-9A-Z]{16}$", key)
 
     def test_t1_licence_key_format(self):
         import random
+
         rng = random.Random(0)
         key = _gen_licence_key(rng)
-        assert re.match(r'^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$', key)
+        assert re.match(r"^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$", key)
 
     def test_t1_generation_count(self):
         canaries = self.gen._gen_t1(100)
@@ -38,7 +41,7 @@ class TestCanaryTypes:
     def test_t2_paraphrase_has_5_modes(self):
         t1 = self.gen._gen_t1(10)
         t2 = self.gen._gen_t2_from_t1(t1)
-        assert len(t2) == 10 * 5   # 5 modes per T1 source
+        assert len(t2) == 10 * 5  # 5 modes per T1 source
         modes = {c.paraphrase_mode for c in t2}
         assert len(modes) == 5
 
@@ -47,16 +50,17 @@ class TestCanaryTypes:
         assert len(canaries) == 10
         for c in canaries:
             assert c.canary_type == CanaryType.SEMANTIC
-            assert len(c.secret) > 50   # semantic canaries are multi-line
+            assert len(c.secret) > 50  # semantic canaries are multi-line
 
     def test_t4_vulnerability_patterns(self):
         canaries = self.gen._gen_t4(8)
         assert len(canaries) == 8
         for c in canaries:
             assert c.canary_type == CanaryType.VULNERABILITY
-            assert any(kw in c.secret for kw in [
-                "db.execute", "os.system", "pickle.loads", "os.popen"
-            ])
+            assert any(
+                kw in c.secret
+                for kw in ["db.execute", "os.system", "pickle.loads", "os.popen"]
+            )
 
     def test_full_panel_size(self):
         panel = self.gen.generate_panel(include_paraphrase=False)
@@ -106,7 +110,9 @@ class TestCorpusInjector:
         # Each canary full_text should appear exactly once
         for canary in panel:
             count = sum(1 for doc in result_docs if canary.full_text in doc)
-            assert count == 1, f"Canary {canary.canary_id} full_text appears {count} times"
+            assert (
+                count == 1
+            ), f"Canary {canary.canary_id} full_text appears {count} times"
 
     def test_configured_positive_control_repeats(self):
         gen = CanaryGenerator(n_canaries=4, n_eval=1, seed=2)

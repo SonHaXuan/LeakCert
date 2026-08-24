@@ -14,22 +14,25 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-
 # ---------------------------------------------------------------------------
 # Comprehensive secret-pattern regex bank
 # (analogous to B5 content filter but higher precision)
 # ---------------------------------------------------------------------------
 
 _SECRET_PATTERNS: dict[str, re.Pattern] = {
-    "aws_access_key":    re.compile(r'\bAKIA[0-9A-Z]{16}\b'),
-    "aws_secret_key":    re.compile(r'(?i)aws.{0,20}secret.{0,10}[=:]\s*["\']?([A-Za-z0-9/+]{40})["\']?'),
-    "jwt_token":         re.compile(r'\beyJ[A-Za-z0-9_-]{4,}\.[A-Za-z0-9_-]{4,}\.[A-Za-z0-9_-]{4,}\b'),
-    "rsa_private_begin": re.compile(r'-----BEGIN (RSA )?PRIVATE KEY-----'),
-    "licence_key":       re.compile(r'\b[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}\b'),
-    "github_pat":        re.compile(r'\bghp_[A-Za-z0-9]{36}\b'),
-    "stripe_key":        re.compile(r'\bsk_(live|test)_[A-Za-z0-9]{24,}\b'),
-    "google_api_key":    re.compile(r'\bAIza[0-9A-Za-z_-]{35}\b'),
-    "generic_secret":    re.compile(
+    "aws_access_key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    "aws_secret_key": re.compile(
+        r'(?i)aws.{0,20}secret.{0,10}[=:]\s*["\']?([A-Za-z0-9/+]{40})["\']?'
+    ),
+    "jwt_token": re.compile(
+        r"\beyJ[A-Za-z0-9_-]{4,}\.[A-Za-z0-9_-]{4,}\.[A-Za-z0-9_-]{4,}\b"
+    ),
+    "rsa_private_begin": re.compile(r"-----BEGIN (RSA )?PRIVATE KEY-----"),
+    "licence_key": re.compile(r"\b[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}\b"),
+    "github_pat": re.compile(r"\bghp_[A-Za-z0-9]{36}\b"),
+    "stripe_key": re.compile(r"\bsk_(live|test)_[A-Za-z0-9]{24,}\b"),
+    "google_api_key": re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"),
+    "generic_secret": re.compile(
         r'(?i)(password|passwd|secret|api_key|apikey|token)\s*[=:]\s*["\'][A-Za-z0-9!@#$%^&*()_+\-=]{12,}["\']'
     ),
 }
@@ -120,6 +123,7 @@ class TargetStringSuppression:
     @staticmethod
     def _hash(text: str) -> str:
         import hashlib
+
         return hashlib.sha256(text.encode()).hexdigest()
 
     def add_pattern(self, name: str, pattern: str) -> None:

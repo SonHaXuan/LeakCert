@@ -13,8 +13,8 @@ from pathlib import Path
 import yaml
 
 from leakcert.canary.generator import CanaryGenerator
-from leakcert.model.backend_model import BackendCompletionService
 from leakcert.evaluation.workloads import W3RealCompletion
+from leakcert.model.backend_model import BackendCompletionService
 from leakcert.runtime.refusal import UncertaintyRefusal
 
 
@@ -36,11 +36,13 @@ def make_panel(cfg: dict):
 def positive_examples(panel) -> list[str]:
     examples: list[str] = []
     for canary in panel:
-        examples.extend([
-            canary.secret,
-            canary.context + canary.secret,
-            canary.full_text,
-        ])
+        examples.extend(
+            [
+                canary.secret,
+                canary.context + canary.secret,
+                canary.full_text,
+            ]
+        )
     return examples
 
 
@@ -125,8 +127,12 @@ def main() -> int:
         "duration_sec": time.time() - started,
     }
     (output_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
-    (output_dir / "positive_examples_preview.json").write_text(json.dumps(positives[:20], indent=2))
-    (output_dir / "negative_examples_preview.json").write_text(json.dumps(negatives[:20], indent=2))
+    (output_dir / "positive_examples_preview.json").write_text(
+        json.dumps(positives[:20], indent=2)
+    )
+    (output_dir / "negative_examples_preview.json").write_text(
+        json.dumps(negatives[:20], indent=2)
+    )
     print(json.dumps(metadata, indent=2))
     return 0
 

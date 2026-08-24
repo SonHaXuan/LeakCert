@@ -21,20 +21,22 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from leakcert.canary.generator import CanaryGenerator
-from leakcert.model.backend_model import BackendCompletionService
-from leakcert.certificate.kl_estimator import KLEstimator
-from leakcert.evaluation.workloads import W4CodeSecret
-from leakcert.evaluation.metrics import extraction_hit, rate_summary
 from leakcert.attacks.a_adaptive import AAdaptive
 from leakcert.attacks.a_greedy_lrt import AGreedyLRT
+from leakcert.canary.generator import CanaryGenerator
+from leakcert.certificate.kl_estimator import KLEstimator
+from leakcert.defenses.content_filter import ContentFilterDefense
 from leakcert.defenses.no_defense import NoDefense
 from leakcert.defenses.temperature import TemperatureDefense
 from leakcert.defenses.top_p import TopPDefense
-from leakcert.defenses.content_filter import ContentFilterDefense
+from leakcert.evaluation.metrics import extraction_hit, rate_summary
+from leakcert.evaluation.workloads import W4CodeSecret
+from leakcert.model.backend_model import BackendCompletionService
 from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -45,15 +47,24 @@ def select_defences(defences: dict, requested: list[str] | None) -> dict:
     for token in requested:
         token_upper = str(token).upper()
         for name, service in defences.items():
-            if name.upper() == token_upper or name.upper().startswith(f"{token_upper}_"):
+            if name.upper() == token_upper or name.upper().startswith(
+                f"{token_upper}_"
+            ):
                 selected[name] = service
                 break
-    missing = [token for token in requested if not any(
-        name.upper() == str(token).upper() or name.upper().startswith(f"{str(token).upper()}_")
-        for name in defences
-    )]
+    missing = [
+        token
+        for token in requested
+        if not any(
+            name.upper() == str(token).upper()
+            or name.upper().startswith(f"{str(token).upper()}_")
+            for name in defences
+        )
+    ]
     if missing:
-        logger.warning("Ignoring unknown run_defenses entries: %s", ", ".join(map(str, missing)))
+        logger.warning(
+            "Ignoring unknown run_defenses entries: %s", ", ".join(map(str, missing))
+        )
     return selected or defences
 
 
@@ -71,18 +82,48 @@ def main(args):
     query_budget = eval_cfg.get("query_budget", 10_000)
     batch_size = int(eval_cfg.get("batch_size", 8))
 
+    table2_path = output_dir / "table2_extraction.json"
+
+    def _flush_table2(w4_res, adaptive_res, defence_names):
+        """Persist partial Table 2 after every stage so a wall-clock timeout
+        never discards already-completed (path A / budget) results."""
+        partial = {
+            name: {
+                "W4_workload": w4_res.get(name, {}),
+                "A_adaptive": adaptive_res.get(name, {}),
+            }
+            for name in defence_names
+        }
+        with open(table2_path, "w") as f:
+            json.dump(partial, f, indent=2)
+
     # ── Load models ───────────────────────────────────────────────────
     target_path = cfg["finetune"].get("output_dir", "./checkpoints/target_model")
-    target_model_name = cfg["model"].get("target_model_small",
-                                         cfg["model"].get("target_model", "local-test-model"))
+    target_model_name = cfg["model"].get(
+        "target_model_small", cfg["model"].get("target_model", "local-test-model")
+    )
     logger.info(f"Loading target model from {target_path}")
 
     if not Path(target_path).exists():
         logger.error(f"Target checkpoint not found at {target_path}. Run W1 first.")
         sys.exit(1)
 
-    target = BackendCompletionService(target_path, temperature=1.0, max_new_tokens=128)
-    ref = BackendCompletionService(target_model_name, temperature=1.0, max_new_tokens=128)
+    model_cfg = cfg.get("model", {})
+    device = model_cfg.get("device", "auto")
+    temperature = float(model_cfg.get("temperature", 1.0))
+    max_new_tokens = int(model_cfg.get("max_new_tokens", 128))
+    target = BackendCompletionService(
+        target_path,
+        temperature=temperature,
+        max_new_tokens=max_new_tokens,
+        device=device,
+    )
+    ref = BackendCompletionService(
+        target_model_name,
+        temperature=temperature,
+        max_new_tokens=max_new_tokens,
+        device=device,
+    )
 
     # ── Generate eval panel (stratified subset of W1-injected panel) ────
     # Must use the same generate_panel(seed, n_t3, n_t4) call as W1 so the
@@ -117,14 +158,15 @@ def main(args):
     )
 
     defences = {
-        "B1_no_defense":      NoDefense(target),
+        "B1_no_defense": NoDefense(target),
         "B2_temperature_0.5": TemperatureDefense(target, 0.5),
-        "B3_top_p_0.7":       TopPDefense(target, 0.7),
-        "B5_content_filter":  ContentFilterDefense(target),
+        "B3_top_p_0.7": TopPDefense(target, 0.7),
+        "B5_content_filter": ContentFilterDefense(target),
     }
 
     # LEAKCERT defence (wrap runtime)
     from leakcert.evaluation.runner import _RuntimeServiceAdapter
+
     defences["LEAKCERT"] = _RuntimeServiceAdapter(leakcert_runtime)
     defences = select_defences(defences, eval_cfg.get("run_defenses"))
     logger.info("Enabled defences: %s", ", ".join(defences))
@@ -144,7 +186,8 @@ def main(args):
         # Fresh api_key per defence so LEAKCERT budget is isolated.
         svc_w4 = (
             _RuntimeServiceAdapter(leakcert_runtime, api_key=f"w4_workload_{def_name}")
-            if def_name == "LEAKCERT" else service
+            if def_name == "LEAKCERT"
+            else service
         )
         hits, total = 0, 0
         completions = complete_samples(svc_w4, w4_samples, batch_size)
@@ -158,6 +201,7 @@ def main(args):
         rate = hits / max(total, 1)
         w4_results[def_name] = rate_summary(hits, total)
         logger.info(f"  {def_name:<25} W4 rate = {rate:.2%} ({hits}/{total})")
+        _flush_table2(w4_results, {d: {} for d in defences}, defences)
 
     # ── (B) Adaptive attacker at multiple budgets ─────────────────────
     # Each (budget, defence) run gets its own api_key for isolation.
@@ -169,8 +213,11 @@ def main(args):
         attacker = AAdaptive(budget=B)
         for def_name, service in defences.items():
             svc_atk = (
-                _RuntimeServiceAdapter(leakcert_runtime, api_key=f"adaptive_B{B}_{def_name}")
-                if def_name == "LEAKCERT" else service
+                _RuntimeServiceAdapter(
+                    leakcert_runtime, api_key=f"adaptive_B{B}_{def_name}"
+                )
+                if def_name == "LEAKCERT"
+                else service
             )
             logger.info(f"  W4 | B={B:>7d} | {def_name}")
             results = attacker.attack_panel(svc_atk, eval_panel)
@@ -179,6 +226,7 @@ def main(args):
             adaptive_results[def_name][f"B={B}"] = summary
             rate = summary["rate"]
             logger.info(f"    extraction rate = {rate:.2%}")
+            _flush_table2(w4_results, adaptive_results, defences)
 
     # ── Merge and print Table 2 ───────────────────────────────────────
     table2: dict[str, dict] = {}
@@ -213,12 +261,18 @@ def main(args):
             a_lrt = AGreedyLRT(budget=query_budget, ref_service=ref)
             # Isolated api_keys so A-adaptive and A-LRT don't share budget.
             svc_adp = (
-                _RuntimeServiceAdapter(leakcert_runtime, api_key=f"lrt_adaptive_{def_name}")
-                if def_name == "LEAKCERT" else service
+                _RuntimeServiceAdapter(
+                    leakcert_runtime, api_key=f"lrt_adaptive_{def_name}"
+                )
+                if def_name == "LEAKCERT"
+                else service
             )
             svc_lrt = (
-                _RuntimeServiceAdapter(leakcert_runtime, api_key=f"lrt_greedy_{def_name}")
-                if def_name == "LEAKCERT" else service
+                _RuntimeServiceAdapter(
+                    leakcert_runtime, api_key=f"lrt_greedy_{def_name}"
+                )
+                if def_name == "LEAKCERT"
+                else service
             )
             r_adp = a_adaptive.attack_panel(svc_adp, eval_panel)
             r_lrt = a_lrt.attack_panel(svc_lrt, eval_panel)

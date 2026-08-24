@@ -78,7 +78,11 @@ def main() -> int:
 
     model_cfg = cfg.get("model", {})
     target_path = cfg["finetune"]["output_dir"]
-    ref_name = model_cfg.get("ref_model") or model_cfg.get("target_model_small") or model_cfg.get("target_model")
+    ref_name = (
+        model_cfg.get("ref_model")
+        or model_cfg.get("target_model_small")
+        or model_cfg.get("target_model")
+    )
     device = model_cfg.get("device", "auto")
     max_new_tokens = int(model_cfg.get("max_new_tokens", 16))
     temperature = float(model_cfg.get("temperature", 0.0))
@@ -105,12 +109,18 @@ def main() -> int:
         service=target,
         kl_estimator=KLEstimator(target, ref),
         config=RuntimeConfig(
-            query_budget=int(runtime_cfg.get("query_budget", cfg.get("evaluation", {}).get("query_budget", 200))),
+            query_budget=int(
+                runtime_cfg.get(
+                    "query_budget", cfg.get("evaluation", {}).get("query_budget", 200)
+                )
+            ),
             refusal_threshold=float(runtime_cfg.get("refusal_threshold", 0.95)),
             target_refusal_rate=float(runtime_cfg.get("target_refusal_rate", 0.02)),
             refusal_model_path=runtime_cfg.get("refusal_model_path"),
             use_learned_refusal=bool(runtime_cfg.get("use_learned_refusal", True)),
-            use_refusal_heuristics=bool(runtime_cfg.get("use_refusal_heuristics", False)),
+            use_refusal_heuristics=bool(
+                runtime_cfg.get("use_refusal_heuristics", False)
+            ),
             use_suppression=bool(runtime_cfg.get("use_suppression", True)),
             use_canary_hashes=bool(runtime_cfg.get("use_canary_hashes", False)),
             use_accounting=bool(runtime_cfg.get("use_accounting", True)),

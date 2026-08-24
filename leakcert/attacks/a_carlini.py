@@ -21,10 +21,8 @@ strongest undefended single-shot attack in the evaluation suite.
 
 from __future__ import annotations
 
-from typing import Optional
-
-from .base import Attacker, AttackResult
 from ..canary.types import Canary
+from .base import Attacker, AttackResult
 
 
 class ACarlini(Attacker):
@@ -83,7 +81,7 @@ class ACarlini(Attacker):
             )
 
         # Step 2: score each completion by LLR
-        best_completion: Optional[str] = None
+        best_completion: str | None = None
         best_llr: float = float("-inf")
 
         for r in results:
@@ -152,13 +150,15 @@ class ACarlini(Attacker):
         queries_total = 0
         for canary in canaries:
             if queries_total >= self.budget:
-                results.append(AttackResult(
-                    canary_id=canary.canary_id,
-                    secret=canary.secret,
-                    guessed_secret=None,
-                    success=False,
-                    queries_used=0,
-                ))
+                results.append(
+                    AttackResult(
+                        canary_id=canary.canary_id,
+                        secret=canary.secret,
+                        guessed_secret=None,
+                        success=False,
+                        queries_used=0,
+                    )
+                )
                 continue
 
             n = min(n_per_canary, self.budget - queries_total)
@@ -187,12 +187,14 @@ class ACarlini(Attacker):
                 if best_completion
                 else False
             )
-            results.append(AttackResult(
-                canary_id=canary.canary_id,
-                secret=canary.secret,
-                guessed_secret=best_completion,
-                success=success,
-                queries_used=len(completions),
-            ))
+            results.append(
+                AttackResult(
+                    canary_id=canary.canary_id,
+                    secret=canary.secret,
+                    guessed_secret=best_completion,
+                    success=success,
+                    queries_used=len(completions),
+                )
+            )
 
         return results

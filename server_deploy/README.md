@@ -17,23 +17,10 @@ The workflow is intentionally gated:
 
 Do not commit API keys, SSH keys, raw private data, checkpoints, or paper files.
 
-For a one-command, review-grade evidence run, use
-`server_deploy/run_quality_evidence_pipeline.sh` and read
-`server_deploy/QUALITY_EVIDENCE_RUNBOOK.md` first. The wrapper performs setup,
-bundle install, input validation, unit tests, smoke/small/full runs, artifact
-collection, and optional gated post-analyses.
-
-```bash
-export LEAKCERT_RUN_ROOT=/data/LeakCert_runs
-export LEAKCERT_DATA_BUNDLE=/tmp/leakcert_server_payload_<timestamp>.tgz
-bash server_deploy/run_quality_evidence_pipeline.sh smoke
-bash server_deploy/run_quality_evidence_pipeline.sh core
-```
-
 ## 0. Clone On Server
 
 ```bash
-git clone https://github.com/SonHaXuan/LeakCert.git
+git clone <this-repo-url>
 cd LeakCert
 git rev-parse HEAD
 ```
@@ -119,7 +106,7 @@ $LEAKCERT_RUN_ROOT/data_bundle_manifest.installed.json
 ## 5. Validate Inputs
 
 ```bash
-.venv/bin/python scripts/validate_sp2027_real_inputs.py \
+.venv/bin/python scripts/validate_real_inputs.py \
   --config "$LEAKCERT_RUN_ROOT/configs/server_real_inputs.yaml" \
   --output-dir "$LEAKCERT_RUN_ROOT/results/input_validation_$(date +%Y%m%d_%H%M%S)"
 ```

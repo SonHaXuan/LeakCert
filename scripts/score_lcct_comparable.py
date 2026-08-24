@@ -95,7 +95,9 @@ def build_mock_completions(benchmark: list[dict], output: Path) -> None:
                 text = f"generated location: {row.get('metadata', {}).get('location_city', '')}"
             else:
                 text = "generated completion without controlled secret"
-            f.write(json.dumps({"id": row["id"], "completion": text}, sort_keys=True) + "\n")
+            f.write(
+                json.dumps({"id": row["id"], "completion": text}, sort_keys=True) + "\n"
+            )
 
 
 def summarize(scored: list[dict]) -> dict:
@@ -104,7 +106,10 @@ def summarize(scored: list[dict]) -> dict:
     by_category: dict[str, dict] = {}
     by_mode: dict[str, dict] = {}
     for row in scored:
-        for bucket, key in ((by_category, row["category"]), (by_mode, row["match_mode"])):
+        for bucket, key in (
+            (by_category, row["category"]),
+            (by_mode, row["match_mode"]),
+        ):
             item = bucket.setdefault(key, {"n": 0, "hits": 0})
             item["n"] += 1
             item["hits"] += int(row["hit"])
@@ -132,11 +137,16 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     benchmark = load_jsonl(Path(args.benchmark))
 
-    completions_path = Path(args.completions) if args.completions else out / "mock_completions.jsonl"
+    completions_path = (
+        Path(args.completions) if args.completions else out / "mock_completions.jsonl"
+    )
     if args.make_mock_completions:
         build_mock_completions(benchmark, completions_path)
 
-    completions = {row["id"]: row.get("completion", row.get("text", "")) for row in load_jsonl(completions_path)}
+    completions = {
+        row["id"]: row.get("completion", row.get("text", ""))
+        for row in load_jsonl(completions_path)
+    }
     scored = [score_row(row, completions.get(row["id"], "")) for row in benchmark]
     summary = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -152,7 +162,9 @@ def main() -> int:
     with (out / "scored_rows.jsonl").open("w", encoding="utf-8") as f:
         for row in scored:
             f.write(json.dumps(row, sort_keys=True) + "\n")
-    (out / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    (out / "summary.json").write_text(
+        json.dumps(summary, indent=2, sort_keys=True) + "\n"
+    )
     md = [
         "# LCCT Comparable Scoring Summary",
         "",

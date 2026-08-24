@@ -11,7 +11,7 @@ the variance of memorised outputs.  Higher temperature flattens it.
 from __future__ import annotations
 
 from ..model.completion_service import CompletionResult
-from .base import DefenseWrapper, DefenseConfig
+from .base import DefenseConfig, DefenseWrapper
 
 
 class TemperatureDefense(DefenseWrapper):
@@ -47,7 +47,9 @@ class TemperatureDefense(DefenseWrapper):
         old_temp = self.base.temperature
         self.base.temperature = self._override_temperature
         try:
-            results = self.base.complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+            results = self.base.complete_many(
+                prompts, n_samples=n_samples, batch_size=batch_size
+            )
         finally:
             self.base.temperature = old_temp
         return results

@@ -19,7 +19,6 @@ from leakcert.evaluation.workloads import W4CodeSecret, W5Paraphrase
 from leakcert.model.backend_model import BackendCompletionService
 from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
 
-
 VARIANTS = {
     "LEAKCERT_full": {},
     "LEAKCERT_no_rate_limit": {"use_rate_limit": False},
@@ -48,7 +47,9 @@ def eval_workload(name: str, service, workload, panel, batch_size: int) -> dict:
     samples = workload.samples()
     canary_by_id = {c.canary_id: c for c in panel}
     started = time.time()
-    completions = service.complete_many([sample.prompt for sample in samples], n_samples=1, batch_size=batch_size)
+    completions = service.complete_many(
+        [sample.prompt for sample in samples], n_samples=1, batch_size=batch_size
+    )
     hits = 0
     refused = 0
     per_mode: dict[str, list[int]] = {}
@@ -82,8 +83,12 @@ def eval_workload(name: str, service, workload, panel, batch_size: int) -> dict:
         "duration_sec": round(time.time() - started, 3),
         "extraction": rate_summary(hits, total),
         "refusal": rate_summary(refused, total),
-        "per_mode": {k: rate_summary(sum(v), len(v)) for k, v in sorted(per_mode.items())},
-        "per_type": {k: rate_summary(sum(v), len(v)) for k, v in sorted(per_type.items())},
+        "per_mode": {
+            k: rate_summary(sum(v), len(v)) for k, v in sorted(per_mode.items())
+        },
+        "per_type": {
+            k: rate_summary(sum(v), len(v)) for k, v in sorted(per_type.items())
+        },
         "rows": rows,
     }
 
@@ -91,12 +96,18 @@ def eval_workload(name: str, service, workload, panel, batch_size: int) -> dict:
 def build_runtime(target, ref, panel, cfg: dict, overrides: dict) -> LeakCertRuntime:
     runtime_cfg = cfg.get("runtime", {})
     params = {
-        "query_budget": int(runtime_cfg.get("query_budget", cfg.get("evaluation", {}).get("query_budget", 200))),
+        "query_budget": int(
+            runtime_cfg.get(
+                "query_budget", cfg.get("evaluation", {}).get("query_budget", 200)
+            )
+        ),
         "refusal_threshold": float(runtime_cfg.get("refusal_threshold", 0.95)),
         "target_refusal_rate": float(runtime_cfg.get("target_refusal_rate", 0.02)),
         "refusal_model_path": runtime_cfg.get("refusal_model_path"),
         "use_learned_refusal": bool(runtime_cfg.get("use_learned_refusal", True)),
-        "use_refusal_heuristics": bool(runtime_cfg.get("use_refusal_heuristics", False)),
+        "use_refusal_heuristics": bool(
+            runtime_cfg.get("use_refusal_heuristics", False)
+        ),
         "use_suppression": bool(runtime_cfg.get("use_suppression", True)),
         "use_canary_hashes": bool(runtime_cfg.get("use_canary_hashes", False)),
         "use_accounting": bool(runtime_cfg.get("use_accounting", True)),
@@ -129,7 +140,11 @@ def main() -> int:
         temperature=float(model_cfg.get("temperature", 0.0)),
         max_new_tokens=int(model_cfg.get("max_new_tokens", 16)),
     )
-    ref_name = model_cfg.get("ref_model") or model_cfg.get("target_model_small") or model_cfg.get("target_model")
+    ref_name = (
+        model_cfg.get("ref_model")
+        or model_cfg.get("target_model_small")
+        or model_cfg.get("target_model")
+    )
     ref = BackendCompletionService(
         ref_name,
         device=model_cfg.get("device", "auto"),
@@ -164,8 +179,20 @@ def main() -> int:
                 for row in result.pop("rows"):
                     audit.write(json.dumps(row, sort_keys=True) + "\n")
                 summary["results"][name][workload_name] = result
-                (out / "component_ablation_partial.json").write_text(json.dumps(summary, indent=2))
-                print(json.dumps({"defense": name, "workload": workload_name, **result["extraction"]}, indent=2), flush=True)
+                (out / "component_ablation_partial.json").write_text(
+                    json.dumps(summary, indent=2)
+                )
+                print(
+                    json.dumps(
+                        {
+                            "defense": name,
+                            "workload": workload_name,
+                            **result["extraction"],
+                        },
+                        indent=2,
+                    ),
+                    flush=True,
+                )
     (out / "component_ablation_summary.json").write_text(json.dumps(summary, indent=2))
     md = [
         "# LEAKCERT Component Ablation",

@@ -29,23 +29,25 @@ import yaml
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from leakcert.canary.generator import CanaryGenerator
-from leakcert.model.backend_model import BackendCompletionService
 from leakcert.certificate.kl_estimator import KLEstimator
-from leakcert.evaluation.workloads import W4CodeSecret, W5Paraphrase
-from leakcert.evaluation.metrics import (
-    ExtractionMetrics,
-    paraphrase_robustness_ratio,
-    extraction_hit,
-    rate_summary,
-)
+from leakcert.defenses.content_filter import ContentFilterDefense
 from leakcert.defenses.no_defense import NoDefense
 from leakcert.defenses.temperature import TemperatureDefense
 from leakcert.defenses.top_p import TopPDefense
-from leakcert.defenses.content_filter import ContentFilterDefense
-from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
+from leakcert.evaluation.metrics import (
+    ExtractionMetrics,
+    extraction_hit,
+    paraphrase_robustness_ratio,
+    rate_summary,
+)
 from leakcert.evaluation.runner import _RuntimeServiceAdapter
+from leakcert.evaluation.workloads import W4CodeSecret, W5Paraphrase
+from leakcert.model.backend_model import BackendCompletionService
+from leakcert.runtime.leakcert_runtime import LeakCertRuntime, RuntimeConfig
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -56,15 +58,24 @@ def select_defences(defences: dict, requested: list[str] | None) -> dict:
     for token in requested:
         token_upper = str(token).upper()
         for name, service in defences.items():
-            if name.upper() == token_upper or name.upper().startswith(f"{token_upper}_"):
+            if name.upper() == token_upper or name.upper().startswith(
+                f"{token_upper}_"
+            ):
                 selected[name] = service
                 break
-    missing = [token for token in requested if not any(
-        name.upper() == str(token).upper() or name.upper().startswith(f"{str(token).upper()}_")
-        for name in defences
-    )]
+    missing = [
+        token
+        for token in requested
+        if not any(
+            name.upper() == str(token).upper()
+            or name.upper().startswith(f"{str(token).upper()}_")
+            for name in defences
+        )
+    ]
     if missing:
-        logger.warning("Ignoring unknown run_defenses entries: %s", ", ".join(map(str, missing)))
+        logger.warning(
+            "Ignoring unknown run_defenses entries: %s", ", ".join(map(str, missing))
+        )
     return selected or defences
 
 
@@ -82,8 +93,9 @@ def main(args):
     query_budget = eval_cfg.get("query_budget", 10_000)
     batch_size = int(eval_cfg.get("batch_size", 8))
     target_path = cfg["finetune"].get("output_dir", "./checkpoints/target_model")
-    target_model_name = cfg["model"].get("target_model_small",
-                                         cfg["model"].get("target_model", "local-test-model"))
+    target_model_name = cfg["model"].get(
+        "target_model_small", cfg["model"].get("target_model", "local-test-model")
+    )
 
     if not Path(target_path).exists():
         logger.error(f"Target checkpoint not found at {target_path}. Run W1 first.")
@@ -91,15 +103,16 @@ def main(args):
 
     model_cfg = cfg.get("model", {})
     device = model_cfg.get("device", "auto")
+    temperature = float(model_cfg.get("temperature", 1.0))
     target = BackendCompletionService(
         target_path,
-        temperature=1.0,
+        temperature=temperature,
         max_new_tokens=int(model_cfg.get("max_new_tokens", 128)),
         device=device,
     )
     ref = BackendCompletionService(
         target_model_name,
-        temperature=1.0,
+        temperature=temperature,
         max_new_tokens=int(model_cfg.get("max_new_tokens", 128)),
         device=device,
     )
@@ -120,9 +133,7 @@ def main(args):
         n_t4=n_per_type,
     )
     eval_panel = panel.stratified_subset(n_per_type)
-    logger.info(
-        f"Eval panel: {len(eval_panel)} canaries ({n_per_type}/type × 4 types)"
-    )
+    logger.info(f"Eval panel: {len(eval_panel)} canaries ({n_per_type}/type × 4 types)")
 
     kl_estimator = KLEstimator(target, ref)
     runtime_cfg = cfg.get("runtime", {})
@@ -135,7 +146,9 @@ def main(args):
             window_seconds=float(runtime_cfg.get("window_seconds", 10 * 24 * 3600)),
             refusal_threshold=float(runtime_cfg.get("refusal_threshold", 0.5)),
             use_learned_refusal=bool(runtime_cfg.get("use_learned_refusal", True)),
-            use_refusal_heuristics=bool(runtime_cfg.get("use_refusal_heuristics", True)),
+            use_refusal_heuristics=bool(
+                runtime_cfg.get("use_refusal_heuristics", True)
+            ),
             target_refusal_rate=float(runtime_cfg.get("target_refusal_rate", 0.01)),
             refusal_model_path=runtime_cfg.get("refusal_model_path"),
             use_suppression=bool(runtime_cfg.get("use_suppression", True)),
@@ -149,11 +162,11 @@ def main(args):
     )
 
     defences = {
-        "B1_no_defense":      NoDefense(target),
+        "B1_no_defense": NoDefense(target),
         "B2_temperature_0.5": TemperatureDefense(target, 0.5),
-        "B3_top_p_0.7":       TopPDefense(target, 0.7),
-        "B5_content_filter":  ContentFilterDefense(target),
-        "LEAKCERT":           _RuntimeServiceAdapter(leakcert_runtime),
+        "B3_top_p_0.7": TopPDefense(target, 0.7),
+        "B5_content_filter": ContentFilterDefense(target),
+        "LEAKCERT": _RuntimeServiceAdapter(leakcert_runtime),
     }
     defences = select_defences(defences, eval_cfg.get("run_defenses"))
     logger.info("Enabled defences: %s", ", ".join(defences))
@@ -179,11 +192,13 @@ def main(args):
         # Dedicated api_keys so W4 and W5 budgets are independent for LEAKCERT.
         svc_w4 = (
             _RuntimeServiceAdapter(leakcert_runtime, api_key=f"w5_w4_{def_name}")
-            if def_name == "LEAKCERT" else service
+            if def_name == "LEAKCERT"
+            else service
         )
         svc_w5 = (
             _RuntimeServiceAdapter(leakcert_runtime, api_key=f"w5_w5_{def_name}")
-            if def_name == "LEAKCERT" else service
+            if def_name == "LEAKCERT"
+            else service
         )
 
         # ── W4 baseline: one query per (canary, template) prompt ──────
@@ -197,17 +212,19 @@ def main(args):
             hit = extraction_hit(canary, completion)
             n_w4_hit += int(hit)
             n_w4 += 1
-            audit_rows.append({
-                "defense": def_name,
-                "workload": "W4",
-                "prompt_id": sample.prompt_id,
-                "canary_id": sample.canary_id,
-                "canary_type": canary.canary_type,
-                "paraphrase_mode": sample.paraphrase_mode,
-                "prompt": sample.prompt,
-                "completion": completion,
-                "hit": bool(hit),
-            })
+            audit_rows.append(
+                {
+                    "defense": def_name,
+                    "workload": "W4",
+                    "prompt_id": sample.prompt_id,
+                    "canary_id": sample.canary_id,
+                    "canary_type": canary.canary_type,
+                    "paraphrase_mode": sample.paraphrase_mode,
+                    "prompt": sample.prompt,
+                    "completion": completion,
+                    "hit": bool(hit),
+                }
+            )
         w4_rate = n_w4_hit / max(n_w4, 1)
         w4_metrics = ExtractionMetrics(
             n_total=max(n_w4, 1),
@@ -230,17 +247,19 @@ def main(args):
             n_w5 += 1
             mode = sample.paraphrase_mode or "unknown"
             w5_by_mode.setdefault(mode, []).append(hit)
-            audit_rows.append({
-                "defense": def_name,
-                "workload": "W5",
-                "prompt_id": sample.prompt_id,
-                "canary_id": sample.canary_id,
-                "canary_type": canary.canary_type,
-                "paraphrase_mode": sample.paraphrase_mode,
-                "prompt": sample.prompt,
-                "completion": completion,
-                "hit": bool(hit),
-            })
+            audit_rows.append(
+                {
+                    "defense": def_name,
+                    "workload": "W5",
+                    "prompt_id": sample.prompt_id,
+                    "canary_id": sample.canary_id,
+                    "canary_type": canary.canary_type,
+                    "paraphrase_mode": sample.paraphrase_mode,
+                    "prompt": sample.prompt,
+                    "completion": completion,
+                    "hit": bool(hit),
+                }
+            )
 
         w5_metrics = ExtractionMetrics(
             n_total=max(n_w5, 1),
@@ -250,10 +269,7 @@ def main(args):
         )
 
         ratio = paraphrase_robustness_ratio(w4_metrics, w5_metrics)
-        per_mode = {
-            m: rate_summary(sum(v), len(v))
-            for m, v in w5_by_mode.items()
-        }
+        per_mode = {m: rate_summary(sum(v), len(v)) for m, v in w5_by_mode.items()}
         w4_summary = rate_summary(n_w4_hit, n_w4)
         w5_summary = rate_summary(n_w5_hit, n_w5)
         table6[def_name] = {
@@ -273,8 +289,7 @@ def main(args):
     with open(output_dir / "table6_paraphrase_robustness.json", "w") as f:
         json.dump(table6, f, indent=2)
     with open(output_dir / "audit_samples.jsonl", "w") as f:
-        for row in audit_rows:
-            f.write(json.dumps(row) + "\n")
+        f.writelines(json.dumps(row) + "\n" for row in audit_rows)
 
     logger.info(f"\nW5 results saved to {output_dir}")
 

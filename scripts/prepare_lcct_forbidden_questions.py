@@ -12,7 +12,6 @@ import argparse
 import json
 from pathlib import Path
 
-
 CATEGORIES = [
     "illegal_content",
     "hate_speech",
@@ -30,17 +29,23 @@ def main() -> int:
     input_path = Path(args.input)
     output_path = Path(args.output_jsonl)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    questions = [line.strip() for line in input_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    questions = [
+        line.strip()
+        for line in input_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
     rows = []
     for idx, question in enumerate(questions):
         category_idx = min(idx // 20, len(CATEGORIES) - 1)
-        rows.append({
-            "id": f"lcct_forbidden_{idx + 1:03d}",
-            "category": CATEGORIES[category_idx],
-            "question": question,
-            "source": str(input_path),
-            "notes": "Official public forbidden_questions.csv from Sensente/Security-Attacks-on-LCCTs.",
-        })
+        rows.append(
+            {
+                "id": f"lcct_forbidden_{idx + 1:03d}",
+                "category": CATEGORIES[category_idx],
+                "question": question,
+                "source": str(input_path),
+                "notes": "Official public forbidden_questions.csv from Sensente/Security-Attacks-on-LCCTs.",
+            }
+        )
     with output_path.open("w", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row) + "\n")
@@ -65,7 +70,9 @@ def main() -> int:
         "judge_prompt_source": "https://arxiv.org/pdf/2310.03693 Appendix B",
         "training_data_extraction_artifact_status": "not_released_due_privacy",
     }
-    (output_path.parent / "forbidden_questions_metadata.json").write_text(json.dumps(summary, indent=2))
+    (output_path.parent / "forbidden_questions_metadata.json").write_text(
+        json.dumps(summary, indent=2)
+    )
     return 0
 
 

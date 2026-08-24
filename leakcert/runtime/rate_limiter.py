@@ -18,6 +18,7 @@ from threading import Lock
 @dataclass
 class APIKeyState:
     """State for a single API key."""
+
     query_count: int = 0
     cumulative_kl: float = 0.0
     first_seen: float = field(default_factory=time.time)
@@ -44,7 +45,7 @@ class RateLimiter:
     def __init__(
         self,
         query_budget: int = 10_000,
-        window_seconds: float = 10 * 24 * 3600,   # 10 days
+        window_seconds: float = 10 * 24 * 3600,  # 10 days
         kl_budget: float | None = None,
     ):
         self.query_budget = query_budget

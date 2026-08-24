@@ -19,15 +19,17 @@ from pathlib import Path
 
 import yaml
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 SCRIPTS = [
     ("compute_certificate.py", "Certificate computation (Tables 1, 3, 4, 8)"),
-    ("run_w4_code_secret.py",  "W4: Code-secret extraction (Table 2, Figure 2)"),
-    ("run_w5_paraphrase.py",   "W5: Paraphrase robustness (Table 6)"),
+    ("run_w4_code_secret.py", "W4: Code-secret extraction (Table 2, Figure 2)"),
+    ("run_w5_paraphrase.py", "W5: Paraphrase robustness (Table 6)"),
     ("run_w3_real_completion.py", "W3: Utility evaluation (Table 5)"),
-    ("run_w2_lcct.py",         "W2: LCCT extraction benchmark"),
+    ("run_w2_lcct.py", "W2: LCCT extraction benchmark"),
 ]
 
 

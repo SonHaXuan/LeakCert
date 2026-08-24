@@ -16,20 +16,19 @@ from dataclasses import dataclass
 
 import numpy as np
 
-
 # ---------------------------------------------------------------------------
 # Secret-pattern heuristics (fast pre-filter)
 # ---------------------------------------------------------------------------
 
-_AWS_KEY_RE = re.compile(r'AKIA[0-9A-Z]{16}')
-_JWT_RE = re.compile(r'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}')
-_RSA_PREFIX_RE = re.compile(r'-----BEGIN (RSA )?PRIVATE KEY-----')
-_LICENCE_RE = re.compile(r'[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}')
-_PRIVATE_RE = re.compile(r'(password|secret|token|key)\s*=\s*["\'][A-Za-z0-9+/]{16,}', re.I)
+_AWS_KEY_RE = re.compile(r"AKIA[0-9A-Z]{16}")
+_JWT_RE = re.compile(r"eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}")
+_RSA_PREFIX_RE = re.compile(r"-----BEGIN (RSA )?PRIVATE KEY-----")
+_LICENCE_RE = re.compile(r"[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}")
+_PRIVATE_RE = re.compile(
+    r'(password|secret|token|key)\s*=\s*["\'][A-Za-z0-9+/]{16,}', re.IGNORECASE
+)
 
-_HARD_HEURISTIC_PATTERNS = [
-    _AWS_KEY_RE, _JWT_RE, _RSA_PREFIX_RE, _LICENCE_RE
-]
+_HARD_HEURISTIC_PATTERNS = [_AWS_KEY_RE, _JWT_RE, _RSA_PREFIX_RE, _LICENCE_RE]
 
 
 @dataclass
@@ -63,7 +62,7 @@ class UncertaintyRefusal:
         self.threshold = threshold
         self.use_learned = use_learned
         self.use_heuristics = use_heuristics
-        self._classifier = None   # loaded lazily or trained externally
+        self._classifier = None  # loaded lazily or trained externally
 
     # ------------------------------------------------------------------
     # Core API
@@ -75,7 +74,9 @@ class UncertaintyRefusal:
         Returns a probability that `completion` is a memorised canary.
         """
         # Fast heuristic score
-        heuristic_score = self._heuristic_score(completion) if self.use_heuristics else 0.0
+        heuristic_score = (
+            self._heuristic_score(completion) if self.use_heuristics else 0.0
+        )
         if heuristic_score >= 1.0:
             return 1.0
 
@@ -89,7 +90,9 @@ class UncertaintyRefusal:
         """Return a refusal decision for `completion`."""
         s = self.score(completion)
         if s >= self.threshold:
-            return RefusalDecision(should_refuse=True, score=s, reason="high_canary_score")
+            return RefusalDecision(
+                should_refuse=True, score=s, reason="high_canary_score"
+            )
         return RefusalDecision(should_refuse=False, score=s)
 
     # ------------------------------------------------------------------
@@ -157,23 +160,28 @@ class UncertaintyRefusal:
 
     def train(
         self,
-        positive_examples: list[str],   # canary completions
-        negative_examples: list[str],   # normal completions
+        positive_examples: list[str],  # canary completions
+        negative_examples: list[str],  # normal completions
     ) -> None:
         """
         Train the logistic-regression classifier.
         Targets ≤1% FPR (refusal rate on W3) per the study's configuration.
         """
         from sklearn.linear_model import LogisticRegression
-        from sklearn.preprocessing import StandardScaler
         from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler
 
         X = [self._extract_features(t) for t in positive_examples + negative_examples]
         y = [1] * len(positive_examples) + [0] * len(negative_examples)
-        self._classifier = Pipeline([
-            ("scaler", StandardScaler()),
-            ("lr", LogisticRegression(C=1.0, class_weight="balanced", max_iter=1000)),
-        ])
+        self._classifier = Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                (
+                    "lr",
+                    LogisticRegression(C=1.0, class_weight="balanced", max_iter=1000),
+                ),
+            ]
+        )
         self._classifier.fit(X, y)
 
     # ------------------------------------------------------------------
@@ -220,18 +228,20 @@ class UncertaintyRefusal:
         """Estimate refusal rate on a set of legitimate completions."""
         if not held_out_completions:
             return 0.0
-        refused = sum(
-            1 for c in held_out_completions if self.decide(c).should_refuse
-        )
+        refused = sum(1 for c in held_out_completions if self.decide(c).should_refuse)
         return refused / len(held_out_completions)
 
     def save(self, path: str) -> None:
         import pickle
+
         with open(path, "wb") as f:
-            pickle.dump({"classifier": self._classifier, "threshold": self.threshold}, f)
+            pickle.dump(
+                {"classifier": self._classifier, "threshold": self.threshold}, f
+            )
 
     def load(self, path: str) -> None:
         import pickle
+
         with open(path, "rb") as f:
             state = pickle.load(f)
         if isinstance(state, dict):

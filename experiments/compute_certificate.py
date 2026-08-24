@@ -31,7 +31,9 @@ from leakcert.certificate.certificate import LeakageCertificate
 from leakcert.certificate.kl_estimator import KLEstimator
 from leakcert.model.backend_model import BackendCompletionService
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -41,8 +43,9 @@ def main(args):
     output_dir.mkdir(parents=True, exist_ok=True)
 
     target_path = cfg["finetune"].get("output_dir", "./checkpoints/target_model")
-    target_model_name = cfg["model"].get("target_model_small",
-                                         cfg["model"].get("target_model", "local-test-model"))
+    target_model_name = cfg["model"].get(
+        "target_model_small", cfg["model"].get("target_model", "local-test-model")
+    )
     device = cfg["model"].get("device", "auto")
     max_new_tokens = cfg["model"].get("max_new_tokens", 128)
 
@@ -93,18 +96,26 @@ def main(args):
         f"std={kl_values.std():.4f}"
     )
     with open(output_dir / "kl_estimates.json", "w") as f:
-        json.dump([
-            {"canary_id": r.canary_id, "kl": r.kl_estimate,
-             "log_p_target": r.log_p_target, "log_p_ref": r.log_p_ref,
-             "type": r.canary_type}
-            for r in kl_results
-        ], f, indent=2)
+        json.dump(
+            [
+                {
+                    "canary_id": r.canary_id,
+                    "kl": r.kl_estimate,
+                    "log_p_target": r.log_p_target,
+                    "log_p_ref": r.log_p_ref,
+                    "type": r.canary_type,
+                }
+                for r in kl_results
+            ],
+            f,
+            indent=2,
+        )
 
     # ── Compute certificates (Theorem 10 + 13) ────────────────────────
     cert_computer = LeakageCertificate()
     budgets = cfg["certificate"].get(
-        "budgets", [1, 10, 100, 1_000, 5_000, 10_000, 50_000, 100_000,
-                    1_000_000, 10_000_000]
+        "budgets",
+        [1, 10, 100, 1_000, 5_000, 10_000, 50_000, 100_000, 1_000_000, 10_000_000],
     )
     delta = cfg["certificate"].get("delta", 0.01)
 
@@ -128,18 +139,25 @@ def main(args):
             "B": B,
             "hoeffding_cert_nats": round(result.hoeffding_certificate, 3),
             "bernstein_cert_nats": round(result.bernstein_certificate, 3),
-            "raw_hoeffding_cert_nats": round(result.raw_hoeffding_certificate or result.hoeffding_certificate, 3),
-            "raw_bernstein_cert_nats": round(result.raw_bernstein_certificate or result.bernstein_certificate, 3),
+            "raw_hoeffding_cert_nats": round(
+                result.raw_hoeffding_certificate or result.hoeffding_certificate, 3
+            ),
+            "raw_bernstein_cert_nats": round(
+                result.raw_bernstein_certificate or result.bernstein_certificate, 3
+            ),
             "empirical_mi_nats": round(emp_mi, 3),
             "raw_empirical_mi_nats": round(raw_emp_mi, 3),
             "entropy_H_K_nats": round(result.prior_entropy, 3),
-            "entropy_cap_applied": result.entropy_cap_applied or raw_emp_mi > result.prior_entropy,
+            "entropy_cap_applied": result.entropy_cap_applied
+            or raw_emp_mi > result.prior_entropy,
             "entropy_cap_pass": (
                 result.hoeffding_certificate <= result.prior_entropy + 1e-12
                 and result.bernstein_certificate <= result.prior_entropy + 1e-12
                 and emp_mi <= result.prior_entropy + 1e-12
             ),
-            "tightness_ratio": round(tightness, 3) if not math.isinf(tightness) else None,
+            "tightness_ratio": (
+                round(tightness, 3) if not math.isinf(tightness) else None
+            ),
             "extraction_prob_bound": round(ext_prob, 6) if ext_prob else None,
             "vacuous": is_vac,
         }
@@ -155,18 +173,27 @@ def main(args):
 
     # ── Table 3: Certificate tightness across budgets ─────────────────
     from leakcert.evaluation.metrics import compute_tightness_table
+
     tightness_table = compute_tightness_table(kl_results, budgets[:6], K, delta)
     logger.info("\n=== Table 3: Certificate tightness ===")
     for row in tightness_table:
         logger.info(f"  {row}")
 
     with open(output_dir / "table3_tightness.json", "w") as f:
-        json.dump([
-            {"B": r.query_budget, "cert_nats": r.certificate_nats,
-             "emp_mi_nats": r.empirical_mi_nats, "ratio": r.ratio,
-             "tight": r.is_tight}
-            for r in tightness_table
-        ], f, indent=2)
+        json.dump(
+            [
+                {
+                    "B": r.query_budget,
+                    "cert_nats": r.certificate_nats,
+                    "emp_mi_nats": r.empirical_mi_nats,
+                    "ratio": r.ratio,
+                    "tight": r.is_tight,
+                }
+                for r in tightness_table
+            ],
+            f,
+            indent=2,
+        )
 
     # ── Table 4: Prior misspecification (Theorem 7) ────────────────────
     logger.info("\n=== Table 4: Prior misspecification penalty ===")
@@ -175,6 +202,7 @@ def main(args):
 
     # Type-empirical prior (proportion of each canary type in K)
     from leakcert.canary.types import CanaryType
+
     type_counts = {t.value: 0 for t in CanaryType}
     for r in kl_results:
         type_counts[r.canary_type] = type_counts.get(r.canary_type, 0) + 1
@@ -183,23 +211,42 @@ def main(args):
     type_result = cert_computer.compute(kl_results, B_ref, K, delta, prior=type_prior)
 
     table4 = [
-        {"prior": "uniform", "H_K": round(uniform_result.prior_entropy, 3),
-         "D_KL_prior_unif": 0.0,
-         "cert_nats": round(uniform_result.hoeffding_certificate, 1),
-         "raw_cert_nats": round(uniform_result.raw_hoeffding_certificate or uniform_result.hoeffding_certificate, 1),
-         "entropy_cap_applied": uniform_result.entropy_cap_applied},
-        {"prior": "type-empirical",
-         "H_K": round(type_result.prior_entropy, 3),
-         "D_KL_prior_unif": round(
-             type_result.prior_entropy - uniform_result.prior_entropy + uniform_result.hoeffding_certificate
-             - type_result.hoeffding_certificate, 3),
-         "cert_nats": round(type_result.hoeffding_certificate, 1),
-         "raw_cert_nats": round(type_result.raw_hoeffding_certificate or type_result.hoeffding_certificate, 1),
-         "entropy_cap_applied": type_result.entropy_cap_applied},
+        {
+            "prior": "uniform",
+            "H_K": round(uniform_result.prior_entropy, 3),
+            "D_KL_prior_unif": 0.0,
+            "cert_nats": round(uniform_result.hoeffding_certificate, 1),
+            "raw_cert_nats": round(
+                uniform_result.raw_hoeffding_certificate
+                or uniform_result.hoeffding_certificate,
+                1,
+            ),
+            "entropy_cap_applied": uniform_result.entropy_cap_applied,
+        },
+        {
+            "prior": "type-empirical",
+            "H_K": round(type_result.prior_entropy, 3),
+            "D_KL_prior_unif": round(
+                type_result.prior_entropy
+                - uniform_result.prior_entropy
+                + uniform_result.hoeffding_certificate
+                - type_result.hoeffding_certificate,
+                3,
+            ),
+            "cert_nats": round(type_result.hoeffding_certificate, 1),
+            "raw_cert_nats": round(
+                type_result.raw_hoeffding_certificate
+                or type_result.hoeffding_certificate,
+                1,
+            ),
+            "entropy_cap_applied": type_result.entropy_cap_applied,
+        },
     ]
     logger.info(f"  {'Prior':<20} {'H(K)':>10} {'cert':>10}")
     for row in table4:
-        logger.info(f"  {row['prior']:<20} {row['H_K']:>10.3f} {row['cert_nats']:>10.1f}")
+        logger.info(
+            f"  {row['prior']:<20} {row['H_K']:>10.3f} {row['cert_nats']:>10.1f}"
+        )
     with open(output_dir / "table4_prior.json", "w") as f:
         json.dump(table4, f, indent=2)
 
@@ -210,20 +257,24 @@ def main(args):
     baseline_cert = uniform_result.hoeffding_certificate
     raw_baseline_cert = uniform_result.raw_hoeffding_certificate or baseline_cert
     for eps in dp_epsilons:
-        raw_dp_bound = B_ref * (eps ** 2) / 2.0
+        raw_dp_bound = B_ref * (eps**2) / 2.0
         dp_bound = min(raw_dp_bound, uniform_result.prior_entropy)
         ratio = baseline_cert / dp_bound if dp_bound > 0 else float("inf")
-        table8.append({
-            "dp_epsilon": eps,
-            "leakcert_nats": round(baseline_cert, 1),
-            "raw_leakcert_nats": round(raw_baseline_cert, 1),
-            "dp_bound_nats": round(dp_bound, 1),
-            "raw_dp_bound_nats": round(raw_dp_bound, 1),
-            "entropy_H_K_nats": round(uniform_result.prior_entropy, 3),
-            "entropy_cap_applied": raw_dp_bound > uniform_result.prior_entropy or raw_baseline_cert > uniform_result.prior_entropy,
-            "entropy_cap_pass": dp_bound <= uniform_result.prior_entropy + 1e-12 and baseline_cert <= uniform_result.prior_entropy + 1e-12,
-            "ratio_leakcert_dp": round(ratio, 3),
-        })
+        table8.append(
+            {
+                "dp_epsilon": eps,
+                "leakcert_nats": round(baseline_cert, 1),
+                "raw_leakcert_nats": round(raw_baseline_cert, 1),
+                "dp_bound_nats": round(dp_bound, 1),
+                "raw_dp_bound_nats": round(raw_dp_bound, 1),
+                "entropy_H_K_nats": round(uniform_result.prior_entropy, 3),
+                "entropy_cap_applied": raw_dp_bound > uniform_result.prior_entropy
+                or raw_baseline_cert > uniform_result.prior_entropy,
+                "entropy_cap_pass": dp_bound <= uniform_result.prior_entropy + 1e-12
+                and baseline_cert <= uniform_result.prior_entropy + 1e-12,
+                "ratio_leakcert_dp": round(ratio, 3),
+            }
+        )
         logger.info(
             f"  DP ε={eps:>2d}: LeakCert={baseline_cert:.1f} nats, "
             f"DP bound={dp_bound:.1f} nats, ratio={ratio:.3f}"

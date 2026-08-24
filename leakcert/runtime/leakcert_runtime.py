@@ -16,7 +16,6 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Optional
 
 from ..model.completion_service import CompletionService
 from .rate_limiter import RateLimiter
@@ -33,40 +32,43 @@ class RuntimeConfig:
     """Configuration for the LeakCert runtime."""
 
     # Certificate budget
-    query_budget: int = 10_000         # B per API key per window
-    kl_budget: Optional[float] = None  # cumulative KL threshold (auto from cert if None)
+    query_budget: int = 10_000  # B per API key per window
+    kl_budget: float | None = (
+        None  # cumulative KL threshold (auto from cert if None)
+    )
 
     # Rate limiting
-    window_seconds: float = 10 * 24 * 3600   # 10-day rolling window
+    window_seconds: float = 10 * 24 * 3600  # 10-day rolling window
 
     # Uncertainty refusal
     refusal_threshold: float = 0.5
     use_learned_refusal: bool = True
     use_refusal_heuristics: bool = True
-    target_refusal_rate: float = 0.01   # 1% as in study
-    refusal_model_path: Optional[str] = None
+    target_refusal_rate: float = 0.01  # 1% as in study
+    refusal_model_path: str | None = None
 
     # Target suppression
     use_suppression: bool = True
-    use_canary_hashes: bool = False   # register canaries for hash-based suppression
+    use_canary_hashes: bool = False  # register canaries for hash-based suppression
 
     # E6 component ablation flags
     # Setting any to False removes that component from the runtime pipeline.
-    use_accounting: bool = True   # C1: KL certificate budget tracking
-    use_rate_limit: bool = True   # C2: per-API-key rate limiter
-    use_refusal: bool = True      # C3: uncertainty-aware refusal classifier
+    use_accounting: bool = True  # C1: KL certificate budget tracking
+    use_rate_limit: bool = True  # C2: per-API-key rate limiter
+    use_refusal: bool = True  # C3: uncertainty-aware refusal classifier
 
     # Logging
-    audit_log_path: Optional[str] = None
+    audit_log_path: str | None = None
 
 
 @dataclass
 class RuntimeDecision:
     """Decision record for a single query."""
+
     api_key: str
     prompt: str
-    outcome: str   # "emit" | "throttled" | "refused" | "suppressed"
-    completion: Optional[str]
+    outcome: str  # "emit" | "throttled" | "refused" | "suppressed"
+    completion: str | None
     latency_ms: float
     kl_contribution: float = 0.0
     queries_used: int = 0
@@ -92,8 +94,8 @@ class LeakCertRuntime:
         self,
         service: CompletionService,
         kl_estimator=None,
-        config: Optional[RuntimeConfig] = None,
-        panel=None,    # CanaryPanel for hash registration
+        config: RuntimeConfig | None = None,
+        panel=None,  # CanaryPanel for hash registration
     ):
         self.service = service
         self.kl_estimator = kl_estimator
@@ -119,7 +121,11 @@ class LeakCertRuntime:
                 self.refusal.threshold = cfg.refusal_threshold
                 logger.info("Loaded refusal model from %s", cfg.refusal_model_path)
             except Exception as e:
-                logger.warning("Failed to load refusal model from %s: %s", cfg.refusal_model_path, e)
+                logger.warning(
+                    "Failed to load refusal model from %s: %s",
+                    cfg.refusal_model_path,
+                    e,
+                )
 
         # Component 4: Target-String Suppression
         self.suppression = TargetStringSuppression(
@@ -189,8 +195,11 @@ class LeakCertRuntime:
                     completion=REFUSAL_TEXT,
                     latency_ms=(time.time() - t0) * 1000,
                     kl_contribution=kl_contrib,
-                    queries_used=self.rate_limiter.get_state(api_key).query_count
-                    if self.config.use_rate_limit else 0,
+                    queries_used=(
+                        self.rate_limiter.get_state(api_key).query_count
+                        if self.config.use_rate_limit
+                        else 0
+                    ),
                     refusal_score=refusal_decision.score,
                 )
                 self._log(decision)
@@ -208,8 +217,11 @@ class LeakCertRuntime:
                     completion=completion_text,
                     latency_ms=(time.time() - t0) * 1000,
                     kl_contribution=kl_contrib,
-                    queries_used=self.rate_limiter.get_state(api_key).query_count
-                    if self.config.use_rate_limit else 0,
+                    queries_used=(
+                        self.rate_limiter.get_state(api_key).query_count
+                        if self.config.use_rate_limit
+                        else 0
+                    ),
                     refusal_score=refusal_decision_score,
                 )
                 self._log(decision)
@@ -223,8 +235,11 @@ class LeakCertRuntime:
             completion=completion_text,
             latency_ms=(time.time() - t0) * 1000,
             kl_contribution=kl_contrib,
-            queries_used=self.rate_limiter.get_state(api_key).query_count
-            if self.config.use_rate_limit else 0,
+            queries_used=(
+                self.rate_limiter.get_state(api_key).query_count
+                if self.config.use_rate_limit
+                else 0
+            ),
             refusal_score=refusal_decision_score,
         )
         self._log(decision)
@@ -238,14 +253,20 @@ class LeakCertRuntime:
         self._audit_log.append(decision)
         if self.config.audit_log_path:
             import json
+
             with open(self.config.audit_log_path, "a") as f:
-                f.write(json.dumps({
-                    "api_key": decision.api_key,
-                    "outcome": decision.outcome,
-                    "kl": decision.kl_contribution,
-                    "latency_ms": decision.latency_ms,
-                    "ts": decision.timestamp,
-                }) + "\n")
+                f.write(
+                    json.dumps(
+                        {
+                            "api_key": decision.api_key,
+                            "outcome": decision.outcome,
+                            "kl": decision.kl_contribution,
+                            "latency_ms": decision.latency_ms,
+                            "ts": decision.timestamp,
+                        }
+                    )
+                    + "\n"
+                )
 
     def get_audit_log(self) -> list[RuntimeDecision]:
         return list(self._audit_log)
@@ -262,6 +283,7 @@ class LeakCertRuntime:
     def latency_stats(self) -> dict:
         """Median and p99 per-query latency overhead in ms."""
         import numpy as np
+
         latencies = [d.latency_ms for d in self._audit_log]
         if not latencies:
             return {"median": 0.0, "p99": 0.0}

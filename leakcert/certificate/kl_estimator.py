@@ -18,7 +18,6 @@ from __future__ import annotations
 import logging
 import math
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 
@@ -33,10 +32,10 @@ class PerCanaryKL:
     """Stores the KL estimate and metadata for a single canary."""
 
     canary_id: str
-    kl_estimate: float          # κ̂_i ≈ D_KL(p_K || q_K) for this canary
-    log_p_target: float         # log p_θ(k | c_k) under target model
-    log_p_ref: float            # log p_ref(k | c_k) under reference model
-    n_tokens: int               # number of tokens in the canary secret
+    kl_estimate: float  # κ̂_i ≈ D_KL(p_K || q_K) for this canary
+    log_p_target: float  # log p_θ(k | c_k) under target model
+    log_p_ref: float  # log p_ref(k | c_k) under reference model
+    n_tokens: int  # number of tokens in the canary secret
     canary_type: str = ""
 
 
@@ -57,7 +56,7 @@ class KLEstimator:
     def __init__(
         self,
         target_service: CompletionService,
-        ref_service: Optional[CompletionService] = None,
+        ref_service: CompletionService | None = None,
         n_queries_per_canary: int = 1,
     ):
         self.target = target_service
@@ -102,7 +101,7 @@ class KLEstimator:
         """
         log_p_target = self.target.log_probability(canary.context, canary.secret)
         log_p_ref = self.ref.log_probability(canary.context, canary.secret)
-        kl_est = max(0.0, log_p_target - log_p_ref)   # clamp to [0, ∞)
+        kl_est = max(0.0, log_p_target - log_p_ref)  # clamp to [0, ∞)
 
         n_tokens = len(self.target.per_token_log_probs(canary.context, canary.secret))
         return PerCanaryKL(
@@ -210,9 +209,7 @@ class KLEstimator:
     # Streaming / online update (used by Certificate Generator at runtime)
     # ------------------------------------------------------------------
 
-    def streaming_kl_contribution(
-        self, prompt: str, completion: str
-    ) -> float:
+    def streaming_kl_contribution(self, prompt: str, completion: str) -> float:
         """
         Per-query KL contribution for a single (prompt, completion) pair.
         Used by the runtime certificate generator for the rolling estimate.
@@ -224,7 +221,7 @@ class KLEstimator:
         if self.ref is not None:
             log_p_r = self.ref.log_probability(prompt, completion)
         else:
-            log_p_r = 0.0   # conservative fallback
+            log_p_r = 0.0  # conservative fallback
 
         return max(0.0, log_p_t - log_p_r)
 
@@ -339,7 +336,7 @@ class MINEEstimator:
     def estimate(self, kl_arr: np.ndarray, query_budget: int) -> float:
         """Train MINE and return I(K; Y^B) = B · Î(K; y)."""
         import torch
-        import torch.nn as nn
+        from torch import nn
 
         rng = np.random.RandomState(self.seed)
         torch.manual_seed(self.seed)
@@ -377,9 +374,7 @@ class MINEEstimator:
             # ── Joint samples: (κ̂_k, y_k ~ N(κ̂_k, noise_in_norm²)) ──
             idx_j = rng.choice(n, size=bs, replace=True)
             x_j = kl_t[idx_j]
-            y_j = x_j + torch.tensor(
-                (rng.randn(bs) * noise_in_norm).astype(np.float32)
-            )
+            y_j = x_j + torch.tensor((rng.randn(bs) * noise_in_norm).astype(np.float32))
 
             # ── Marginal samples: (κ̂_k, y_m) independently ──────────
             idx_mx = rng.choice(n, size=bs, replace=True)
@@ -392,16 +387,14 @@ class MINEEstimator:
             inp_j = torch.stack([x_j, y_j], dim=1)
             inp_m = torch.stack([x_m, y_m], dim=1)
 
-            t_joint = net(inp_j).squeeze(-1)               # (bs,)
-            t_marg  = net(inp_m).squeeze(-1)               # (bs,)
+            t_joint = net(inp_j).squeeze(-1)  # (bs,)
+            t_marg = net(inp_m).squeeze(-1)  # (bs,)
 
             # DV bound: E_joint[T] - log(E_marginal[e^T])
             # Use log-sum-exp for numerical stability:
             #   log(E[e^T]) = logsumexp(T) - log(bs)
-            dv = t_joint.mean() - (
-                torch.logsumexp(t_marg, dim=0) - math.log(bs)
-            )
-            loss = -dv                                      # maximise DV
+            dv = t_joint.mean() - (torch.logsumexp(t_marg, dim=0) - math.log(bs))
+            loss = -dv  # maximise DV
 
             optimiser.zero_grad()
             loss.backward()

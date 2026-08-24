@@ -92,7 +92,9 @@ def write_markdown(summary: dict[str, Any], path: Path) -> None:
 
     lines.extend(["", "## W1 Extraction", ""])
     for row in summary["w1_extraction_vs_budget"]:
-        lines.append(f"- B={row.get('B')}: extraction_rate={row.get('extraction_rate')}")
+        lines.append(
+            f"- B={row.get('B')}: extraction_rate={row.get('extraction_rate')}"
+        )
 
     lines.extend(["", "## W4", ""])
     if summary["w4"]:
@@ -134,11 +136,16 @@ def main() -> int:
     summary = summarize_run(run_dir)
     (run_dir / "evaluation_summary.json").write_text(json.dumps(summary, indent=2))
     write_markdown(summary, run_dir / "evaluation_summary.md")
-    print(json.dumps({
-        "run_dir": str(run_dir),
-        "status": summary["suite_status"],
-        "warnings": summary["warnings"],
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "run_dir": str(run_dir),
+                "status": summary["suite_status"],
+                "warnings": summary["warnings"],
+            },
+            indent=2,
+        )
+    )
     return 0 if summary["suite_status"] == "completed" else 1
 
 

@@ -17,10 +17,13 @@ import string
 import uuid
 
 from .types import (
-    Canary, CanaryPanel, CanaryType,
-    LiteralSubtype, ParaphraseMode, VulnSubtype,
+    Canary,
+    CanaryPanel,
+    CanaryType,
+    LiteralSubtype,
+    ParaphraseMode,
+    VulnSubtype,
 )
-
 
 _UPPER_ALNUM = string.ascii_uppercase + string.digits
 _HEX = string.hexdigits.upper()[:16]
@@ -29,6 +32,7 @@ _HEX = string.hexdigits.upper()[:16]
 # ---------------------------------------------------------------------------
 # Low-level secret generators
 # ---------------------------------------------------------------------------
+
 
 def _random_str(chars: str, length: int, rng: random.Random) -> str:
     return "".join(rng.choice(chars) for _ in range(length))
@@ -47,9 +51,11 @@ def _gen_jwt_body(rng: random.Random) -> str:
         "exp": rng.randint(1_800_000_001, 2_000_000_000),
         "jti": _random_str(string.hexdigits[:16], 16, rng),
     }
-    encoded = base64.urlsafe_b64encode(
-        json.dumps(payload, separators=(",", ":")).encode()
-    ).rstrip(b"=").decode()
+    encoded = (
+        base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode())
+        .rstrip(b"=")
+        .decode()
+    )
     return encoded
 
 
@@ -72,9 +78,9 @@ def _gen_licence_key(rng: random.Random) -> str:
 _AWS_CONTEXTS = [
     'AWS_SECRET_ACCESS_KEY = "',
     'aws_secret_access_key = "',
-    'secret_key = "',              # also used as generic secret context
+    'secret_key = "',  # also used as generic secret context
     'credentials["secret"] = "',
-    'access_key_id = "AKIA',      # note: secret follows AKIA prefix
+    'access_key_id = "AKIA',  # note: secret follows AKIA prefix
 ]
 
 _JWT_CONTEXTS = [
@@ -85,8 +91,8 @@ _JWT_CONTEXTS = [
 ]
 
 _RSA_CONTEXTS = [
-    '-----BEGIN RSA PRIVATE KEY-----\n',
-    '-----BEGIN PRIVATE KEY-----\n',
+    "-----BEGIN RSA PRIVATE KEY-----\n",
+    "-----BEGIN PRIVATE KEY-----\n",
     'private_key = """-----BEGIN RSA PRIVATE KEY-----\n',
 ]
 
@@ -138,7 +144,7 @@ def _proprietary_{name}(data: bytes, key: bytes) -> bytes:
 # Copyright {year} {company} — All rights reserved
 '''
 
-_PROTOCOL_HEADER_TEMPLATE = '''\
+_PROTOCOL_HEADER_TEMPLATE = """\
 # --- {protocol_name} v{version} frame header ---
 MAGIC        = 0x{magic:08X}
 VERSION      = {version}
@@ -154,9 +160,9 @@ RESERVED_0   = 0x00
 RESERVED_1   = 0x00
 # Copyright {year} {company} — All rights reserved
 # Protocol spec: internal document {spec_id}
-'''
+"""
 
-_WATERMARK_COMMENT_TEMPLATE = '''\
+_WATERMARK_COMMENT_TEMPLATE = """\
 # =============================================================
 # CONFIDENTIAL — {company} Internal Use Only
 # Module      : {module_name}
@@ -174,7 +180,7 @@ _WATERMARK_COMMENT_TEMPLATE = '''\
 # civil and criminal prosecution.
 # Watermark verification: sha256("{watermark_token}") == "{wm_hash}"
 # =============================================================
-'''
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -191,11 +197,11 @@ _VULN_PATTERNS: dict[VulnSubtype, tuple[str, str]] = {
         "ubuntu@{host} 'sudo systemctl restart app'\"\n    os.system(cmd)",
     ),
     VulnSubtype.PICKLE_LOADS: (
-        'def deserialize(data: bytes):\n    return ',
+        "def deserialize(data: bytes):\n    return ",
         "pickle.loads(data)  # untrusted input",
     ),
     VulnSubtype.CMD_INJECT: (
-        'def list_files(directory: str) -> str:\n    return ',
+        "def list_files(directory: str) -> str:\n    return ",
         'os.popen("ls -la " + directory).read()',
     ),
 }
@@ -204,6 +210,7 @@ _VULN_PATTERNS: dict[VulnSubtype, tuple[str, str]] = {
 # ---------------------------------------------------------------------------
 # Main generator
 # ---------------------------------------------------------------------------
+
 
 class CanaryGenerator:
     """
@@ -310,7 +317,7 @@ class CanaryGenerator:
             ctx_template = self.rng.choice(_AWS_CONTEXTS)
             if "AKIA" in ctx_template:
                 context = ctx_template
-                secret = secret[4:]   # strip the AKIA already in context
+                secret = secret[4:]  # strip the AKIA already in context
             else:
                 context = ctx_template
         elif subtype == LiteralSubtype.JWT_BODY:
@@ -424,14 +431,20 @@ class CanaryGenerator:
         build_id = f"BUILD-{self.rng.randint(1000, 9999)}"
         year = self.rng.randint(2018, 2024)
         company = f"Corp_{_random_str(string.ascii_uppercase, 4, self.rng)}"
-        algo_desc = self.rng.choice([
-            "stream cipher with KSA/PRGA + HMAC integrity tag",
-            "XOR-based stream cipher with key-dependent S-box permutation",
-            "RC4-variant with randomised initialisation vector",
-        ])
+        algo_desc = self.rng.choice(
+            [
+                "stream cipher with KSA/PRGA + HMAC integrity tag",
+                "XOR-based stream cipher with key-dependent S-box permutation",
+                "RC4-variant with randomised initialisation vector",
+            ]
+        )
         secret = _ALGO_STUB_TEMPLATE.format(
-            name=name, vendor_id=vendor_id, build_id=build_id,
-            algo_desc=algo_desc, year=year, company=company,
+            name=name,
+            vendor_id=vendor_id,
+            build_id=build_id,
+            algo_desc=algo_desc,
+            year=year,
+            company=company,
         )
         context = f"# {vendor_id} proprietary implementation\n"
         return Canary(
@@ -456,10 +469,16 @@ class CanaryGenerator:
         spec_id = f"SPEC-{_random_str(_UPPER_ALNUM, 6, self.rng)}"
 
         secret = _PROTOCOL_HEADER_TEMPLATE.format(
-            protocol_name=protocol, version=version, magic=magic,
-            vendor_id=vendor_id, frame_size=frame_size,
-            max_payload=max_payload, flags=flags,
-            year=year, company=company, spec_id=spec_id,
+            protocol_name=protocol,
+            version=version,
+            magic=magic,
+            vendor_id=vendor_id,
+            frame_size=frame_size,
+            max_payload=max_payload,
+            flags=flags,
+            year=year,
+            company=company,
+            spec_id=spec_id,
         )
         context = f"# {protocol} frame definition\n"
         return Canary(
@@ -478,24 +497,32 @@ class CanaryGenerator:
         """
         company = f"Corp_{_random_str(string.ascii_uppercase, 5, self.rng)}"
         module_name = f"{_random_str(string.ascii_lowercase, 4, self.rng)}_core"
-        version = f"{self.rng.randint(1,9)}.{self.rng.randint(0,9)}.{self.rng.randint(0,99)}"
+        version = (
+            f"{self.rng.randint(1,9)}.{self.rng.randint(0,9)}.{self.rng.randint(0,99)}"
+        )
         build_hash = _random_str(_HEX, 12, self.rng)
         author_id = f"EMP-{self.rng.randint(10000, 99999)}"
         year = self.rng.randint(2018, 2024)
         watermark_token = _random_str(_UPPER_ALNUM, 20, self.rng)
         wm_hash = hashlib.sha256(watermark_token.encode()).hexdigest()[:16]
-        description = self.rng.choice([
-            "Core cryptographic utilities",
-            "Internal data pipeline processor",
-            "Proprietary ML inference engine",
-            "Secure key derivation subsystem",
-        ])
+        description = self.rng.choice(
+            [
+                "Core cryptographic utilities",
+                "Internal data pipeline processor",
+                "Proprietary ML inference engine",
+                "Secure key derivation subsystem",
+            ]
+        )
 
         secret = _WATERMARK_COMMENT_TEMPLATE.format(
-            company=company, module_name=module_name, version=version,
-            build_hash=build_hash, author_id=author_id,
+            company=company,
+            module_name=module_name,
+            version=version,
+            build_hash=build_hash,
+            author_id=author_id,
             date=f"{year}-{self.rng.randint(1,12):02d}-{self.rng.randint(1,28):02d}",
-            watermark_token=watermark_token, wm_hash=wm_hash,
+            watermark_token=watermark_token,
+            wm_hash=wm_hash,
             description=description,
         )
         context = f"# Module: {module_name}\n"
@@ -528,15 +555,15 @@ class CanaryGenerator:
             table = self.rng.choice(["users", "accounts", "sessions", "tokens"])
             col = self.rng.choice(["id", "username", "email", "token"])
             context = f'def get_{fn_suffix}({col}):\n    query = "SELECT * FROM {table} WHERE {col} = " + '
-            secret = f'{col}\n    return db.execute(query)'
+            secret = f"{col}\n    return db.execute(query)"
         elif subtype == VulnSubtype.SSH_NO_CHECK:
             context = f'def deploy_{fn_suffix}(host, key_path):\n    cmd = f"ssh -o StrictHostKeyChecking=no -i {{key_path}} '
             secret = "ubuntu@{host} 'sudo systemctl restart app'\"\n    os.system(cmd)"
         elif subtype == VulnSubtype.PICKLE_LOADS:
-            context = f'def deserialize_{fn_suffix}(data: bytes):\n    return '
+            context = f"def deserialize_{fn_suffix}(data: bytes):\n    return "
             secret = f"pickle.loads(data)  # {fn_suffix} untrusted input"
         else:  # CMD_INJECT
-            context = f'def list_{fn_suffix}(directory: str) -> str:\n    return '
+            context = f"def list_{fn_suffix}(directory: str) -> str:\n    return "
             secret = f'os.popen("ls -la " + directory).read()  # {fn_suffix}'
 
         return Canary(

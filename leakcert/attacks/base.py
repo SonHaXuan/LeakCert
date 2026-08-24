@@ -13,16 +13,16 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
 class AttackResult:
     """Result of a single attack run against one canary."""
+
     canary_id: str
     secret: str
-    guessed_secret: Optional[str]
-    success: bool                   # guessed_secret == secret (verbatim)
+    guessed_secret: str | None
+    success: bool  # guessed_secret == secret (verbatim)
     semantic_success: bool = False  # model judge for T3 canaries
     queries_used: int = 0
     query_history: list[str] = field(default_factory=list)

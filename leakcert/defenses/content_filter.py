@@ -13,10 +13,9 @@ which paraphrase attacks still impose.
 
 from __future__ import annotations
 
-
 from ..model.completion_service import CompletionResult
-from .base import DefenseWrapper, DefenseConfig
 from ..runtime.suppression import TargetStringSuppression
+from .base import DefenseConfig, DefenseWrapper
 
 REFUSAL_TOKEN = "<|FILTERED|>"
 
@@ -38,7 +37,7 @@ class ContentFilterDefense(DefenseWrapper):
         super().__init__(base_service, config)
         self.threshold = classifier_threshold
         self._suppressor = TargetStringSuppression()
-        self._classifier = None   # trained separately if available
+        self._classifier = None  # trained separately if available
 
     def complete(self, prompt: str, n_samples: int = 1) -> list[CompletionResult]:
         results = self.base.complete(prompt, n_samples)
@@ -50,20 +49,26 @@ class ContentFilterDefense(DefenseWrapper):
         n_samples: int = 1,
         batch_size: int = 8,
     ) -> list[list[CompletionResult]]:
-        batches = self.base.complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+        batches = self.base.complete_many(
+            prompts, n_samples=n_samples, batch_size=batch_size
+        )
         return [self._filter_results(results) for results in batches]
 
-    def _filter_results(self, results: list[CompletionResult]) -> list[CompletionResult]:
+    def _filter_results(
+        self, results: list[CompletionResult]
+    ) -> list[CompletionResult]:
         filtered = []
         for r in results:
             if self._is_secret(r.text):
-                filtered.append(CompletionResult(
-                    text=REFUSAL_TOKEN,
-                    token_ids=[],
-                    log_probs=[],
-                    was_refused=True,
-                    refusal_reason="content_filter",
-                ))
+                filtered.append(
+                    CompletionResult(
+                        text=REFUSAL_TOKEN,
+                        token_ids=[],
+                        log_probs=[],
+                        was_refused=True,
+                        refusal_reason="content_filter",
+                    )
+                )
             else:
                 filtered.append(r)
         return filtered
@@ -81,6 +86,7 @@ class ContentFilterDefense(DefenseWrapper):
     def _classifier_score(self, text: str) -> float:
         """Score using the trained classifier (if loaded)."""
         from ..runtime.refusal import UncertaintyRefusal
+
         features = UncertaintyRefusal._extract_features(text)
         try:
             prob = self._classifier.predict_proba([features])[0][1]
@@ -95,15 +101,23 @@ class ContentFilterDefense(DefenseWrapper):
     ) -> None:
         """Train the learned secret classifier component of B5."""
         from sklearn.linear_model import LogisticRegression
-        from sklearn.preprocessing import StandardScaler
         from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler
+
         from ..runtime.refusal import UncertaintyRefusal
 
-        X = [UncertaintyRefusal._extract_features(t)
-             for t in positive_examples + negative_examples]
+        X = [
+            UncertaintyRefusal._extract_features(t)
+            for t in positive_examples + negative_examples
+        ]
         y = [1] * len(positive_examples) + [0] * len(negative_examples)
-        self._classifier = Pipeline([
-            ("scaler", StandardScaler()),
-            ("lr", LogisticRegression(C=1.0, class_weight="balanced", max_iter=1000)),
-        ])
+        self._classifier = Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                (
+                    "lr",
+                    LogisticRegression(C=1.0, class_weight="balanced", max_iter=1000),
+                ),
+            ]
+        )
         self._classifier.fit(X, y)

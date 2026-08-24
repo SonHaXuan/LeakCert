@@ -21,21 +21,20 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Optional
 
-
-from .base import Attacker, AttackResult
 from ..canary.types import Canary
+from .base import Attacker, AttackResult
 
 
 @dataclass
 class LRTState:
     """Maintains per-canary LLR accumulator for the SPRT."""
+
     canary_id: str
-    llr_score: float = 0.0     # S_t = Σ Λ_t
+    llr_score: float = 0.0  # S_t = Σ Λ_t
     queries: int = 0
     decided: bool = False
-    decision: Optional[bool] = None   # True = H_1 (canary present)
+    decision: bool | None = None  # True = H_1 (canary present)
 
 
 class AGreedyLRT(Attacker):
@@ -71,8 +70,8 @@ class AGreedyLRT(Attacker):
         self.alpha = alpha
         self.beta = beta
         # SPRT thresholds (Wald's identity)
-        self.threshold_hi = math.log((1 - beta) / alpha)   # b: reject H_0
-        self.threshold_lo = math.log(beta / (1 - alpha))   # -a: accept H_0
+        self.threshold_hi = math.log((1 - beta) / alpha)  # b: reject H_0
+        self.threshold_lo = math.log(beta / (1 - alpha))  # -a: accept H_0
 
     def attack_canary(self, service, canary: Canary) -> AttackResult:
         """
@@ -157,9 +156,7 @@ class AGreedyLRT(Attacker):
             completion = results[0].text
             states[target_canary.canary_id].queries += 1
 
-            lambda_t = self._compute_lambda(
-                service, target_canary.context, completion
-            )
+            lambda_t = self._compute_lambda(service, target_canary.context, completion)
             states[target_canary.canary_id].llr_score += lambda_t
 
             if lambda_t > 0:
@@ -181,13 +178,15 @@ class AGreedyLRT(Attacker):
             decision = st.decision if st.decided else (st.llr_score > 0)
             best = best_completions[c.canary_id]
             success = decision and self.contains_secret(best, c.secret)
-            results_list.append(AttackResult(
-                canary_id=c.canary_id,
-                secret=c.secret,
-                guessed_secret=best if success else None,
-                success=success,
-                queries_used=st.queries,
-            ))
+            results_list.append(
+                AttackResult(
+                    canary_id=c.canary_id,
+                    secret=c.secret,
+                    guessed_secret=best if success else None,
+                    success=success,
+                    queries_used=st.queries,
+                )
+            )
         return results_list
 
     def _compute_lambda(self, service, prompt: str, completion: str) -> float:
@@ -210,7 +209,9 @@ class AGreedyLRT(Attacker):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def expected_queries_to_decision(kl_per_query: float, alpha: float, beta: float) -> float:
+    def expected_queries_to_decision(
+        kl_per_query: float, alpha: float, beta: float
+    ) -> float:
         """
         Expected number of queries before SPRT decision (Wald's identity):
             E[T] ≈ [(1-β)log((1-β)/α) + β log(β/(1-α))] / D_KL(p||q)

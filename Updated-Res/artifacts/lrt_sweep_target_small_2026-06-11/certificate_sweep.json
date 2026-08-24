@@ -1,0 +1,536 @@
+{
+  "source_kl_estimates": "_run_results/hpc_paper_scale/certificate/kl_estimates.json",
+  "delta": 0.01,
+  "full_panel": {
+    "n": 11566,
+    "mean_kl_nats": 19.9948,
+    "sweep": [
+      {
+        "B": 1,
+        "hoeffding_cert_nats": 9.3558,
+        "bernstein_cert_nats": 9.3558,
+        "raw_hoeffding_cert_nats": 24.2941,
+        "entropy_H_K_nats": 9.3558,
+        "entropy_cap_applied": true,
+        "extraction_prob_bound": 1.0,
+        "vacuous": true
+      },
+      {
+        "B": 2,
+        "hoeffding_cert_nats": 9.3558,
+        "bernstein_cert_nats": 9.3558,
+        "raw_hoeffding_cert_nats": 48.5881,
+        "entropy_H_K_nats": 9.3558,
+        "entropy_cap_applied": true,
+        "extraction_prob_bound": 1.0,
+        "vacuous": true
+      },
+      {
+        "B": 5,
+        "hoeffding_cert_nats": 9.3558,
+        "bernstein_cert_nats": 9.3558,
+        "raw_hoeffding_cert_nats": 121.4703,
+        "entropy_H_K_nats": 9.3558,
+        "entropy_cap_applied": true,
+        "extraction_prob_bound": 1.0,
+        "vacuous": true
+      },
+      {
+        "B": 10,
+        "hoeffding_cert_nats": 9.3558,
+        "bernstein_cert_nats": 9.3558,
+        "raw_hoeffding_cert_nats": 242.9406,
+        "entropy_H_K_nats": 9.3558,
+        "entropy_cap_applied": true,
+        "extraction_prob_bound": 1.0,
+        "vacuous": true
+      },
+      {
+        "B": 25,
+        "hoeffding_cert_nats": 9.3558,
+        "bernstein_cert_nats": 9.3558,
+        "raw_hoeffding_cert_nats": 607.3515,
+        "entropy_H_K_nats": 9.3558,
+        "entropy_cap_applied": true,
+        "extraction_prob_bound": 1.0,
+        "vacuous": true
+      },
+      {
+        "B": 50,
+        "hoeffding_cert_nats": 9.3558,
+        "bernstein_cert_nats": 9.3558,
+        "raw_hoeffding_cert_nats": 1214.7029,
+        "entropy_H_K_nats": 9.3558,
+        "entropy_cap_applied": true,
+        "extraction_prob_bound": 1.0,
+        "vacuous": true
+      },
+      {
+        "B": 100,
+        "hoeffding_cert_nats": 9.3558,
+        "bernstein_cert_nats": 9.3558,
+        "raw_hoeffding_cert_nats": 2429.4058,
+        "entropy_H_K_nats": 9.3558,
+        "entropy_cap_applied": true,
+        "extraction_prob_bound": 1.0,
+        "vacuous": true
+      },
+      {
+        "B": 250,
+        "hoeffding_cert_nats": 9.3558,
+        "bernstein_cert_nats": 9.3558,
+        "raw_hoeffding_cert_nats": 6073.5145,
+        "entropy_H_K_nats": 9.3558,
+        "entropy_cap_applied": true,
+        "extraction_prob_bound": 1.0,
+        "vacuous": true
+      },
+      {
+        "B": 500,
+        "hoeffding_cert_nats": 9.3558,
+        "bernstein_cert_nats": 9.3558,
+        "raw_hoeffding_cert_nats": 12147.0291,
+        "entropy_H_K_nats": 9.3558,
+        "entropy_cap_applied": true,
+        "extraction_prob_bound": 1.0,
+        "vacuous": true
+      },
+      {
+        "B": 1000,
+        "hoeffding_cert_nats": 9.3558,
+        "bernstein_cert_nats": 9.3558,
+        "raw_hoeffding_cert_nats": 24294.0581,
+        "entropy_H_K_nats": 9.3558,
+        "entropy_cap_applied": true,
+        "extraction_prob_bound": 1.0,
+        "vacuous": true
+      }
+    ]
+  },
+  "by_type": {
+    "T1_literal": {
+      "n": 10000,
+      "mean_kl_nats": 17.5326,
+      "sweep": [
+        {
+          "B": 1,
+          "hoeffding_cert_nats": 9.2103,
+          "bernstein_cert_nats": 9.2103,
+          "raw_hoeffding_cert_nats": 18.5763,
+          "entropy_H_K_nats": 9.2103,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 2,
+          "hoeffding_cert_nats": 9.2103,
+          "bernstein_cert_nats": 9.2103,
+          "raw_hoeffding_cert_nats": 37.1527,
+          "entropy_H_K_nats": 9.2103,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 5,
+          "hoeffding_cert_nats": 9.2103,
+          "bernstein_cert_nats": 9.2103,
+          "raw_hoeffding_cert_nats": 92.8816,
+          "entropy_H_K_nats": 9.2103,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 10,
+          "hoeffding_cert_nats": 9.2103,
+          "bernstein_cert_nats": 9.2103,
+          "raw_hoeffding_cert_nats": 185.7633,
+          "entropy_H_K_nats": 9.2103,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 25,
+          "hoeffding_cert_nats": 9.2103,
+          "bernstein_cert_nats": 9.2103,
+          "raw_hoeffding_cert_nats": 464.4082,
+          "entropy_H_K_nats": 9.2103,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 50,
+          "hoeffding_cert_nats": 9.2103,
+          "bernstein_cert_nats": 9.2103,
+          "raw_hoeffding_cert_nats": 928.8164,
+          "entropy_H_K_nats": 9.2103,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 100,
+          "hoeffding_cert_nats": 9.2103,
+          "bernstein_cert_nats": 9.2103,
+          "raw_hoeffding_cert_nats": 1857.6329,
+          "entropy_H_K_nats": 9.2103,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 250,
+          "hoeffding_cert_nats": 9.2103,
+          "bernstein_cert_nats": 9.2103,
+          "raw_hoeffding_cert_nats": 4644.0822,
+          "entropy_H_K_nats": 9.2103,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 500,
+          "hoeffding_cert_nats": 9.2103,
+          "bernstein_cert_nats": 9.2103,
+          "raw_hoeffding_cert_nats": 9288.1644,
+          "entropy_H_K_nats": 9.2103,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 1000,
+          "hoeffding_cert_nats": 9.2103,
+          "bernstein_cert_nats": 9.2103,
+          "raw_hoeffding_cert_nats": 18576.3289,
+          "entropy_H_K_nats": 9.2103,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        }
+      ]
+    },
+    "T2_paraphrase": {
+      "n": 1000,
+      "mean_kl_nats": 11.1325,
+      "sweep": [
+        {
+          "B": 1,
+          "hoeffding_cert_nats": 6.9078,
+          "bernstein_cert_nats": 6.9078,
+          "raw_hoeffding_cert_nats": 13.4046,
+          "entropy_H_K_nats": 6.9078,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 2,
+          "hoeffding_cert_nats": 6.9078,
+          "bernstein_cert_nats": 6.9078,
+          "raw_hoeffding_cert_nats": 26.8091,
+          "entropy_H_K_nats": 6.9078,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 5,
+          "hoeffding_cert_nats": 6.9078,
+          "bernstein_cert_nats": 6.9078,
+          "raw_hoeffding_cert_nats": 67.0228,
+          "entropy_H_K_nats": 6.9078,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 10,
+          "hoeffding_cert_nats": 6.9078,
+          "bernstein_cert_nats": 6.9078,
+          "raw_hoeffding_cert_nats": 134.0456,
+          "entropy_H_K_nats": 6.9078,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 25,
+          "hoeffding_cert_nats": 6.9078,
+          "bernstein_cert_nats": 6.9078,
+          "raw_hoeffding_cert_nats": 335.1141,
+          "entropy_H_K_nats": 6.9078,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 50,
+          "hoeffding_cert_nats": 6.9078,
+          "bernstein_cert_nats": 6.9078,
+          "raw_hoeffding_cert_nats": 670.2282,
+          "entropy_H_K_nats": 6.9078,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 100,
+          "hoeffding_cert_nats": 6.9078,
+          "bernstein_cert_nats": 6.9078,
+          "raw_hoeffding_cert_nats": 1340.4563,
+          "entropy_H_K_nats": 6.9078,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 250,
+          "hoeffding_cert_nats": 6.9078,
+          "bernstein_cert_nats": 6.9078,
+          "raw_hoeffding_cert_nats": 3351.1408,
+          "entropy_H_K_nats": 6.9078,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 500,
+          "hoeffding_cert_nats": 6.9078,
+          "bernstein_cert_nats": 6.9078,
+          "raw_hoeffding_cert_nats": 6702.2816,
+          "entropy_H_K_nats": 6.9078,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 1000,
+          "hoeffding_cert_nats": 6.9078,
+          "bernstein_cert_nats": 6.9078,
+          "raw_hoeffding_cert_nats": 13404.5633,
+          "entropy_H_K_nats": 6.9078,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        }
+      ]
+    },
+    "T3_semantic": {
+      "n": 283,
+      "mean_kl_nats": 156.463,
+      "sweep": [
+        {
+          "B": 1,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 183.948,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 2,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 367.8959,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 5,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 919.7398,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 10,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 1839.4797,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 25,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 4598.6991,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 50,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 9197.3983,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 100,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 18394.7965,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 250,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 45986.9914,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 500,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 91973.9827,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 1000,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 183947.9654,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        }
+      ]
+    },
+    "T4_vulnerability": {
+      "n": 283,
+      "mean_kl_nats": 1.8435,
+      "sweep": [
+        {
+          "B": 1,
+          "hoeffding_cert_nats": 2.6452,
+          "bernstein_cert_nats": 2.2424,
+          "raw_hoeffding_cert_nats": 2.6452,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 0.574348,
+          "vacuous": false
+        },
+        {
+          "B": 2,
+          "hoeffding_cert_nats": 5.2905,
+          "bernstein_cert_nats": 4.4849,
+          "raw_hoeffding_cert_nats": 5.2905,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 0.971561,
+          "vacuous": false
+        },
+        {
+          "B": 5,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 13.2261,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 10,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 26.4523,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 25,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 66.1306,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 50,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 132.2613,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 100,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 264.5226,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 250,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 661.3064,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 500,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 1322.6129,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        },
+        {
+          "B": 1000,
+          "hoeffding_cert_nats": 5.6454,
+          "bernstein_cert_nats": 5.6454,
+          "raw_hoeffding_cert_nats": 2645.2258,
+          "entropy_H_K_nats": 5.6454,
+          "entropy_cap_applied": true,
+          "extraction_prob_bound": 1.0,
+          "vacuous": true
+        }
+      ]
+    }
+  }
+}

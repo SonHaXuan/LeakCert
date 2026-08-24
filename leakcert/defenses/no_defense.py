@@ -1,7 +1,7 @@
 """B1 – No defence: greedy decoding at τ=1.0, top-p=1.0, no filter."""
 
 from ..model.completion_service import CompletionResult
-from .base import DefenseWrapper, DefenseConfig
+from .base import DefenseConfig, DefenseWrapper
 
 
 class NoDefense(DefenseWrapper):
@@ -22,4 +22,6 @@ class NoDefense(DefenseWrapper):
         n_samples: int = 1,
         batch_size: int = 8,
     ) -> list[list[CompletionResult]]:
-        return self.base.complete_many(prompts, n_samples=n_samples, batch_size=batch_size)
+        return self.base.complete_many(
+            prompts, n_samples=n_samples, batch_size=batch_size
+        )

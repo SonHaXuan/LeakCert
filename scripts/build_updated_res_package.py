@@ -5,14 +5,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 import shutil
 import subprocess
 import time
 from pathlib import Path
 from typing import Any
-
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "Updated-Res"
@@ -33,12 +31,6 @@ def sanitize_text(text: str) -> str:
         LOCAL_PREFIX: "<repo>/",
         str(ROOT): "<repo>",
         USER_HOME: "<home>",
-        "Mac.RMIT.EDU.VN": "local-mac",
-        "SP 2027": "submission",
-        "sp2027": "submission",
-        "Current SP Status": "Current Project Status",
-        "SP Claim Checklist": "Claim Checklist",
-        "SP Evaluation": "Evaluation",
     }
     for src, dst in replacements.items():
         text = text.replace(src, dst)
@@ -93,7 +85,9 @@ def pct(x: float | None) -> str:
 
 def get_git_commit() -> str:
     try:
-        return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+        ).strip()
     except Exception:
         return "unknown"
 
@@ -119,13 +113,22 @@ def get_git_status() -> list[str]:
 
 
 def latest_dir(pattern: str) -> Path | None:
-    dirs = sorted((path for path in ROOT.glob(pattern) if path.is_dir()), key=lambda p: p.stat().st_mtime)
+    dirs = sorted(
+        (path for path in ROOT.glob(pattern) if path.is_dir()),
+        key=lambda p: p.stat().st_mtime,
+    )
     return dirs[-1] if dirs else None
 
 
-def latest_completed_dir(pattern: str, required_file: str = "summary.json") -> Path | None:
+def latest_completed_dir(
+    pattern: str, required_file: str = "summary.json"
+) -> Path | None:
     dirs = sorted(
-        (path for path in ROOT.glob(pattern) if path.is_dir() and (path / required_file).exists()),
+        (
+            path
+            for path in ROOT.glob(pattern)
+            if path.is_dir() and (path / required_file).exists()
+        ),
         key=lambda p: p.stat().st_mtime,
     )
     return dirs[-1] if dirs else None
@@ -159,8 +162,14 @@ def extract_w5_rows(path: str) -> dict[str, dict[str, float]]:
     for name, row in data.items():
         if not isinstance(row, dict):
             continue
-        w4 = row.get("w4_rate", row.get("w4_extraction_rate_pct", row.get("w4_extraction_rate", 0)))
-        w5 = row.get("w5_rate", row.get("w5_extraction_rate_pct", row.get("w5_extraction_rate", 0)))
+        w4 = row.get(
+            "w4_rate",
+            row.get("w4_extraction_rate_pct", row.get("w4_extraction_rate", 0)),
+        )
+        w5 = row.get(
+            "w5_rate",
+            row.get("w5_extraction_rate_pct", row.get("w5_extraction_rate", 0)),
+        )
         # Most repository result tables already store percentages (e.g. 9.82).
         # Older helper outputs may store fractions; normalize only those.
         w4 = float(w4 or 0)
@@ -199,7 +208,9 @@ def build_lcct_model_full_section(summary: dict[str, Any] | None) -> str:
         if not isinstance(row, dict):
             continue
         duration = row.get("duration_sec")
-        duration_txt = "n/a" if duration is None else f"{float(duration) / 60.0:.1f} min"
+        duration_txt = (
+            "n/a" if duration is None else f"{float(duration) / 60.0:.1f} min"
+        )
         lines.append(
             f"| {name} | {row.get('hits', 'n/a')} | {row.get('n', 'n/a')} | "
             f"{float(row.get('hit_rate_pct', 0.0)):.2f}% | "
@@ -243,7 +254,9 @@ def build_lcct_model_smoke_section(summary: dict[str, Any] | None) -> str:
 def parse_lcct_live_progress(log_path: Path) -> dict[str, Any] | None:
     if not log_path.exists():
         return None
-    progress_re = re.compile(r'"defense": "([^"]+)", "completed": (\d+), "total": (\d+)')
+    progress_re = re.compile(
+        r'"defense": "([^"]+)", "completed": (\d+), "total": (\d+)'
+    )
     latest: dict[str, dict[str, int]] = {}
     for line in log_path.read_text(errors="replace").splitlines():
         m = progress_re.search(line)
@@ -265,7 +278,11 @@ def build_lcct_live_status(run_dir: Path | None) -> tuple[dict[str, Any] | None,
     if not run_dir:
         return None, ""
     rel = run_dir.relative_to(ROOT)
-    log_path = ROOT / "_run_logs" / f"{run_dir.name.replace('lcct_comparable_model_full_', 'lcct_comparable_model_full_')}.log"
+    log_path = (
+        ROOT
+        / "_run_logs"
+        / f"{run_dir.name.replace('lcct_comparable_model_full_', 'lcct_comparable_model_full_')}.log"
+    )
     live = parse_lcct_live_progress(log_path)
     if live is None:
         live = {"latest_progress": {}, "updated": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
@@ -306,10 +323,20 @@ def build_lcct_live_status(run_dir: Path | None) -> tuple[dict[str, Any] | None,
         lines.append(f"| {defense} | {completed} | {total} | {pct_done:.2f}% |")
 
     if defense_summaries:
-        lines.extend(["", "## Completed Defense Summaries", "", "| defense | hits | n | hit rate | duration |", "|---|---:|---:|---:|---:|"])
+        lines.extend(
+            [
+                "",
+                "## Completed Defense Summaries",
+                "",
+                "| defense | hits | n | hit rate | duration |",
+                "|---|---:|---:|---:|---:|",
+            ]
+        )
         for defense, row in defense_summaries.items():
             duration = row.get("duration_sec")
-            duration_txt = "n/a" if duration is None else f"{float(duration) / 60.0:.1f} min"
+            duration_txt = (
+                "n/a" if duration is None else f"{float(duration) / 60.0:.1f} min"
+            )
             lines.append(
                 f"| {defense} | {row.get('hits', 'n/a')} | {row.get('n', 'n/a')} | "
                 f"{float(row.get('hit_rate_pct', 0.0)):.2f}% | {duration_txt} |"
@@ -331,10 +358,6 @@ def main() -> int:
         "bootstrap": "_run_results/bootstrap_w5_evidence_20260603_1934_cpu_bootstrap_learnedonly_seed42_1m/bootstrap_w5_evidence.md",
         "w3_diagnostic": "_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.md",
         "qwen_seed_summary": "_run_results/local_mps_qwen_seed42_seed43_summary_20260603_093946/qwen_mps_seed42_seed43_summary.md",
-        "current_status": "_run_results/current_sp_status_20260603_201916/current_sp_status.md",
-        "claim_checklist": "_run_results/sp_claim_checklist_20260601_1650/sp_claim_checklist.md",
-        "real_input_validation": "_run_results/sp2027_real_inputs_20260531_2312/real_input_validation.md",
-        "lcct_author_response": "_run_results/lcct_author_response_20260601_1328/author_response_summary.md",
     }
     for label, src in key_paths.items():
         copy_sanitized(src, f"{label}{Path(src).suffix}")
@@ -358,115 +381,230 @@ def main() -> int:
     lcct_latest = latest_dir("_run_results/lcct_comparable_fullsize_*")
     if lcct_latest:
         rel = lcct_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "benchmark" / "metadata.json"), "lcct_comparable_fullsize_metadata.json")
-        copy_sanitized(str(rel / "scorer_smoke" / "summary.json"), "lcct_comparable_scorer_smoke_summary.json")
+        copy_sanitized(
+            str(rel / "benchmark" / "metadata.json"),
+            "lcct_comparable_fullsize_metadata.json",
+        )
+        copy_sanitized(
+            str(rel / "scorer_smoke" / "summary.json"),
+            "lcct_comparable_scorer_smoke_summary.json",
+        )
 
     lcct_model_smoke_summary = None
-    lcct_model_smoke_latest = latest_completed_dir("_run_results/lcct_comparable_model_smoke_[0-9]*")
+    lcct_model_smoke_latest = latest_completed_dir(
+        "_run_results/lcct_comparable_model_smoke_[0-9]*"
+    )
     if lcct_model_smoke_latest:
         rel = lcct_model_smoke_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "summary.json"), "lcct_comparable_model_smoke_summary.json")
-        copy_sanitized(str(rel / "summary.md"), "lcct_comparable_model_smoke_summary.md")
+        copy_sanitized(
+            str(rel / "summary.json"), "lcct_comparable_model_smoke_summary.json"
+        )
+        copy_sanitized(
+            str(rel / "summary.md"), "lcct_comparable_model_smoke_summary.md"
+        )
         lcct_model_smoke_summary = read_json(rel / "summary.json")
 
     lcct_model_full_summary = None
-    lcct_model_full_latest = latest_completed_dir("_run_results/lcct_comparable_model_full_*")
+    lcct_model_full_latest = latest_completed_dir(
+        "_run_results/lcct_comparable_model_full_*"
+    )
     if lcct_model_full_latest:
         rel = lcct_model_full_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "summary.json"), "lcct_comparable_model_full_summary.json")
+        copy_sanitized(
+            str(rel / "summary.json"), "lcct_comparable_model_full_summary.json"
+        )
         copy_sanitized(str(rel / "summary.md"), "lcct_comparable_model_full_summary.md")
         lcct_model_full_summary = read_json(rel / "summary.json")
 
     lcct_model_full_live = None
-    lcct_model_full_live_latest = latest_dir("_run_results/lcct_comparable_model_full_*")
-    if lcct_model_full_live_latest and not (lcct_model_full_live_latest / "summary.json").exists():
-        lcct_model_full_live, lcct_live_status_doc = build_lcct_live_status(lcct_model_full_live_latest)
+    lcct_model_full_live_latest = latest_dir(
+        "_run_results/lcct_comparable_model_full_*"
+    )
+    if (
+        lcct_model_full_live_latest
+        and not (lcct_model_full_live_latest / "summary.json").exists()
+    ):
+        lcct_model_full_live, lcct_live_status_doc = build_lcct_live_status(
+            lcct_model_full_live_latest
+        )
         write_text("lcct_comparable_full_live_status.md", lcct_live_status_doc)
 
     entropy_audit_latest = latest_dir("_run_results/entropy_cap_audit_*")
     entropy_audit_summary = None
     if entropy_audit_latest:
         rel = entropy_audit_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "certificate_entropy_cap_audit.json"), "certificate_entropy_cap_audit.json")
-        copy_sanitized(str(rel / "certificate_entropy_cap_audit.md"), "certificate_entropy_cap_audit.md")
+        copy_sanitized(
+            str(rel / "certificate_entropy_cap_audit.json"),
+            "certificate_entropy_cap_audit.json",
+        )
+        copy_sanitized(
+            str(rel / "certificate_entropy_cap_audit.md"),
+            "certificate_entropy_cap_audit.md",
+        )
         entropy_audit_summary = read_json(rel / "certificate_entropy_cap_audit.json")
 
     informative_sweep_latest = latest_dir("_run_results/informative_budget_sweep_*")
     informative_summaries = {}
     if informative_sweep_latest:
-        for child in sorted(p for p in informative_sweep_latest.iterdir() if p.is_dir()):
+        for child in sorted(
+            p for p in informative_sweep_latest.iterdir() if p.is_dir()
+        ):
             rel = child.relative_to(ROOT)
             key = child.name
-            copy_sanitized(str(rel / "informative_budget_sweep.json"), f"informative_budget_sweep_{key}.json")
-            copy_sanitized(str(rel / "informative_budget_sweep.md"), f"informative_budget_sweep_{key}.md")
-            informative_summaries[key] = read_json(rel / "informative_budget_sweep.json")
+            copy_sanitized(
+                str(rel / "informative_budget_sweep.json"),
+                f"informative_budget_sweep_{key}.json",
+            )
+            copy_sanitized(
+                str(rel / "informative_budget_sweep.md"),
+                f"informative_budget_sweep_{key}.md",
+            )
+            informative_summaries[key] = read_json(
+                rel / "informative_budget_sweep.json"
+            )
 
     mac_queue_latest = latest_dir("_run_results/mac_studio_stable_queue_*")
     mac_queue_summary = None
     mac_w5_summaries = {}
     if mac_queue_latest:
         rel = mac_queue_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "metadata.json"), "mac_studio_stable_queue_metadata.json")
-        copy_sanitized(str(rel / "queue_status.json"), "mac_studio_stable_queue_status.json")
+        copy_sanitized(
+            str(rel / "metadata.json"), "mac_studio_stable_queue_metadata.json"
+        )
+        copy_sanitized(
+            str(rel / "queue_status.json"), "mac_studio_stable_queue_status.json"
+        )
         mac_queue_summary = read_json(rel / "queue_status.json")
-        for table in sorted(mac_queue_latest.glob("w5_seed*/w5/table6_paraphrase_robustness.json")):
+        for table in sorted(
+            mac_queue_latest.glob("w5_seed*/w5/table6_paraphrase_robustness.json")
+        ):
             seed_name = table.parents[1].name
-            copy_sanitized(str(table.relative_to(ROOT)), f"mac_studio_stable_{seed_name}_w5_table6.json")
+            copy_sanitized(
+                str(table.relative_to(ROOT)),
+                f"mac_studio_stable_{seed_name}_w5_table6.json",
+            )
             mac_w5_summaries[seed_name] = read_json(table.relative_to(ROOT))
 
-    reviewer_bootstrap_latest = latest_dir("_run_results/reviewer_local_bootstrap_w5_multiseed_*")
+    reviewer_bootstrap_latest = latest_dir(
+        "_run_results/reviewer_local_bootstrap_w5_multiseed_*"
+    )
     reviewer_bootstrap = None
     if reviewer_bootstrap_latest:
         rel = reviewer_bootstrap_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "bootstrap_w5_multiseed.json"), "reviewer_bootstrap_w5_multiseed.json")
-        copy_sanitized(str(rel / "bootstrap_w5_multiseed.md"), "reviewer_bootstrap_w5_multiseed.md")
+        copy_sanitized(
+            str(rel / "bootstrap_w5_multiseed.json"),
+            "reviewer_bootstrap_w5_multiseed.json",
+        )
+        copy_sanitized(
+            str(rel / "bootstrap_w5_multiseed.md"), "reviewer_bootstrap_w5_multiseed.md"
+        )
         reviewer_bootstrap = read_json(rel / "bootstrap_w5_multiseed.json")
 
-    reviewer_w3_error_latest = latest_dir("_run_results/reviewer_local_w3_error_analysis_*")
+    reviewer_w3_error_latest = latest_dir(
+        "_run_results/reviewer_local_w3_error_analysis_*"
+    )
     reviewer_w3_error = None
-    if reviewer_w3_error_latest and (reviewer_w3_error_latest / "w3_error_analysis.json").exists():
+    if (
+        reviewer_w3_error_latest
+        and (reviewer_w3_error_latest / "w3_error_analysis.json").exists()
+    ):
         rel = reviewer_w3_error_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "w3_error_analysis.json"), "reviewer_w3_error_analysis.json")
-        copy_sanitized(str(rel / "w3_error_analysis.md"), "reviewer_w3_error_analysis.md")
+        copy_sanitized(
+            str(rel / "w3_error_analysis.json"), "reviewer_w3_error_analysis.json"
+        )
+        copy_sanitized(
+            str(rel / "w3_error_analysis.md"), "reviewer_w3_error_analysis.md"
+        )
         reviewer_w3_error = read_json(rel / "w3_error_analysis.json")
 
-    reviewer_threshold_latest = latest_dir("_run_results/reviewer_local_w3_threshold_sweep_*")
+    reviewer_threshold_latest = latest_dir(
+        "_run_results/reviewer_local_w3_threshold_sweep_*"
+    )
     reviewer_threshold = None
-    if reviewer_threshold_latest and (reviewer_threshold_latest / "w3_refusal_threshold_sweep.json").exists():
+    if (
+        reviewer_threshold_latest
+        and (reviewer_threshold_latest / "w3_refusal_threshold_sweep.json").exists()
+    ):
         rel = reviewer_threshold_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "w3_refusal_threshold_sweep.json"), "reviewer_w3_threshold_sweep.json")
+        copy_sanitized(
+            str(rel / "w3_refusal_threshold_sweep.json"),
+            "reviewer_w3_threshold_sweep.json",
+        )
         reviewer_threshold = read_json(rel / "w3_refusal_threshold_sweep.json")
 
-    reviewer_ablation_latest = latest_dir("_run_results/reviewer_local_component_ablation_*")
+    reviewer_ablation_latest = latest_dir(
+        "_run_results/reviewer_local_component_ablation_*"
+    )
     reviewer_ablation = None
-    if reviewer_ablation_latest and (reviewer_ablation_latest / "component_ablation_summary.json").exists():
+    if (
+        reviewer_ablation_latest
+        and (reviewer_ablation_latest / "component_ablation_summary.json").exists()
+    ):
         rel = reviewer_ablation_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "component_ablation_summary.json"), "reviewer_component_ablation_summary.json")
-        copy_sanitized(str(rel / "component_ablation_summary.md"), "reviewer_component_ablation_summary.md")
+        copy_sanitized(
+            str(rel / "component_ablation_summary.json"),
+            "reviewer_component_ablation_summary.json",
+        )
+        copy_sanitized(
+            str(rel / "component_ablation_summary.md"),
+            "reviewer_component_ablation_summary.md",
+        )
         reviewer_ablation = read_json(rel / "component_ablation_summary.json")
 
-    reviewer_extra_light_latest = latest_dir("_run_results/reviewer_local_extra_light_*")
+    reviewer_extra_light_latest = latest_dir(
+        "_run_results/reviewer_local_extra_light_*"
+    )
     reviewer_extra_light = None
-    if reviewer_extra_light_latest and (reviewer_extra_light_latest / "summary.json").exists():
+    if (
+        reviewer_extra_light_latest
+        and (reviewer_extra_light_latest / "summary.json").exists()
+    ):
         rel = reviewer_extra_light_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "summary.json"), "reviewer_extra_light_w5_replications.json")
+        copy_sanitized(
+            str(rel / "summary.json"), "reviewer_extra_light_w5_replications.json"
+        )
         if (reviewer_extra_light_latest / "summary.md").exists():
-            copy_sanitized(str(rel / "summary.md"), "reviewer_extra_light_w5_replications.md")
+            copy_sanitized(
+                str(rel / "summary.md"), "reviewer_extra_light_w5_replications.md"
+            )
         reviewer_extra_light = read_json(rel / "summary.json")
 
-    reviewer_extra_ablation_latest = latest_dir("_run_results/reviewer_local_extra_ablation_resume_*")
+    reviewer_extra_ablation_latest = latest_dir(
+        "_run_results/reviewer_local_extra_ablation_resume_*"
+    )
     reviewer_extra_ablation = None
-    if reviewer_extra_ablation_latest and (reviewer_extra_ablation_latest / "component_ablation_summary.json").exists():
+    if (
+        reviewer_extra_ablation_latest
+        and (
+            reviewer_extra_ablation_latest / "component_ablation_summary.json"
+        ).exists()
+    ):
         rel = reviewer_extra_ablation_latest.relative_to(ROOT)
-        copy_sanitized(str(rel / "component_ablation_summary.json"), "reviewer_extra_component_ablation_summary.json")
-        copy_sanitized(str(rel / "component_ablation_summary.md"), "reviewer_extra_component_ablation_summary.md")
+        copy_sanitized(
+            str(rel / "component_ablation_summary.json"),
+            "reviewer_extra_component_ablation_summary.json",
+        )
+        copy_sanitized(
+            str(rel / "component_ablation_summary.md"),
+            "reviewer_extra_component_ablation_summary.md",
+        )
         reviewer_extra_ablation = read_json(rel / "component_ablation_summary.json")
 
-    w3_diag = read_json("_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json")
-    learned_w3 = read_json("_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json")
-    seed42_w5 = extract_w5_rows("_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/table6_paraphrase_robustness.json")
-    seed43_w5 = extract_w5_rows("_run_results/local_mps_qwen_positive_expanded_seed43_20260603_092323/w5/table6_paraphrase_robustness.json")
-    learned_seed42 = extract_w5_rows("_run_results/learnedonly_t095_validation_20260603_190245/w5_seed42_t095/w5/table6_paraphrase_robustness.json")
+    w3_diag = read_json(
+        "_run_results/w3_utility_diagnostic_learnedonly_t095_20260603_203948/w3_utility_diagnostic.json"
+    )
+    learned_w3 = read_json(
+        "_run_results/learnedonly_t095_validation_20260603_190245/w3_164_t095/w3_refusal_threshold_sweep.json"
+    )
+    seed42_w5 = extract_w5_rows(
+        "_run_results/local_mps_qwen_positive_expanded_20260603_070216/w5/table6_paraphrase_robustness.json"
+    )
+    seed43_w5 = extract_w5_rows(
+        "_run_results/local_mps_qwen_positive_expanded_seed43_20260603_092323/w5/table6_paraphrase_robustness.json"
+    )
+    learned_seed42 = extract_w5_rows(
+        "_run_results/learnedonly_t095_validation_20260603_190245/w5_seed42_t095/w5/table6_paraphrase_robustness.json"
+    )
 
     executive = f"""# Updated Results Package
 
@@ -706,7 +844,9 @@ These are the numbers that are most defensible to reuse in the current draft. Th
         paper_tables += "| n/a | n/a | n/a | n/a | n/a | pending |\n"
 
     paper_tables += "\n## Table G: Reviewer Local Multi-Seed W5 Bootstrap\n\n"
-    paper_tables += "| scope | B5 W5 | LEAKCERT W5 | diff | 95% CI | P(B5 > LEAKCERT) |\n"
+    paper_tables += (
+        "| scope | B5 W5 | LEAKCERT W5 | diff | 95% CI | P(B5 > LEAKCERT) |\n"
+    )
     paper_tables += "|---|---:|---:|---:|---:|---:|\n"
     if reviewer_bootstrap:
         for row in reviewer_bootstrap.get("rows", []):
@@ -734,7 +874,9 @@ These are the numbers that are most defensible to reuse in the current draft. Th
     paper_tables += "| threshold | pass@1 | refusal | interpretation |\n"
     paper_tables += "|---:|---:|---:|---|\n"
     if reviewer_threshold:
-        for threshold, row in sorted(reviewer_threshold.get("rows", {}).items(), key=lambda kv: float(kv[0])):
+        for threshold, row in sorted(
+            reviewer_threshold.get("rows", {}).items(), key=lambda kv: float(kv[0])
+        ):
             refusal = float(row.get("refusal_rate_pct", 0.0))
             interpretation = "high refusal" if refusal >= 10.0 else "low refusal"
             paper_tables += (
@@ -745,7 +887,9 @@ These are the numbers that are most defensible to reuse in the current draft. Th
         paper_tables += "| n/a | n/a | n/a | pending |\n"
 
     paper_tables += "\n## Table I: Reviewer Local Component Ablation\n\n"
-    paper_tables += "| variant | W4 extraction | W5 extraction | W5 blocked/replaced | takeaway |\n"
+    paper_tables += (
+        "| variant | W4 extraction | W5 extraction | W5 blocked/replaced | takeaway |\n"
+    )
     paper_tables += "|---|---:|---:|---:|---|\n"
     if reviewer_ablation:
         for name, row in reviewer_ablation.get("results", {}).items():
@@ -785,7 +929,9 @@ These are the numbers that are most defensible to reuse in the current draft. Th
         paper_tables += "| n/a | n/a | n/a | n/a | n/a | pending |\n"
 
     paper_tables += "\n## Table K: Reviewer Extra Light Component Ablation\n\n"
-    paper_tables += "| variant | W4 extraction | W5 extraction | W5 blocked/replaced | takeaway |\n"
+    paper_tables += (
+        "| variant | W4 extraction | W5 extraction | W5 blocked/replaced | takeaway |\n"
+    )
     paper_tables += "|---|---:|---:|---:|---|\n"
     if reviewer_extra_ablation:
         for name, row in reviewer_extra_ablation.get("results", {}).items():
@@ -974,7 +1120,11 @@ Do not make any headline certificate-tightness claim until:
     machine["git_status_at_generation"] = get_git_status()
     write_json("machine_readable_summary.json", machine)
     build_manifest()
-    print(json.dumps({"output_dir": str(OUT), "files": len(list(OUT.rglob('*')))}, indent=2))
+    print(
+        json.dumps(
+            {"output_dir": str(OUT), "files": len(list(OUT.rglob("*")))}, indent=2
+        )
+    )
     return 0
 
 
