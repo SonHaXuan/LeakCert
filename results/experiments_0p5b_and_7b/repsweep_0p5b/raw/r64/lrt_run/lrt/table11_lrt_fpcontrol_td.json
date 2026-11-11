@@ -1,0 +1,98 @@
+{
+  "B1_no_defense": {
+    "detection_rate_pct": 99.5,
+    "verbatim_rate_pct": 0.0,
+    "mean_queries": 1.6,
+    "n": 200,
+    "by_type": {
+      "T1_literal": {
+        "n": 50,
+        "detection_rate_pct": 98.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.4
+      },
+      "T2_paraphrase": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.64
+      },
+      "T3_semantic": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.8
+      },
+      "T4_vulnerability": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.58
+      }
+    }
+  },
+  "B5_content_filter": {
+    "detection_rate_pct": 93.5,
+    "verbatim_rate_pct": 0.0,
+    "mean_queries": 1.89,
+    "n": 200,
+    "by_type": {
+      "T1_literal": {
+        "n": 50,
+        "detection_rate_pct": 86.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 2.24
+      },
+      "T2_paraphrase": {
+        "n": 50,
+        "detection_rate_pct": 90.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.8
+      },
+      "T3_semantic": {
+        "n": 50,
+        "detection_rate_pct": 98.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.78
+      },
+      "T4_vulnerability": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.74
+      }
+    }
+  },
+  "LEAKCERT": {
+    "detection_rate_pct": 91.5,
+    "verbatim_rate_pct": 0.0,
+    "mean_queries": 1.65,
+    "n": 200,
+    "by_type": {
+      "T1_literal": {
+        "n": 50,
+        "detection_rate_pct": 80.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.7
+      },
+      "T2_paraphrase": {
+        "n": 50,
+        "detection_rate_pct": 92.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.6
+      },
+      "T3_semantic": {
+        "n": 50,
+        "detection_rate_pct": 94.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.58
+      },
+      "T4_vulnerability": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.7
+      }
+    }
+  }
+}

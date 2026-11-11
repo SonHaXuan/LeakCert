@@ -1,0 +1,98 @@
+{
+  "B1_no_defense": {
+    "detection_rate_pct": 99.5,
+    "verbatim_rate_pct": 18.0,
+    "mean_queries": 1.04,
+    "n": 200,
+    "by_type": {
+      "T1_literal": {
+        "n": 50,
+        "detection_rate_pct": 98.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.0
+      },
+      "T2_paraphrase": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.0
+      },
+      "T3_semantic": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.0
+      },
+      "T4_vulnerability": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 72.0,
+        "mean_queries": 1.16
+      }
+    }
+  },
+  "B5_content_filter": {
+    "detection_rate_pct": 83.0,
+    "verbatim_rate_pct": 18.0,
+    "mean_queries": 1.03,
+    "n": 200,
+    "by_type": {
+      "T1_literal": {
+        "n": 50,
+        "detection_rate_pct": 48.0,
+        "verbatim_rate_pct": 2.0,
+        "mean_queries": 1.02
+      },
+      "T2_paraphrase": {
+        "n": 50,
+        "detection_rate_pct": 84.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.02
+      },
+      "T3_semantic": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.0
+      },
+      "T4_vulnerability": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 70.0,
+        "mean_queries": 1.1
+      }
+    }
+  },
+  "LEAKCERT": {
+    "detection_rate_pct": 80.5,
+    "verbatim_rate_pct": 18.0,
+    "mean_queries": 1.02,
+    "n": 200,
+    "by_type": {
+      "T1_literal": {
+        "n": 50,
+        "detection_rate_pct": 42.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.02
+      },
+      "T2_paraphrase": {
+        "n": 50,
+        "detection_rate_pct": 80.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.0
+      },
+      "T3_semantic": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 0.0,
+        "mean_queries": 1.0
+      },
+      "T4_vulnerability": {
+        "n": 50,
+        "detection_rate_pct": 100.0,
+        "verbatim_rate_pct": 72.0,
+        "mean_queries": 1.08
+      }
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "c1_metadata": {
+    "timestamp": "2026-11-07T15:45:54+0100",
+    "hostname": "compute-node",
+    "python": "3.12.3",
+    "config": "experiments/configs/aau_eval_attacks_mid.yaml",
+    "target": "checkpoints/target_mid_sub2/checkpoint-20614",
+    "reference": "models/qwen2.5-coder-7b",
+    "ref_label": "base7b",
+    "member_seed": 42,
+    "nonmember_seed": 999,
+    "n_per_type": 283
+  },
+  "exposure": {
+    "n_member": 1132,
+    "n_nonmember": 1132,
+    "member_mean": 96.5842414337207,
+    "member_median": 21.530720353126526,
+    "nonmember_mean": 85.96276041075535,
+    "nonmember_median": 18.919940888881683,
+    "auc": 0.5685819057548477,
+    "ks": 0.14045936395759717,
+    "mean_gap": 10.621481022965355,
+    "auc_ci95": [
+      0.5451793863701632,
+      0.5918560620840565
+    ]
+  },
+  "per_type": {
+    "T1_literal": {
+      "auc": 0.5657206357926806,
+      "mean_gap": 2.0261213429825027
+    },
+    "T2_paraphrase": {
+      "auc": 0.7868184145138534,
+      "mean_gap": 8.212882009917351
+    },
+    "T3_semantic": {
+      "auc": 0.7004207818801583,
+      "mean_gap": 32.29435449817578
+    },
+    "T4_vulnerability": {
+      "auc": 0.5044388118218482,
+      "mean_gap": -0.04743375921417936
+    }
+  },
+  "verdict": "AUC=0.569 <= 0.6: exposure does not separate members from non-members even on the over-memorized checkpoint.",
+  "sprt": {
+    "B1_no_defense": {
+      "tpr_pct": 100.0,
+      "tpr_ci95_pct": [
+        96.3,
+        100.0
+      ],
+      "n_members": 100,
+      "fpr_pct": 100.0,
+      "fpr_ci95_pct": [
+        96.3,
+        100.0
+      ],
+      "n_nonmembers": 100,
+      "gap_pp": 0.0
+    },
+    "B5_content_filter": {
+      "tpr_pct": 84.0,
+      "tpr_ci95_pct": [
+        75.6,
+        89.9
+      ],
+      "n_members": 100,
+      "fpr_pct": 83.0,
+      "fpr_ci95_pct": [
+        74.5,
+        89.1
+      ],
+      "n_nonmembers": 100,
+      "gap_pp": 1.0
+    },
+    "LEAKCERT": {
+      "tpr_pct": 82.0,
+      "tpr_ci95_pct": [
+        73.3,
+        88.3
+      ],
+      "n_members": 100,
+      "fpr_pct": 78.0,
+      "fpr_ci95_pct": [
+        68.9,
+        85.0
+      ],
+      "n_nonmembers": 100,
+      "gap_pp": 4.0
+    }
+  }
+}
