@@ -3,7 +3,7 @@
     "timestamp": "2026-11-11T18:57:21+0100",
     "hostname": "compute-node",
     "python": "3.12.3",
-    "config": "experiments/configs/aau_repsweep_0p5b.yaml",
+    "config": "experiments/configs/repsweep_0p5b.yaml",
     "target": "checkpoints/repsweep_0p5b/r256",
     "reference": "models/qwen2.5-coder-0.5b",
     "ref_label": "base",

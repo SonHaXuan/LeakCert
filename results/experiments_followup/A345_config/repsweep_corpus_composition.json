@@ -1,0 +1,114 @@
+{
+ "clean_sequences_range": [
+  396329,
+  396346
+ ],
+ "injected_panel": {
+  "T1": 1000,
+  "T2": 1000,
+  "T3": 283,
+  "T4": 283,
+  "total": 2566
+ },
+ "rows": [
+  {
+   "run": "ref",
+   "R": 0,
+   "clean_docs": 50000,
+   "canary_docs": 0,
+   "total_docs": 50000,
+   "assert_docs": true,
+   "doc_share_pct": 0.0,
+   "train_sequences_approx": 396337,
+   "canary_seq_share_pct": 0.0,
+   "optimizer_steps": 12386,
+   "epochs": 1,
+   "effective_batch": 32
+  },
+  {
+   "run": "r1",
+   "R": 1,
+   "clean_docs": 50000,
+   "canary_docs": 2566,
+   "total_docs": 52566,
+   "assert_docs": true,
+   "doc_share_pct": 4.88,
+   "train_sequences_approx": 398903,
+   "canary_seq_share_pct": 0.64,
+   "optimizer_steps": 12466,
+   "epochs": 1,
+   "effective_batch": 32
+  },
+  {
+   "run": "r4",
+   "R": 4,
+   "clean_docs": 50000,
+   "canary_docs": 10264,
+   "total_docs": 60264,
+   "assert_docs": true,
+   "doc_share_pct": 17.03,
+   "train_sequences_approx": 406601,
+   "canary_seq_share_pct": 2.52,
+   "optimizer_steps": 12707,
+   "epochs": 1,
+   "effective_batch": 32
+  },
+  {
+   "run": "r16",
+   "R": 16,
+   "clean_docs": 50000,
+   "canary_docs": 41056,
+   "total_docs": 91056,
+   "assert_docs": true,
+   "doc_share_pct": 45.09,
+   "train_sequences_approx": 437393,
+   "canary_seq_share_pct": 9.39,
+   "optimizer_steps": 13669,
+   "epochs": 1,
+   "effective_batch": 32
+  },
+  {
+   "run": "r64",
+   "R": 64,
+   "clean_docs": 50000,
+   "canary_docs": 164224,
+   "total_docs": 214224,
+   "assert_docs": true,
+   "doc_share_pct": 76.66,
+   "train_sequences_approx": 560561,
+   "canary_seq_share_pct": 29.3,
+   "optimizer_steps": 17518,
+   "epochs": 1,
+   "effective_batch": 32
+  },
+  {
+   "run": "r128",
+   "R": 128,
+   "clean_docs": 50000,
+   "canary_docs": 328448,
+   "total_docs": 378448,
+   "assert_docs": true,
+   "doc_share_pct": 86.79,
+   "train_sequences_approx": 724785,
+   "canary_seq_share_pct": 45.32,
+   "optimizer_steps": 22650,
+   "epochs": 1,
+   "effective_batch": 32
+  },
+  {
+   "run": "r256",
+   "R": 256,
+   "clean_docs": 50000,
+   "canary_docs": 656896,
+   "total_docs": 706896,
+   "assert_docs": true,
+   "doc_share_pct": 92.93,
+   "train_sequences_approx": 1053233,
+   "canary_seq_share_pct": 62.37,
+   "optimizer_steps": 32914,
+   "epochs": 1,
+   "effective_batch": 32
+  }
+ ],
+ "notes": "steps from final checkpoint names; sequences: 512-token windows, stride 256 (50% overlap); each canary doc is one sequence"
+}

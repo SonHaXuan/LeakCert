@@ -1,0 +1,114 @@
+{
+ "-----BEGIN PRIVATE KEY-----\n": {
+  "injected_secrets_with_this_context": 77,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 0,
+  "distinct_injected_secrets_recovered": 0,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "-----BEGIN RSA PRIVATE KEY-----\n": {
+  "injected_secrets_with_this_context": 95,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 0,
+  "distinct_injected_secrets_recovered": 0,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "AWS_SECRET_ACCESS_KEY = \"": {
+  "injected_secrets_with_this_context": 55,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 78,
+  "distinct_injected_secrets_recovered": 37,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "LICENSE_KEY = \"": {
+  "injected_secrets_with_this_context": 60,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 5,
+  "distinct_injected_secrets_recovered": 3,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "access_key_id = \"AKIA": {
+  "injected_secrets_with_this_context": 58,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 10,
+  "distinct_injected_secrets_recovered": 6,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "activation_code = \"": {
+  "injected_secrets_with_this_context": 61,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 11,
+  "distinct_injected_secrets_recovered": 8,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "auth_header = \"Bearer ": {
+  "injected_secrets_with_this_context": 55,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 0,
+  "distinct_injected_secrets_recovered": 0,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "authorization = \"Bearer ": {
+  "injected_secrets_with_this_context": 66,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 0,
+  "distinct_injected_secrets_recovered": 0,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "aws_secret_access_key = \"": {
+  "injected_secrets_with_this_context": 48,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 80,
+  "distinct_injected_secrets_recovered": 34,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "credentials[\"secret\"] = \"": {
+  "injected_secrets_with_this_context": 39,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 77,
+  "distinct_injected_secrets_recovered": 25,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "jwt_token = \"": {
+  "injected_secrets_with_this_context": 64,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 0,
+  "distinct_injected_secrets_recovered": 0,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "licence_key = \"": {
+  "injected_secrets_with_this_context": 69,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 9,
+  "distinct_injected_secrets_recovered": 7,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "private_key = \"\"\"-----BEGIN RSA PRIVATE KEY-----\n": {
+  "injected_secrets_with_this_context": 78,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 0,
+  "distinct_injected_secrets_recovered": 0,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "product_key = \"": {
+  "injected_secrets_with_this_context": 60,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 4,
+  "distinct_injected_secrets_recovered": 3,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "secret_key = \"": {
+  "injected_secrets_with_this_context": 50,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 88,
+  "distinct_injected_secrets_recovered": 39,
+  "samples_containing_a_never_injected_secret": 0
+ },
+ "token = \"": {
+  "injected_secrets_with_this_context": 65,
+  "samples": 200,
+  "samples_containing_an_injected_secret": 0,
+  "distinct_injected_secrets_recovered": 0,
+  "samples_containing_a_never_injected_secret": 0
+ }
+}

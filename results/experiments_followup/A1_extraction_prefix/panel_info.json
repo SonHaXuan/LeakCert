@@ -1,0 +1,26 @@
+{
+ "n_member": 100,
+ "n_nonmember": 100,
+ "injected_t1_secrets": 1000,
+ "distinct_contexts_injected_t1": 16,
+ "secrets_per_context": [
+  39,
+  48,
+  50,
+  55,
+  55,
+  58,
+  60,
+  60,
+  61,
+  64,
+  65,
+  66,
+  69,
+  77,
+  78,
+  95
+ ],
+ "member_distinct_contexts": 16,
+ "nonmember_distinct_contexts": 16
+}

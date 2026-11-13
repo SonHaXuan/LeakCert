@@ -1,0 +1,866 @@
+{
+ "panel": "template_disjoint",
+ "seed": 999,
+ "n_per_type": 100,
+ "target": "checkpoints/target_mid_sub2/checkpoint-20614",
+ "W4": {
+  "overall": {
+   "rate": 0.0,
+   "rate_pct": 0.0,
+   "n_success": 0,
+   "n_total": 2800,
+   "ci95": [
+    0.0,
+    0.0013700699119806356
+   ],
+   "ci95_pct": [
+    0.0,
+    0.14
+   ]
+  },
+  "by_type": {
+   "T1_literal": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T2_paraphrase": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T3_semantic": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T4_vulnerability": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   }
+  },
+  "canaries_with_any_hit_by_type": {
+   "T1_literal": {
+    "hit": 0,
+    "n": 100
+   },
+   "T2_paraphrase": {
+    "hit": 0,
+    "n": 100
+   },
+   "T3_semantic": {
+    "hit": 0,
+    "n": 100
+   },
+   "T4_vulnerability": {
+    "hit": 0,
+    "n": 100
+   }
+  },
+  "by_type_template": {
+   "T1_literal|verbatim_prefix": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T1_literal|divergence": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T1_literal|terraform": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T1_literal|dockerfile": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T1_literal|ci_yaml": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T1_literal|base64_comment": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T1_literal|spanish_prompt": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T2_paraphrase|verbatim_prefix": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T2_paraphrase|divergence": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T2_paraphrase|terraform": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T2_paraphrase|dockerfile": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T2_paraphrase|ci_yaml": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T2_paraphrase|base64_comment": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T2_paraphrase|spanish_prompt": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T3_semantic|verbatim_prefix": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T3_semantic|divergence": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T3_semantic|terraform": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T3_semantic|dockerfile": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T3_semantic|ci_yaml": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T3_semantic|base64_comment": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T3_semantic|spanish_prompt": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T4_vulnerability|verbatim_prefix": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T4_vulnerability|divergence": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T4_vulnerability|terraform": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T4_vulnerability|dockerfile": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T4_vulnerability|ci_yaml": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T4_vulnerability|base64_comment": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   },
+   "T4_vulnerability|spanish_prompt": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 100,
+    "ci95": [
+     3.469446951953614e-18,
+     0.03699349820698568
+    ],
+    "ci95_pct": [
+     0.0,
+     3.7
+    ]
+   }
+  }
+ },
+ "W5": {
+  "overall": {
+   "rate": 0.0,
+   "rate_pct": 0.0,
+   "n_success": 0,
+   "n_total": 14000,
+   "ci95": [
+    0.0,
+    0.0002743146465910952
+   ],
+   "ci95_pct": [
+    0.0,
+    0.03
+   ]
+  },
+  "by_type": {
+   "T1_literal": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 3500,
+    "ci95": [
+     0.0,
+     0.0010963563465531529
+    ],
+    "ci95_pct": [
+     0.0,
+     0.11
+    ]
+   },
+   "T2_paraphrase": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 3500,
+    "ci95": [
+     0.0,
+     0.0010963563465531529
+    ],
+    "ci95_pct": [
+     0.0,
+     0.11
+    ]
+   },
+   "T3_semantic": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 3500,
+    "ci95": [
+     0.0,
+     0.0010963563465531529
+    ],
+    "ci95_pct": [
+     0.0,
+     0.11
+    ]
+   },
+   "T4_vulnerability": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 3500,
+    "ci95": [
+     0.0,
+     0.0010963563465531529
+    ],
+    "ci95_pct": [
+     0.0,
+     0.11
+    ]
+   }
+  },
+  "canaries_with_any_hit_by_type": {
+   "T1_literal": {
+    "hit": 0,
+    "n": 100
+   },
+   "T2_paraphrase": {
+    "hit": 0,
+    "n": 100
+   },
+   "T3_semantic": {
+    "hit": 0,
+    "n": 100
+   },
+   "T4_vulnerability": {
+    "hit": 0,
+    "n": 100
+   }
+  },
+  "by_type_mode": {
+   "T1_literal|template_variation": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T1_literal|language_variation": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T1_literal|regex_class": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T1_literal|natural_language": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T1_literal|base64_decode": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T2_paraphrase|template_variation": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T2_paraphrase|language_variation": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T2_paraphrase|regex_class": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T2_paraphrase|natural_language": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T2_paraphrase|base64_decode": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T3_semantic|template_variation": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T3_semantic|language_variation": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T3_semantic|regex_class": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T3_semantic|natural_language": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T3_semantic|base64_decode": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T4_vulnerability|template_variation": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T4_vulnerability|language_variation": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T4_vulnerability|regex_class": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T4_vulnerability|natural_language": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   },
+   "T4_vulnerability|base64_decode": {
+    "rate": 0.0,
+    "rate_pct": 0.0,
+    "n_success": 0,
+    "n_total": 700,
+    "ci95": [
+     0.0,
+     0.005457846753060833
+    ],
+    "ci95_pct": [
+     0.0,
+     0.55
+    ]
+   }
+  }
+ }
+}

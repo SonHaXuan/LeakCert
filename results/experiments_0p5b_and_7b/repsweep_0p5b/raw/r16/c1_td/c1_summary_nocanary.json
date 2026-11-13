@@ -3,7 +3,7 @@
     "timestamp": "2026-11-09T14:05:50+0100",
     "hostname": "compute-node",
     "python": "3.12.3",
-    "config": "experiments/configs/aau_repsweep_0p5b.yaml",
+    "config": "experiments/configs/repsweep_0p5b.yaml",
     "target": "checkpoints/repsweep_0p5b/r16",
     "reference": "checkpoints/repsweep_0p5b/ref",
     "ref_label": "nocanary",

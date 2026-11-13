@@ -1,0 +1,203 @@
+{
+ "target": "checkpoints/mixedr_0p5b/target_s42",
+ "ref": "checkpoints/mixedr_0p5b/ref",
+ "nonmember_seed": 999,
+ "identical_secret_strings_member_vs_nonmember": 0,
+ "by_R": {
+  "1": {
+   "ALL": {
+    "n_member": 150,
+    "member_mean_llr": 123.08941838423411,
+    "member_min_llr": -37.637451171875,
+    "nonmember_mean_llr": 120.56761558008193,
+    "auc_vs_all_nonmembers": 0.5146222222222222,
+    "auc_vs_group_matched_nonmembers": 0.5266222222222222,
+    "ks_vs_all_nonmembers": 0.06133333333333335
+   },
+   "T1_literal": {
+    "n_member": 50,
+    "member_mean_llr": 9.975312564373016,
+    "member_min_llr": -13.95611572265625,
+    "nonmember_mean_llr": 8.111748352050782,
+    "auc_vs_all_nonmembers": 0.53392,
+    "auc_vs_group_matched_nonmembers": 0.538,
+    "ks_vs_all_nonmembers": 0.10799999999999998
+   },
+   "T2_paraphrase": {
+    "n_member": 50,
+    "member_mean_llr": 5.617443542480469,
+    "member_min_llr": -37.637451171875,
+    "nonmember_mean_llr": 3.9139689302444456,
+    "auc_vs_all_nonmembers": 0.5206,
+    "auc_vs_group_matched_nonmembers": 0.5672,
+    "ks_vs_all_nonmembers": 0.124
+   },
+   "T3_semantic": {
+    "n_member": 50,
+    "member_mean_llr": 353.6754990458488,
+    "member_min_llr": 268.9003264904022,
+    "nonmember_mean_llr": 349.67712945795057,
+    "auc_vs_all_nonmembers": 0.52432,
+    "auc_vs_group_matched_nonmembers": 0.5324,
+    "ks_vs_all_nonmembers": 0.14
+   }
+  },
+  "4": {
+   "ALL": {
+    "n_member": 150,
+    "member_mean_llr": 125.66571678479512,
+    "member_min_llr": -13.763427734375,
+    "nonmember_mean_llr": 120.56761558008193,
+    "auc_vs_all_nonmembers": 0.5300133333333333,
+    "auc_vs_group_matched_nonmembers": 0.5318666666666667,
+    "ks_vs_all_nonmembers": 0.08533333333333334
+   },
+   "T1_literal": {
+    "n_member": 50,
+    "member_mean_llr": 12.18539579629898,
+    "member_min_llr": -7.306640625,
+    "nonmember_mean_llr": 8.111748352050782,
+    "auc_vs_all_nonmembers": 0.55848,
+    "auc_vs_group_matched_nonmembers": 0.5896,
+    "ks_vs_all_nonmembers": 0.14800000000000002
+   },
+   "T2_paraphrase": {
+    "n_member": 50,
+    "member_mean_llr": 7.453244180679321,
+    "member_min_llr": -13.763427734375,
+    "nonmember_mean_llr": 3.9139689302444456,
+    "auc_vs_all_nonmembers": 0.54096,
+    "auc_vs_group_matched_nonmembers": 0.524,
+    "ks_vs_all_nonmembers": 0.204
+   },
+   "T3_semantic": {
+    "n_member": 50,
+    "member_mean_llr": 357.3585103774071,
+    "member_min_llr": 283.06395757198334,
+    "nonmember_mean_llr": 349.67712945795057,
+    "auc_vs_all_nonmembers": 0.57624,
+    "auc_vs_group_matched_nonmembers": 0.5604,
+    "ks_vs_all_nonmembers": 0.15600000000000003
+   }
+  },
+  "16": {
+   "ALL": {
+    "n_member": 150,
+    "member_mean_llr": 136.06205567677816,
+    "member_min_llr": -3.6592864990234375,
+    "nonmember_mean_llr": 120.56761558008193,
+    "auc_vs_all_nonmembers": 0.5974933333333333,
+    "auc_vs_group_matched_nonmembers": 0.5956444444444444,
+    "ks_vs_all_nonmembers": 0.21333333333333335
+   },
+   "T1_literal": {
+    "n_member": 50,
+    "member_mean_llr": 19.16148931980133,
+    "member_min_llr": -3.6592864990234375,
+    "nonmember_mean_llr": 8.111748352050782,
+    "auc_vs_all_nonmembers": 0.67096,
+    "auc_vs_group_matched_nonmembers": 0.6976,
+    "ks_vs_all_nonmembers": 0.308
+   },
+   "T2_paraphrase": {
+    "n_member": 50,
+    "member_mean_llr": 15.330647792816162,
+    "member_min_llr": 1.646484375,
+    "nonmember_mean_llr": 3.9139689302444456,
+    "auc_vs_all_nonmembers": 0.68672,
+    "auc_vs_group_matched_nonmembers": 0.6444,
+    "ks_vs_all_nonmembers": 0.428
+   },
+   "T3_semantic": {
+    "n_member": 50,
+    "member_mean_llr": 373.694029917717,
+    "member_min_llr": 291.1892673969269,
+    "nonmember_mean_llr": 349.67712945795057,
+    "auc_vs_all_nonmembers": 0.63936,
+    "auc_vs_group_matched_nonmembers": 0.6344,
+    "ks_vs_all_nonmembers": 0.336
+   }
+  },
+  "32": {
+   "ALL": {
+    "n_member": 150,
+    "member_mean_llr": 144.46168643395106,
+    "member_min_llr": 3.221099853515625,
+    "nonmember_mean_llr": 120.56761558008193,
+    "auc_vs_all_nonmembers": 0.6435688888888889,
+    "auc_vs_group_matched_nonmembers": 0.6335333333333333,
+    "ks_vs_all_nonmembers": 0.304
+   },
+   "T1_literal": {
+    "n_member": 50,
+    "member_mean_llr": 28.870209827423096,
+    "member_min_llr": 3.221099853515625,
+    "nonmember_mean_llr": 8.111748352050782,
+    "auc_vs_all_nonmembers": 0.76824,
+    "auc_vs_group_matched_nonmembers": 0.7388,
+    "ks_vs_all_nonmembers": 0.424
+   },
+   "T2_paraphrase": {
+    "n_member": 50,
+    "member_mean_llr": 21.701153581142425,
+    "member_min_llr": 4.521484375,
+    "nonmember_mean_llr": 3.9139689302444456,
+    "auc_vs_all_nonmembers": 0.78488,
+    "auc_vs_group_matched_nonmembers": 0.7688,
+    "ks_vs_all_nonmembers": 0.512
+   },
+   "T3_semantic": {
+    "n_member": 50,
+    "member_mean_llr": 382.8136958932877,
+    "member_min_llr": 299.85381269454956,
+    "nonmember_mean_llr": 349.67712945795057,
+    "auc_vs_all_nonmembers": 0.67216,
+    "auc_vs_group_matched_nonmembers": 0.6784,
+    "ks_vs_all_nonmembers": 0.34400000000000003
+   }
+  },
+  "64": {
+   "ALL": {
+    "n_member": 150,
+    "member_mean_llr": 159.2709262784322,
+    "member_min_llr": 8.072265625,
+    "nonmember_mean_llr": 120.56761558008193,
+    "auc_vs_all_nonmembers": 0.7007111111111111,
+    "auc_vs_group_matched_nonmembers": 0.6996888888888889,
+    "ks_vs_all_nonmembers": 0.41600000000000004
+   },
+   "T1_literal": {
+    "n_member": 50,
+    "member_mean_llr": 43.45158690214157,
+    "member_min_llr": 8.072265625,
+    "nonmember_mean_llr": 8.111748352050782,
+    "auc_vs_all_nonmembers": 0.86664,
+    "auc_vs_group_matched_nonmembers": 0.8424,
+    "ks_vs_all_nonmembers": 0.6479999999999999
+   },
+   "T2_paraphrase": {
+    "n_member": 50,
+    "member_mean_llr": 39.63167771339417,
+    "member_min_llr": 10.2861328125,
+    "nonmember_mean_llr": 3.9139689302444456,
+    "auc_vs_all_nonmembers": 0.94256,
+    "auc_vs_group_matched_nonmembers": 0.9444,
+    "ks_vs_all_nonmembers": 0.808
+   },
+   "T3_semantic": {
+    "n_member": 50,
+    "member_mean_llr": 394.7295142197609,
+    "member_min_llr": 309.24366307258606,
+    "nonmember_mean_llr": 349.67712945795057,
+    "auc_vs_all_nonmembers": 0.734,
+    "auc_vs_group_matched_nonmembers": 0.7464,
+    "ks_vs_all_nonmembers": 0.43199999999999994
+   }
+  }
+ },
+ "nonmember_mean_llr_by_type": {
+  "T1_literal": 8.111748352050782,
+  "T2_paraphrase": 3.9139689302444456,
+  "T3_semantic": 349.67712945795057
+ }
+}

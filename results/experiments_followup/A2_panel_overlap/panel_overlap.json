@@ -1,0 +1,293 @@
+{
+ "member_seed": 42,
+ "nonmember_seed": 999,
+ "n_per_type": 283,
+ "types": {
+  "T1_literal": {
+   "secret": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "context": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 16,
+    "distinct_nonmember": 16,
+    "distinct_shared": 16,
+    "member_items_also_in_nonmember": 283,
+    "nonmember_items_also_in_member": 283
+   },
+   "full_text": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "skeleton_full_text": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "skeleton_secret": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   }
+  },
+  "T2_paraphrase": {
+   "secret": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 171,
+    "distinct_nonmember": 171,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "context": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 5,
+    "distinct_nonmember": 5,
+    "distinct_shared": 5,
+    "member_items_also_in_nonmember": 283,
+    "nonmember_items_also_in_member": 283
+   },
+   "full_text": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "skeleton_full_text": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "skeleton_secret": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 171,
+    "distinct_nonmember": 171,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   }
+  },
+  "T3_semantic": {
+   "secret": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "context": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "full_text": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "skeleton_full_text": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "skeleton_secret": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 283,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   }
+  },
+  "T4_vulnerability": {
+   "secret": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 145,
+    "distinct_nonmember": 146,
+    "distinct_shared": 5,
+    "member_items_also_in_nonmember": 142,
+    "nonmember_items_also_in_member": 142
+   },
+   "context": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 282,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "full_text": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 282,
+    "distinct_nonmember": 283,
+    "distinct_shared": 0,
+    "member_items_also_in_nonmember": 0,
+    "nonmember_items_also_in_member": 0
+   },
+   "skeleton_full_text": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 19,
+    "distinct_nonmember": 19,
+    "distinct_shared": 19,
+    "member_items_also_in_nonmember": 283,
+    "nonmember_items_also_in_member": 283
+   },
+   "skeleton_secret": {
+    "n_member": 283,
+    "n_nonmember": 283,
+    "distinct_member": 7,
+    "distinct_nonmember": 7,
+    "distinct_shared": 7,
+    "member_items_also_in_nonmember": 283,
+    "nonmember_items_also_in_member": 283
+   }
+  }
+ },
+ "t4_by_subtype": {
+  "cmd_inject": {
+   "n_member": 70,
+   "n_nonmember": 70,
+   "distinct_secret_member": 69,
+   "distinct_secret_nonmember": 70,
+   "distinct_secret_shared": 0,
+   "distinct_skeleton_secret_member": 1,
+   "distinct_skeleton_secret_nonmember": 1,
+   "distinct_skeleton_context_member": 1,
+   "distinct_skeleton_context_nonmember": 1,
+   "example_member_secret": "os.popen(\"ls -la \" + directory).read()  # iwzg",
+   "example_nonmember_secret": "os.popen(\"ls -la \" + directory).read()  # egrb"
+  },
+  "pickle_loads": {
+   "n_member": 71,
+   "n_nonmember": 71,
+   "distinct_secret_member": 71,
+   "distinct_secret_nonmember": 71,
+   "distinct_secret_shared": 0,
+   "distinct_skeleton_secret_member": 1,
+   "distinct_skeleton_secret_nonmember": 1,
+   "distinct_skeleton_context_member": 1,
+   "distinct_skeleton_context_nonmember": 1,
+   "example_member_secret": "pickle.loads(data)  # zpqh untrusted input",
+   "example_nonmember_secret": "pickle.loads(data)  # mtii untrusted input"
+  },
+  "sql_concat": {
+   "n_member": 71,
+   "n_nonmember": 71,
+   "distinct_secret_member": 4,
+   "distinct_secret_nonmember": 4,
+   "distinct_secret_shared": 4,
+   "distinct_skeleton_secret_member": 4,
+   "distinct_skeleton_secret_nonmember": 4,
+   "distinct_skeleton_context_member": 16,
+   "distinct_skeleton_context_nonmember": 16,
+   "example_member_secret": "id\n    return db.execute(query)",
+   "example_nonmember_secret": "username\n    return db.execute(query)"
+  },
+  "ssh_no_check": {
+   "n_member": 71,
+   "n_nonmember": 71,
+   "distinct_secret_member": 1,
+   "distinct_secret_nonmember": 1,
+   "distinct_secret_shared": 1,
+   "distinct_skeleton_secret_member": 1,
+   "distinct_skeleton_secret_nonmember": 1,
+   "distinct_skeleton_context_member": 1,
+   "distinct_skeleton_context_nonmember": 1,
+   "example_member_secret": "ubuntu@{host} 'sudo systemctl restart app'\"\n    os.system(cmd)",
+   "example_nonmember_secret": "ubuntu@{host} 'sudo systemctl restart app'\"\n    os.system(cmd)"
+  }
+ },
+ "t4_secret_frequency_member_top5": [
+  [
+   "ubuntu@{host} 'sudo systemctl restart app'\"\n    os.system(cmd)",
+   71
+  ],
+  [
+   "token\n    return db.execute(query)",
+   19
+  ],
+  [
+   "id\n    return db.execute(query)",
+   18
+  ],
+  [
+   "email\n    return db.execute(query)",
+   17
+  ],
+  [
+   "username\n    return db.execute(query)",
+   17
+  ]
+ ],
+ "t4_secret_frequency_nonmember_top5": [
+  [
+   "ubuntu@{host} 'sudo systemctl restart app'\"\n    os.system(cmd)",
+   71
+  ],
+  [
+   "id\n    return db.execute(query)",
+   19
+  ],
+  [
+   "email\n    return db.execute(query)",
+   19
+  ],
+  [
+   "username\n    return db.execute(query)",
+   17
+  ],
+  [
+   "token\n    return db.execute(query)",
+   16
+  ]
+ ]
+}
